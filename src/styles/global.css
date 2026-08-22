@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Kafe Grohova design tokens — lifted from the legacy Next.js app
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-cream: #FDEDC3;
+  --color-brick: #ED3D26;
+  --color-brick-dark: #c62d1f;
+  --color-stone: #EAEAEA;
+  --color-ink: #000000;
+
+  --font-display: 'Unient DIN CE', 'Helvetica Neue', Arial, sans-serif;
+}
+
+@font-face {
+  font-family: 'Unient DIN CE';
+  src: url('/fonts/dince-regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Everything below MUST stay inside @layer, otherwise unlayered rules beat
+   Tailwind utilities (a bare `img { height: auto }` silently defeats every
+   h-* class on an image). */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-display);
+    overflow-x: hidden;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-cream);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-brick);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brick-dark);
+  }
+}
+
+@layer components {
+  .container {
+    max-width: 100%;
+    padding: 0;
+    margin: auto;
+  }
+
+  /* Legacy site used uppercase labels everywhere with generous tracking */
+  .label {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+  }
+
+  /* Rich text coming out of Shopify (blog articles, product descriptions) */
+  .rte > * + * {
+    margin-top: 1em;
+  }
+
+  .rte h2 {
+    font-size: 1.5em;
+    margin-top: 1.6em;
+  }
+
+  .rte h3 {
+    font-size: 1.25em;
+    margin-top: 1.4em;
+  }
+
+  .rte a {
+    color: var(--color-brick);
+    text-decoration: underline;
+  }
+
+  .rte ul {
+    list-style: disc;
+    padding-left: 1.25em;
+  }
+
+  .rte ol {
+    list-style: decimal;
+    padding-left: 1.25em;
+  }
+
+  .rte img {
+    margin: 1.5em 0;
+  }
+}

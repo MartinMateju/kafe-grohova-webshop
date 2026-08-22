@@ -1,0 +1,146 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CourseBooking from '../../../components/CourseBooking.astro';
+import {
+  allLangs,
+  localePath,
+  useTranslations,
+  type Lang,
+} from '../../../i18n/utils';
+import {
+  getCourses,
+  formatDuration,
+  formatMoney,
+  imageUrl,
+} from '../../../lib/shopify';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const lang of allLangs) {
+    const courses = await getCourses(lang);
+    for (const course of courses) {
+      paths.push({ params: { lang, handle: course.handle }, props: { course } });
+    }
+  }
+  return paths;
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { course } = Astro.props;
+
+const hero = imageUrl(course.featuredImage?.url, 1600);
+const price = formatMoney(course.priceRange.minVariantPrice, lang);
+const duration = formatDuration(course.course?.durationMinutes ?? null, lang);
+const others = (await getCourses(lang)).filter((c) => c.handle !== course.handle);
+
+const facts = [
+  duration ? { label: t('courses.duration'), value: duration } : null,
+  course.course?.capacity
+    ? { label: t('courses.capacity'), value: `max ${course.course.capacity}` }
+    : null,
+  course.course?.level ? { label: t('courses.level'), value: course.course.level } : null,
+  { label: t('common.price'), value: price },
+].filter(Boolean) as Array<{ label: string; value: string }>;
+---
+
+<BaseLayout
+  title={course.title}
+  description={course.description.slice(0, 160)}
+  image={hero}
+>
+  <div class="flex flex-col gap-12 pt-5 lg:pt-15">
+    <a
+      href={localePath(lang, '/courses')}
+      class="text-[14px] text-ink/60 transition-colors hover:text-brick"
+    >
+      &lt; {t('courses.back')}
+    </a>
+
+    {
+      hero && (
+        <div class="w-full overflow-hidden">
+          <img
+            src={hero}
+            alt={course.featuredImage?.altText ?? course.title}
+            class="h-[20rem] w-full object-cover object-center md:h-[32rem]"
+          />
+        </div>
+      )
+    }
+
+    <div class="flex w-full flex-col gap-10 lg:flex-row lg:gap-16">
+      {/* ── Left: description ───────────────────────────────── */}
+      <div class="flex w-full flex-col gap-8 lg:w-3/5">
+        <h1 class="text-[32px] leading-none md:text-[52px]">{course.title}</h1>
+
+        <dl class="grid grid-cols-2 gap-4 border-y border-ink/15 py-5 md:grid-cols-4">
+          {
+            facts.map((fact) => (
+              <div class="flex flex-col gap-1">
+                <dt class="label text-ink/50">{fact.label}</dt>
+                <dd class="text-[16px]">{fact.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        {
+          course.descriptionHtml && (
+            <div
+              class="rte text-[16px] leading-relaxed lg:text-[20px]"
+              set:html={course.descriptionHtml}
+            />
+          )
+        }
+
+        {
+          course.course?.syllabus?.length ? (
+            <section class="flex flex-col gap-4">
+              <h2 class="label text-ink/60">{t('courses.whatYouLearn')}</h2>
+              <ul class="flex flex-col gap-2">
+                {course.course.syllabus.map((item) => (
+                  <li class="flex gap-3 text-[16px] lg:text-[18px]">
+                    <span class="text-brick">—</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null
+        }
+      </div>
+
+      {/* ── Right: booking ──────────────────────────────────── */}
+      <aside class="w-full lg:w-2/5">
+        <div class="lg:sticky lg:top-6">
+          <CourseBooking product={course} lang={lang} />
+        </div>
+      </aside>
+    </div>
+
+    {/* ── Other courses ──────────────────────────────────────── */}
+    {
+      others.length > 0 && (
+        <section class="mb-12 flex flex-col gap-4 border-t border-ink/15 pt-10">
+          <h2 class="label text-ink/60">{t('courses.allCourses')}</h2>
+          <ul class="grid gap-3 md:grid-cols-3">
+            {others.map((other) => (
+              <li>
+                <a
+                  href={localePath(lang, `/courses/${other.handle}`)}
+                  class="flex h-full flex-col justify-between gap-3 border border-ink/25 p-5 transition-colors hover:border-brick hover:text-brick"
+                >
+                  <span class="text-[18px] lg:text-[22px]">{other.title}</span>
+                  <span class="text-[14px] text-ink/60">
+                    {t('courses.from')} {formatMoney(other.priceRange.minVariantPrice, lang)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>

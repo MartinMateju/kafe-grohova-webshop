@@ -1,0 +1,58 @@
+---
+import type { Product } from '../lib/shopify';
+import { formatMoney, imageUrl } from '../lib/shopify';
+import { localePath, type Lang } from '../i18n/utils';
+
+interface Props {
+  product: Product;
+  lang: Lang;
+  /** Tailwind height utility for the image box */
+  heightClass?: string;
+  soldOutLabel?: string;
+}
+
+const {
+  product,
+  lang,
+  heightClass = 'h-[45vw] md:h-[28vw]',
+  soldOutLabel,
+} = Astro.props;
+
+const price = formatMoney(product.priceRange.minVariantPrice, lang);
+const src = imageUrl(product.featuredImage?.url, 900);
+const alt = product.featuredImage?.altText ?? product.title;
+const soldOut = !product.availableForSale;
+---
+
+<a
+  href={localePath(lang, `/store/${product.handle}`)}
+  class="group flex flex-col gap-1 text-[16px] md:text-[20px] lg:text-[24px] hover:text-brick transition-colors"
+>
+  <div class:list={['relative w-full overflow-hidden bg-stone/40', heightClass]}>
+    {
+      src ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        />
+      ) : (
+        <div class="h-full w-full bg-stone/60" />
+      )
+    }
+    {
+      soldOut && soldOutLabel && (
+        <span class="absolute left-0 top-0 bg-brick px-2 py-1 text-[11px] tracking-widest text-cream">
+          {soldOutLabel}
+        </span>
+      )
+    }
+  </div>
+
+  <div class="flex w-full justify-between gap-3">
+    <p class="truncate">{product.title}</p>
+    <p class="whitespace-nowrap">{price}</p>
+  </div>
+</a>

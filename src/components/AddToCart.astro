@@ -1,0 +1,229 @@
+---
+import type { Product } from '../lib/shopify';
+import { formatMoney, imageUrl } from '../lib/shopify';
+import { useTranslations, type Lang } from '../i18n/utils';
+
+interface Props {
+  product: Product;
+  lang: Lang;
+}
+
+const { product, lang } = Astro.props;
+const t = useTranslations(lang);
+
+const hasRealOptions =
+  product.options.length > 0 &&
+  !(product.options.length === 1 && product.options[0].name === 'Title');
+
+const variants = product.variants.map((v) => ({
+  id: v.id,
+  title: v.title,
+  available: v.availableForSale,
+  quantityAvailable: v.quantityAvailable,
+  amount: v.price.amount,
+  currencyCode: v.price.currencyCode,
+  priceLabel: formatMoney(v.price, lang),
+}));
+
+const snapshotBase = {
+  productTitle: product.title,
+  productHandle: product.handle,
+  imageUrl: imageUrl(product.featuredImage?.url, 300),
+};
+
+const labels = {
+  add: t('product.addToCart'),
+  adding: t('product.adding'),
+  added: t('product.added'),
+  soldOut: t('product.soldOut'),
+  stockLeft: t('product.stockLeft'),
+};
+
+const firstAvailable = variants.find((v) => v.available) ?? variants[0];
+---
+
+<div class="flex flex-col gap-5" data-add-to-cart>
+  {
+    hasRealOptions && variants.length > 1 && (
+      <div class="flex flex-col gap-2">
+        <span class="label text-ink/60">{product.options[0]?.name}</span>
+        <div class="flex flex-wrap gap-2">
+          {variants.map((variant) => (
+            <button
+              type="button"
+              data-variant={variant.id}
+              disabled={!variant.available}
+              aria-pressed={variant.id === firstAvailable?.id ? 'true' : 'false'}
+              class:list={[
+                'border px-4 py-2 text-[14px] transition-colors',
+                variant.available
+                  ? 'border-ink hover:bg-ink hover:text-cream aria-pressed:bg-ink aria-pressed:text-cream'
+                  : 'border-ink/20 text-ink/30 line-through cursor-not-allowed',
+              ]}
+            >
+              {variant.title}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <div class="flex flex-wrap items-stretch gap-3">
+    <div class="flex items-center border border-ink">
+      <button
+        type="button"
+        data-qty-down
+        class="px-4 py-3 text-lg leading-none hover:text-brick"
+        aria-label="−"
+      >
+        −
+      </button>
+      <input
+        type="number"
+        data-qty
+        value="1"
+        min="1"
+        max="99"
+        class="w-14 border-0 bg-transparent text-center text-[16px] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        aria-label={t('product.quantity')}
+      />
+      <button
+        type="button"
+        data-qty-up
+        class="px-4 py-3 text-lg leading-none hover:text-brick"
+        aria-label="+"
+      >
+        +
+      </button>
+    </div>
+
+    <button
+      type="button"
+      data-add
+      disabled={!product.availableForSale}
+      class="flex-1 min-w-[12rem] border border-ink bg-ink px-6 py-3 text-cream tracking-widest transition-colors hover:bg-brick hover:border-brick disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {product.availableForSale ? labels.add : labels.soldOut}
+    </button>
+  </div>
+
+  <p data-stock class="text-[13px] text-ink/60"></p>
+</div>
+
+<script
+  is:inline
+  type="application/json"
+  data-add-to-cart-data
+  set:html={JSON.stringify({ variants, snapshotBase, labels })}
+/>
+
+<script>
+  import { addLine } from '../lib/cart';
+
+  const root = document.querySelector<HTMLElement>('[data-add-to-cart]');
+  const dataEl = document.querySelector<HTMLScriptElement>(
+    '[data-add-to-cart-data]',
+  );
+
+  if (root && dataEl) {
+    const { variants, snapshotBase, labels } = JSON.parse(dataEl.textContent!);
+
+    const qtyInput = root.querySelector<HTMLInputElement>('[data-qty]')!;
+    const addBtn = root.querySelector<HTMLButtonElement>('[data-add]')!;
+    const stockEl = root.querySelector<HTMLElement>('[data-stock]')!;
+    const variantBtns = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-variant]'),
+    );
+
+    let selected =
+      variants.find((v: any) => v.available) ?? variants[0] ?? null;
+
+    const clampQty = () => {
+      let n = Number.parseInt(qtyInput.value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      const max =
+        typeof selected?.quantityAvailable === 'number' &&
+        selected.quantityAvailable > 0
+          ? Math.min(99, selected.quantityAvailable)
+          : 99;
+      if (n > max) n = max;
+      qtyInput.value = String(n);
+      return n;
+    };
+
+    const syncUI = () => {
+      variantBtns.forEach((btn) => {
+        btn.setAttribute(
+          'aria-pressed',
+          String(btn.dataset.variant === selected?.id),
+        );
+      });
+
+      const available = Boolean(selected?.available);
+      addBtn.disabled = !available;
+      addBtn.textContent = available ? labels.add : labels.soldOut;
+
+      const qty = selected?.quantityAvailable;
+      const showStock =
+        available && typeof qty === 'number' && qty > 0 && qty < 11;
+      stockEl.textContent = showStock
+        ? labels.stockLeft.replace('{n}', String(qty))
+        : '';
+
+      clampQty();
+    };
+
+    variantBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const match = variants.find((v: any) => v.id === btn.dataset.variant);
+        if (match && match.available) {
+          selected = match;
+          syncUI();
+        }
+      });
+    });
+
+    root
+      .querySelector('[data-qty-up]')
+      ?.addEventListener('click', () => {
+        qtyInput.value = String(clampQty() + 1);
+        clampQty();
+      });
+    root
+      .querySelector('[data-qty-down]')
+      ?.addEventListener('click', () => {
+        qtyInput.value = String(Math.max(1, clampQty() - 1));
+      });
+    qtyInput.addEventListener('change', clampQty);
+
+    addBtn.addEventListener('click', async () => {
+      if (!selected) return;
+      const original = addBtn.textContent;
+      addBtn.disabled = true;
+      addBtn.textContent = labels.adding;
+      try {
+        await addLine(
+          {
+            ...snapshotBase,
+            merchandiseId: selected.id,
+            variantTitle: selected.title,
+            amount: selected.amount,
+            currencyCode: selected.currencyCode,
+          },
+          clampQty(),
+        );
+        addBtn.textContent = labels.added;
+        window.setTimeout(() => {
+          addBtn.textContent = original;
+          addBtn.disabled = false;
+        }, 1400);
+      } catch {
+        addBtn.textContent = original;
+        addBtn.disabled = false;
+      }
+    });
+
+    syncUI();
+  }
+</script>

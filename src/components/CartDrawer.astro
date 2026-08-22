@@ -1,0 +1,253 @@
+---
+import { getLangFromUrl, useTranslations, localePath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const strings = {
+  title: t('cart.title'),
+  empty: t('cart.empty'),
+  continue: t('cart.continue'),
+  subtotal: t('cart.subtotal'),
+  checkout: t('cart.checkout'),
+  remove: t('cart.remove'),
+  shippingNote: t('cart.shippingNote'),
+  close: t('cart.close'),
+  mockNotice: t('cart.mockNotice'),
+  loading: t('common.loading'),
+  storeHref: localePath(lang, '/store'),
+  locale: lang === 'cs' ? 'cs-CZ' : 'en-GB',
+};
+---
+
+<div data-cart-root>
+  <div
+    data-cart-backdrop
+    hidden
+    class="fixed inset-0 z-50 bg-black/40 opacity-0 transition-opacity duration-300"
+  >
+  </div>
+
+  <aside
+    data-cart-panel
+    hidden
+    aria-label={strings.title}
+    class="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md translate-x-full flex-col border-l border-ink bg-cream transition-transform duration-300"
+  >
+    <div class="flex items-center justify-between border-b border-ink px-5 py-4">
+      <h2 class="text-2xl">{strings.title}</h2>
+      <button
+        type="button"
+        data-cart-close
+        aria-label={strings.close}
+        class="text-2xl leading-none hover:text-brick transition-colors"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div data-cart-body class="flex-1 overflow-y-auto px-5 py-4">
+      <p class="py-10 text-center text-ink/60">{strings.empty}</p>
+    </div>
+
+    <div data-cart-foot class="border-t border-ink px-5 py-4" hidden>
+      <div class="mb-1 flex items-center justify-between text-lg">
+        <span>{strings.subtotal}</span>
+        <span data-cart-subtotal>—</span>
+      </div>
+      <p class="mb-4 text-[12px] text-ink/60">{strings.shippingNote}</p>
+      <p data-cart-error class="mb-3 text-[13px] text-brick" hidden></p>
+      <button
+        type="button"
+        data-cart-checkout
+        class="w-full border border-ink bg-ink px-4 py-3 text-cream transition-colors hover:bg-brick hover:border-brick disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {strings.checkout}
+      </button>
+    </div>
+  </aside>
+</div>
+
+<script is:inline define:vars={{ strings }}>
+  window.__KAFE_CART_STRINGS__ = strings;
+</script>
+
+<script>
+  import {
+    subscribe,
+    initCart,
+    openCart,
+    closeCart,
+    updateLine,
+    removeLine,
+    checkout,
+    isMockMode,
+  } from '../lib/cart';
+
+  const strings = (window as any).__KAFE_CART_STRINGS__ ?? {};
+
+  const root = document.querySelector('[data-cart-root]');
+  if (root) {
+    const backdrop = root.querySelector<HTMLElement>('[data-cart-backdrop]')!;
+    const panel = root.querySelector<HTMLElement>('[data-cart-panel]')!;
+    const body = root.querySelector<HTMLElement>('[data-cart-body]')!;
+    const foot = root.querySelector<HTMLElement>('[data-cart-foot]')!;
+    const subtotalEl = root.querySelector<HTMLElement>('[data-cart-subtotal]')!;
+    const errorEl = root.querySelector<HTMLElement>('[data-cart-error]')!;
+    const checkoutBtn = root.querySelector<HTMLButtonElement>('[data-cart-checkout]')!;
+
+    const money = (amount: string, currencyCode: string) => {
+      const n = Number.parseFloat(amount);
+      if (!Number.isFinite(n)) return '';
+      try {
+        return new Intl.NumberFormat(strings.locale ?? 'cs-CZ', {
+          style: 'currency',
+          currency: currencyCode,
+          maximumFractionDigits: n % 1 === 0 ? 0 : 2,
+        }).format(n);
+      } catch {
+        return `${n} ${currencyCode}`;
+      }
+    };
+
+    const escapeHtml = (value: string) =>
+      value.replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+      );
+
+    let isOpen = false;
+
+    const setOpen = (open: boolean) => {
+      if (open === isOpen) return;
+      isOpen = open;
+      if (open) {
+        backdrop.hidden = false;
+        panel.hidden = false;
+        // next frame so the transition actually runs
+        requestAnimationFrame(() => {
+          backdrop.classList.remove('opacity-0');
+          panel.classList.remove('translate-x-full');
+        });
+        document.body.style.overflow = 'hidden';
+      } else {
+        backdrop.classList.add('opacity-0');
+        panel.classList.add('translate-x-full');
+        document.body.style.overflow = '';
+        window.setTimeout(() => {
+          if (!isOpen) {
+            backdrop.hidden = true;
+            panel.hidden = true;
+          }
+        }, 300);
+      }
+    };
+
+    const renderLines = (cart: any) => {
+      if (!cart || !cart.lines.length) {
+        body.innerHTML = `
+          <div class="flex flex-col items-center gap-4 py-16 text-center">
+            <p class="text-lg text-ink/70">${escapeHtml(strings.empty ?? '')}</p>
+            <a href="${strings.storeHref}" class="text-brick underline">${escapeHtml(strings.continue ?? '')}</a>
+          </div>`;
+        foot.hidden = true;
+        return;
+      }
+
+      body.innerHTML = cart.lines
+        .map((line: any) => {
+          const variant =
+            line.variantTitle && line.variantTitle !== 'Default Title'
+              ? `<p class="text-[13px] text-ink/60">${escapeHtml(line.variantTitle)}</p>`
+              : '';
+          const image = line.image
+            ? `<img src="${line.image.url}" alt="" class="h-24 w-20 object-cover" loading="lazy" />`
+            : `<div class="h-24 w-20 bg-ink/5"></div>`;
+          return `
+            <div class="flex gap-4 border-b border-ink/10 py-4" data-line="${line.id}">
+              ${image}
+              <div class="flex min-w-0 flex-1 flex-col justify-between">
+                <div>
+                  <p class="truncate">${escapeHtml(line.productTitle)}</p>
+                  ${variant}
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center border border-ink/30">
+                    <button type="button" class="px-2 py-1 hover:text-brick" data-qty-down aria-label="-">−</button>
+                    <span class="min-w-8 text-center text-sm">${line.quantity}</span>
+                    <button type="button" class="px-2 py-1 hover:text-brick" data-qty-up aria-label="+">+</button>
+                  </div>
+                  <span class="text-sm">${money(line.totalAmount.amount, line.totalAmount.currencyCode)}</span>
+                </div>
+              </div>
+              <button type="button" class="self-start text-ink/40 hover:text-brick" data-line-remove aria-label="${escapeHtml(strings.remove ?? 'Remove')}">✕</button>
+            </div>`;
+        })
+        .join('');
+
+      foot.hidden = false;
+      subtotalEl.textContent = money(
+        cart.subtotal.amount,
+        cart.subtotal.currencyCode,
+      );
+    };
+
+    subscribe((state) => {
+      setOpen(state.open);
+
+      const count = state.cart?.totalQuantity ?? 0;
+      document.querySelectorAll<HTMLElement>('[data-cart-count]').forEach((el) => {
+        el.textContent = count > 0 ? `(${count})` : '';
+        el.hidden = count === 0;
+      });
+
+      renderLines(state.cart);
+
+      if (state.error) {
+        errorEl.textContent = state.error;
+        errorEl.hidden = false;
+      } else if (isMockMode) {
+        errorEl.textContent = strings.mockNotice ?? '';
+        errorEl.hidden = !state.cart?.lines.length;
+      } else {
+        errorEl.hidden = true;
+      }
+
+      checkoutBtn.disabled =
+        state.loading || isMockMode || !state.cart?.lines.length;
+      checkoutBtn.textContent = state.loading
+        ? (strings.loading ?? '…')
+        : (strings.checkout ?? 'CHECKOUT');
+    });
+
+    document.querySelectorAll('[data-cart-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => (isOpen ? closeCart() : openCart()));
+    });
+    root.querySelector('[data-cart-close]')?.addEventListener('click', closeCart);
+    backdrop.addEventListener('click', closeCart);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) closeCart();
+    });
+
+    body.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const row = target.closest<HTMLElement>('[data-line]');
+      if (!row) return;
+      const lineId = row.dataset.line!;
+      const qtyText = row.querySelector('span.min-w-8')?.textContent ?? '1';
+      const quantity = Number.parseInt(qtyText, 10) || 1;
+
+      if (target.closest('[data-qty-up]')) void updateLine(lineId, quantity + 1);
+      else if (target.closest('[data-qty-down]')) void updateLine(lineId, quantity - 1);
+      else if (target.closest('[data-line-remove]')) void removeLine(lineId);
+    });
+
+    checkoutBtn.addEventListener('click', () => {
+      if (!checkout()) {
+        errorEl.textContent = strings.mockNotice ?? '';
+        errorEl.hidden = false;
+      }
+    });
+
+    void initCart();
+  }
+</script>

@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import {
+  allLangs,
+  localePath,
+  useTranslations,
+  type Lang,
+} from '../../../i18n/utils';
+import { getArticles, formatDate, imageUrl } from '../../../lib/shopify';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const lang of allLangs) {
+    const articles = await getArticles(lang);
+    for (const article of articles) {
+      paths.push({ params: { lang, handle: article.handle }, props: { article } });
+    }
+  }
+  return paths;
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { article } = Astro.props;
+
+const hero = imageUrl(article.image?.url, 1600);
+const others = (await getArticles(lang))
+  .filter((a) => a.handle !== article.handle)
+  .slice(0, 4);
+---
+
+<BaseLayout
+  title={article.title}
+  description={article.excerpt.slice(0, 160)}
+  image={hero}
+>
+  <article class="flex flex-col gap-10 py-5 lg:py-10">
+    <a
+      href={localePath(lang, '/blog')}
+      class="text-[14px] text-ink/60 transition-colors hover:text-brick"
+    >
+      &lt; {t('blog.back')}
+    </a>
+
+    <header class="flex w-full flex-col gap-3 lg:flex-row lg:gap-16">
+      <div class="lg:w-1/2">
+        <h1 class="text-[28px] leading-tight md:text-[44px]">{article.title}</h1>
+        <p class="mt-3 text-[14px] text-ink/50">
+          {formatDate(article.publishedAt, lang)}
+          {article.authorName && <span> · {article.authorName}</span>}
+        </p>
+      </div>
+
+      {
+        article.excerptHtml && (
+          <div
+            class="rte lg:w-1/2 text-justify text-[16px] md:text-[20px]"
+            set:html={article.excerptHtml}
+          />
+        )
+      }
+    </header>
+
+    {
+      hero && (
+        <img
+          src={hero}
+          alt={article.image?.altText ?? article.title}
+          class="h-[20rem] w-full object-cover object-center md:h-[36rem]"
+        />
+      )
+    }
+
+    <div class="flex w-full justify-center">
+      <div
+        class="rte w-full max-w-3xl text-justify text-[16px] leading-relaxed md:text-[20px]"
+        set:html={article.contentHtml}
+      />
+    </div>
+
+    {
+      others.length > 0 && (
+        <section class="mt-8 flex flex-col gap-4 border-t border-ink/15 pt-10">
+          <h2 class="label text-ink/60">{t('blog.title')}</h2>
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {others.map((other) => (
+              <a
+                href={localePath(lang, `/blog/${other.handle}`)}
+                class="group flex flex-col gap-2"
+              >
+                <div class="h-[180px] w-full overflow-hidden bg-stone/40">
+                  {other.image && (
+                    <img
+                      src={imageUrl(other.image.url, 600)}
+                      alt=""
+                      loading="lazy"
+                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    />
+                  )}
+                </div>
+                <p class="text-[15px] group-hover:text-brick">{other.title}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </article>
+</BaseLayout>

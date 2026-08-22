@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { allLangs, useTranslations, type Lang } from '../../../i18n/utils';
+import { getMerch } from '../../../lib/shopify';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const products = await getMerch(lang);
+const [first, second, ...rest] = products;
+---
+
+<BaseLayout title={t('store.title')}>
+  <div class="mt-12 flex flex-col gap-12">
+    {/* ── Feature row + limited edition block ────────────────── */}
+    <section class="flex w-full flex-col gap-4 text-[16px] md:flex-row md:text-[24px]">
+      <div class="flex w-full flex-row gap-3">
+        {
+          first && (
+            <div class="w-full">
+              <ProductCard product={first} lang={lang} heightClass="h-[300px] md:h-[450px]" soldOutLabel={t('product.soldOut')} />
+            </div>
+          )
+        }
+        {
+          second && (
+            <div class="w-full">
+              <ProductCard product={second} lang={lang} heightClass="h-[300px] md:h-[450px]" soldOutLabel={t('product.soldOut')} />
+            </div>
+          )
+        }
+      </div>
+
+      <div class="flex h-[300px] w-full flex-col items-center justify-center bg-brick md:h-[450px]">
+        <p class="font-semibold text-ink tracking-widest">{t('store.limited')}</p>
+      </div>
+    </section>
+
+    {/* ── All products ───────────────────────────────────────── */}
+    <section class="flex flex-col gap-4">
+      <h1 class="text-[20px] md:text-[28px]">{t('store.all')}</h1>
+
+      {
+        products.length === 0 ? (
+          <p class="py-20 text-center text-ink/60">{t('store.empty')}</p>
+        ) : (
+          <div class="grid w-full grid-cols-2 gap-3 md:grid-cols-4">
+            {rest.map((product) => (
+              <ProductCard product={product} lang={lang} soldOutLabel={t('product.soldOut')} />
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    {/* ── Editorial closer, mirroring the legacy store page ──── */}
+    <section class="mb-15 flex flex-col gap-6">
+      <div class="flex w-full justify-end">
+        <div class="w-full md:w-1/2">
+          <img
+            src="/nomad.webp"
+            alt=""
+            loading="lazy"
+            class="h-[600px] w-full object-cover"
+          />
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

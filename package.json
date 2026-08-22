@@ -1,0 +1,29 @@
+{
+  "name": "kafe-grohova-webshop",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless Astro storefront for Kafe Grohova \u2014 barista courses and merchandise, powered by Shopify",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.0",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^5.18.2",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "sharp": "^0.35.3",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "vite": "^6.4.3"
+  }
+}

@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CourseCard from '../../../components/CourseCard.astro';
+import {
+  allLangs,
+  localePath,
+  useTranslations,
+  type Lang,
+} from '../../../i18n/utils';
+import {
+  getCourses,
+  bookableVariants,
+  formatDateTime,
+  formatMoney,
+} from '../../../lib/shopify';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const courses = await getCourses(lang);
+
+/** Flatten every open date across all courses, soonest first. */
+const upcoming = courses
+  .flatMap((course) =>
+    bookableVariants(course).map((variant) => ({ course, variant })),
+  )
+  .sort((a, b) => {
+    const at = a.variant.startsAt ? Date.parse(a.variant.startsAt) : Infinity;
+    const bt = b.variant.startsAt ? Date.parse(b.variant.startsAt) : Infinity;
+    return at - bt;
+  })
+  .slice(0, 6);
+---
+
+<BaseLayout title={t('courses.title')} description={t('courses.intro')}>
+  <div class="flex flex-col gap-14 pt-8 lg:pt-14">
+    <header class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <h1 class="text-[36px] leading-none md:text-[64px] lg:text-[80px]">
+        {t('courses.title')}
+      </h1>
+      <p class="max-w-xl text-[16px] leading-relaxed lg:text-[20px]">
+        {t('courses.intro')}
+      </p>
+    </header>
+
+    {/* ── Next dates strip ───────────────────────────────────── */}
+    {
+      upcoming.length > 0 && (
+        <section class="flex flex-col gap-3">
+          <h2 class="label text-ink/60">{t('courses.upcoming')}</h2>
+          <ul class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+            {upcoming.map(({ course, variant }) => (
+              <li>
+                <a
+                  href={localePath(lang, `/courses/${course.handle}`)}
+                  class="flex items-center justify-between gap-4 border border-ink/20 px-4 py-3 transition-colors hover:border-brick hover:text-brick"
+                >
+                  <span class="flex flex-col">
+                    <span class="text-[15px]">
+                      {variant.startsAt ? formatDateTime(variant.startsAt, lang) : variant.title}
+                    </span>
+                    <span class="text-[12px] text-ink/50">{course.title}</span>
+                  </span>
+                  <span class="whitespace-nowrap text-[14px]">
+                    {formatMoney(variant.price, lang)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {/* ── Course list ────────────────────────────────────────── */}
+    <section class="flex flex-col gap-6">
+      {
+        courses.length === 0 ? (
+          <div class="border border-ink/20 px-6 py-16 text-center">
+            <p class="text-[18px]">{t('courses.noDates')}</p>
+            <a href={localePath(lang, '/contact')} class="mt-3 inline-block text-brick underline">
+              {t('courses.notifyMe')}
+            </a>
+          </div>
+        ) : (
+          courses.map((course) => <CourseCard product={course} lang={lang} />)
+        )
+      }
+    </section>
+
+    <section class="mb-10 w-full overflow-hidden">
+      <img
+        src="/images/OLD03354.webp"
+        alt=""
+        loading="lazy"
+        class="h-[24rem] w-full object-cover object-center lg:h-[40rem]"
+      />
+    </section>
+  </div>
+</BaseLayout>

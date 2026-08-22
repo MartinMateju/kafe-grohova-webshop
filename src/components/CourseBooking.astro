@@ -1,0 +1,239 @@
+---
+import type { Product } from '../lib/shopify';
+import { formatDateTime, formatMoney, imageUrl } from '../lib/shopify';
+import { useTranslations, localePath, type Lang } from '../i18n/utils';
+
+interface Props {
+  product: Product;
+  lang: Lang;
+}
+
+const { product, lang } = Astro.props;
+const t = useTranslations(lang);
+
+/** Seat wording has three Czech forms; English has two. */
+function seatWord(n: number): string {
+  if (lang === 'en') return n === 1 ? t('courses.seatLeft') : t('courses.seatsLeft');
+  if (n === 1) return t('courses.seatLeft');
+  if (n >= 2 && n <= 4) return t('courses.seatsLeft2');
+  return t('courses.seatsLeft');
+}
+
+const dates = product.variants
+  .map((v) => ({
+    id: v.id,
+    title: v.title,
+    available: v.availableForSale,
+    seats: v.quantityAvailable,
+    startsAt: v.startsAt,
+    label: v.startsAt ? formatDateTime(v.startsAt, lang) : v.title,
+    priceLabel: formatMoney(v.price, lang),
+    amount: v.price.amount,
+    currencyCode: v.price.currencyCode,
+  }))
+  .sort((a, b) => {
+    if (a.startsAt && b.startsAt) return Date.parse(a.startsAt) - Date.parse(b.startsAt);
+    return 0;
+  });
+
+const anyAvailable = dates.some((d) => d.available);
+const firstAvailable = dates.find((d) => d.available);
+
+const snapshotBase = {
+  productTitle: product.title,
+  productHandle: product.handle,
+  imageUrl: imageUrl(product.featuredImage?.url, 300),
+};
+
+const labels = {
+  book: t('courses.book'),
+  adding: t('product.adding'),
+  added: t('product.added'),
+  soldOut: t('courses.soldOut'),
+};
+---
+
+<div class="flex flex-col gap-6" data-course-booking>
+  <div class="flex flex-col gap-3">
+    <span class="label text-ink/60">{t('courses.pickDate')}</span>
+
+    {
+      dates.length === 0 && (
+        <div class="border border-ink/20 px-5 py-6">
+          <p class="text-[16px]">{t('courses.noDates')}</p>
+          <a href={localePath(lang, '/contact')} class="mt-2 inline-block text-brick underline">
+            {t('courses.notifyMe')}
+          </a>
+        </div>
+      )
+    }
+
+    <ul class="flex flex-col divide-y divide-ink/15 border border-ink/25">
+      {
+        dates.map((date) => (
+          <li>
+            <button
+              type="button"
+              data-date={date.id}
+              disabled={!date.available}
+              aria-pressed={date.id === firstAvailable?.id ? 'true' : 'false'}
+              class:list={[
+                'flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors',
+                date.available
+                  ? 'hover:bg-ink/5 aria-pressed:bg-ink aria-pressed:text-cream'
+                  : 'cursor-not-allowed text-ink/35',
+              ]}
+            >
+              <span class="flex flex-col gap-0.5">
+                <span class="text-[16px] md:text-[18px]">{date.label}</span>
+                <span class="text-[12px] opacity-70">
+                  {date.available
+                    ? typeof date.seats === 'number'
+                      ? `${date.seats} ${seatWord(date.seats)}`
+                      : ''
+                    : t('courses.soldOut')}
+                </span>
+              </span>
+              <span class="whitespace-nowrap text-[15px]">{date.priceLabel}</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  {
+    dates.length > 0 && (
+      <div class="flex flex-wrap items-stretch gap-3">
+        <div class="flex items-center border border-ink">
+          <button type="button" data-seat-down class="px-4 py-3 text-lg leading-none hover:text-brick" aria-label="−">
+            −
+          </button>
+          <input
+            type="number"
+            data-seats
+            value="1"
+            min="1"
+            max="99"
+            class="w-14 border-0 bg-transparent text-center text-[16px] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            aria-label={t('courses.seatsLeft')}
+          />
+          <button type="button" data-seat-up class="px-4 py-3 text-lg leading-none hover:text-brick" aria-label="+">
+            +
+          </button>
+        </div>
+
+        <button
+          type="button"
+          data-book
+          disabled={!anyAvailable}
+          class="flex-1 min-w-[12rem] border border-ink bg-brick px-6 py-3 tracking-widest text-cream transition-colors hover:bg-ink disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {anyAvailable ? labels.book : labels.soldOut}
+        </button>
+      </div>
+    )
+  }
+</div>
+
+<script
+  is:inline
+  type="application/json"
+  data-course-booking-data
+  set:html={JSON.stringify({ dates, snapshotBase, labels })}
+/>
+
+<script>
+  import { addLine } from '../lib/cart';
+
+  const root = document.querySelector<HTMLElement>('[data-course-booking]');
+  const dataEl = document.querySelector<HTMLScriptElement>(
+    '[data-course-booking-data]',
+  );
+
+  if (root && dataEl) {
+    const { dates, snapshotBase, labels } = JSON.parse(dataEl.textContent!);
+
+    const seatsInput = root.querySelector<HTMLInputElement>('[data-seats]');
+    const bookBtn = root.querySelector<HTMLButtonElement>('[data-book]');
+    const dateBtns = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[data-date]'),
+    );
+
+    let selected = dates.find((d: any) => d.available) ?? null;
+
+    const clampSeats = () => {
+      if (!seatsInput) return 1;
+      let n = Number.parseInt(seatsInput.value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 1;
+      const max =
+        typeof selected?.seats === 'number' && selected.seats > 0
+          ? selected.seats
+          : 99;
+      if (n > max) n = max;
+      seatsInput.value = String(n);
+      return n;
+    };
+
+    const syncUI = () => {
+      dateBtns.forEach((btn) =>
+        btn.setAttribute('aria-pressed', String(btn.dataset.date === selected?.id)),
+      );
+      if (bookBtn) {
+        bookBtn.disabled = !selected?.available;
+        bookBtn.textContent = selected?.available ? labels.book : labels.soldOut;
+      }
+      clampSeats();
+    };
+
+    dateBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const match = dates.find((d: any) => d.id === btn.dataset.date);
+        if (match?.available) {
+          selected = match;
+          syncUI();
+        }
+      });
+    });
+
+    root.querySelector('[data-seat-up]')?.addEventListener('click', () => {
+      if (!seatsInput) return;
+      seatsInput.value = String(clampSeats() + 1);
+      clampSeats();
+    });
+    root.querySelector('[data-seat-down]')?.addEventListener('click', () => {
+      if (!seatsInput) return;
+      seatsInput.value = String(Math.max(1, clampSeats() - 1));
+    });
+    seatsInput?.addEventListener('change', clampSeats);
+
+    bookBtn?.addEventListener('click', async () => {
+      if (!selected) return;
+      const original = bookBtn.textContent;
+      bookBtn.disabled = true;
+      bookBtn.textContent = labels.adding;
+      try {
+        await addLine(
+          {
+            ...snapshotBase,
+            merchandiseId: selected.id,
+            variantTitle: selected.label,
+            amount: selected.amount,
+            currencyCode: selected.currencyCode,
+          },
+          clampSeats(),
+        );
+        bookBtn.textContent = labels.added;
+        window.setTimeout(() => {
+          bookBtn.textContent = original;
+          bookBtn.disabled = false;
+        }, 1400);
+      } catch {
+        bookBtn.textContent = original;
+        bookBtn.disabled = false;
+      }
+    });
+
+    syncUI();
+  }
+</script>

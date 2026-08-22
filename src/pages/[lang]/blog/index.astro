@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import {
+  allLangs,
+  localePath,
+  useTranslations,
+  type Lang,
+} from '../../../i18n/utils';
+import { getArticles, formatDate, imageUrl } from '../../../lib/shopify';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const articles = await getArticles(lang);
+const [lead, ...rest] = articles;
+---
+
+<BaseLayout title={t('blog.title')}>
+  <div class="w-full">
+    {/* ── Subscribe block + lead article ─────────────────────── */}
+    <section class="flex w-full flex-col gap-2.5 py-5 md:flex-row lg:py-10">
+      <div class="flex h-[420px] w-full flex-col items-center justify-center gap-4 bg-brick px-6 text-center md:h-[600px] md:w-1/2">
+        <p class="md:text-[24px]">
+          {t('blog.news')}<br />{t('blog.subscribeText')}
+        </p>
+        <a
+          href={localePath(lang, '/contact')}
+          class="text-[28px] text-cream underline-offset-4 hover:underline"
+        >
+          {t('blog.subscribe')}
+        </a>
+      </div>
+
+      <div class="w-full md:w-1/2 md:text-[20px] lg:mr-20">
+        {
+          lead ? (
+            <a href={localePath(lang, `/blog/${lead.handle}`)} class="group flex flex-col gap-4">
+              <span class="text-[22px] group-hover:text-brick md:text-[26px]">{lead.title}</span>
+              <span class="text-[13px] text-ink/50">{formatDate(lead.publishedAt, lang)}</span>
+              <div class="rte mt-2 text-justify text-[16px] md:text-[18px]" set:html={lead.excerptHtml || lead.contentHtml} />
+              <span class="text-brick">{t('blog.readMore')} →</span>
+            </a>
+          ) : (
+            <p class="text-ink/60">{t('blog.empty')}</p>
+          )
+        }
+      </div>
+    </section>
+
+    {/* ── Article grid ───────────────────────────────────────── */}
+    {
+      rest.length > 0 && (
+        <section class="mt-7 flex w-full flex-col gap-6">
+          <div class="grid w-full grid-cols-2 gap-3 md:grid-cols-4">
+            {rest.map((article) => (
+              <a
+                href={localePath(lang, `/blog/${article.handle}`)}
+                class="group flex flex-col gap-1 md:text-[20px]"
+              >
+                <div class="h-[220px] w-full overflow-hidden bg-stone/40 md:h-[300px]">
+                  {article.image ? (
+                    <img
+                      src={imageUrl(article.image.url, 800)}
+                      alt={article.image.altText ?? article.title}
+                      loading="lazy"
+                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <div class="h-full w-full bg-stone" />
+                  )}
+                </div>
+                <div class="mt-4 flex w-full justify-between gap-3">
+                  <p class="truncate group-hover:text-brick">{article.title}</p>
+                  <p class="whitespace-nowrap text-[13px] text-ink/50">
+                    {formatDate(article.publishedAt, lang)}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <section class="my-12 w-full overflow-hidden">
+      <img
+        src="/images/OLD03389.webp"
+        alt=""
+        loading="lazy"
+        class="h-[24rem] w-full object-cover object-center lg:h-[44rem]"
+      />
+    </section>
+  </div>
+</BaseLayout>
