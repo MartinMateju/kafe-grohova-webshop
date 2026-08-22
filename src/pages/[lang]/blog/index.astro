@@ -21,6 +21,8 @@ const [lead, ...rest] = articles;
 
 <BaseLayout title={t('blog.title')}>
   <div class="w-full">
+    <h1 class="sr-only">{t('blog.title')}</h1>
+
     {/* ── Subscribe block + lead article ─────────────────────── */}
     <section class="flex w-full flex-col gap-2.5 py-5 md:flex-row lg:py-10">
       <div class="flex h-[420px] w-full flex-col items-center justify-center gap-4 bg-brick px-6 text-center md:h-[600px] md:w-1/2">

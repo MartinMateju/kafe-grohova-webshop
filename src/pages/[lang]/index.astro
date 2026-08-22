@@ -40,16 +40,23 @@ const coursesCopy =
   lang === 'cs'
     ? 'Otevřeli jsme baristické kurzy. Malé skupiny, profesionální vybavení a lektoři, kteří stojí za barem každý den. Od základů espressa po latte art a filtrovanou kávu doma.'
     : 'We run barista courses. Small groups, professional equipment and instructors who stand behind the bar every day. From espresso fundamentals to latte art and filter coffee at home.';
+
+const h1 =
+  lang === 'cs'
+    ? 'Kafe Grohova — espresso bar a obchod v Brně'
+    : 'Kafe Grohova — espresso bar and store in Brno';
 ---
 
 <BaseLayout>
   <div class="flex flex-col gap-10 lg:gap-20">
+    <h1 class="sr-only">{h1}</h1>
+
     {/* ── Hero tiles ─────────────────────────────────────────── */}
     <section class="flex flex-col items-center gap-10 w-full md:mt-10 lg:gap-20">
       <div class="grid w-full grid-cols-2 gap-4">
         <a
           href={localePath(lang, '/store')}
-          class="relative h-[calc(50vw-20px)] w-full overflow-hidden group"
+          class="relative h-[clamp(11rem,calc(50vw-20px),34rem)] w-full overflow-hidden group"
         >
           <img
             src="/expressobar.webp"
@@ -63,7 +70,7 @@ const coursesCopy =
 
         <a
           href={localePath(lang, '/store')}
-          class="relative h-[calc(50vw-20px)] w-full overflow-hidden group"
+          class="relative h-[clamp(11rem,calc(50vw-20px),34rem)] w-full overflow-hidden group"
         >
           <img
             src="/store.webp"
@@ -103,7 +110,7 @@ const coursesCopy =
           {
             collectionRow.slice(0, 2).map((product) => (
               <div class="w-full">
-                <ProductCard product={product} lang={lang} heightClass="h-[40vw] md:h-[25vw]" />
+                <ProductCard product={product} lang={lang} heightClass="h-[40vw] md:h-[clamp(16rem,25vw,28rem)]" />
               </div>
             ))
           }
@@ -115,7 +122,7 @@ const coursesCopy =
               <ProductCard
                 product={collectionRow[2]}
                 lang={lang}
-                heightClass="h-[40vw] md:h-[25vw]"
+                heightClass="h-[40vw] md:h-[clamp(16rem,25vw,28rem)]"
               />
             )
           }
