@@ -29,6 +29,38 @@ const pageDescription =
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 const csHref = new URL(switchLocalePath(Astro.url, 'cs'), canonical);
 const enHref = new URL(switchLocalePath(Astro.url, 'en'), canonical);
+const ogLocale = lang === 'cs' ? 'cs_CZ' : 'en_US';
+const ogLocaleAlt = lang === 'cs' ? 'en_US' : 'cs_CZ';
+
+const siteOrigin = String(Astro.site ?? Astro.url.origin);
+const localBusiness = {
+  '@context': 'https://schema.org',
+  '@type': 'CafeOrCoffeeShop',
+  '@id': `${siteOrigin}#business`,
+  name: siteName,
+  image: new URL('/expressobar.webp', siteOrigin).href,
+  url: siteOrigin,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Grohova 102/3',
+    addressLocality: 'Brno',
+    postalCode: '602 00',
+    addressCountry: 'CZ',
+  },
+  areaServed: {
+    '@type': 'City',
+    name: 'Brno',
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    opens: '07:00',
+    closes: '17:00',
+  },
+  servesCuisine: 'Coffee',
+  priceRange: '$$',
+  sameAs: ['https://instagram.com/kafegrohova'],
+};
 ---
 
 <!doctype html>
@@ -55,9 +87,12 @@ const enHref = new URL(switchLocalePath(Astro.url, 'en'), canonical);
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
     <meta property="og:url" content={canonical.href} />
+    <meta property="og:locale" content={ogLocale} />
+    <meta property="og:locale:alternate" content={ogLocaleAlt} />
     {image && <meta property="og:image" content={image} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#FDEDC3" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(localBusiness)} />
   </head>
 
   <body class="antialiased p-3 bg-cream text-ink min-h-screen w-full">

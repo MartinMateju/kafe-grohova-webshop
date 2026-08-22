@@ -14,7 +14,7 @@ interface Props {
 const {
   product,
   lang,
-  heightClass = 'h-[45vw] md:h-[28vw]',
+  heightClass = 'h-[45vw] md:h-[clamp(12rem,28vw,21rem)]',
   soldOutLabel,
 } = Astro.props;
 
