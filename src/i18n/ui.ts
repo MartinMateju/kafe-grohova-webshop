@@ -9,8 +9,8 @@ export type Lang = keyof typeof languages;
 
 export const ui = {
   cs: {
-    'nav.store': 'ESPRESSO BAR & STORE',
-    'nav.courses': 'BARISTA KURZY',
+    'nav.store': 'OBCHOD',
+    'nav.courses': 'KURZY',
     'nav.blog': 'BLOG',
     'nav.contact': 'KONTAKT',
     'nav.cart': 'KOŠÍK',
@@ -102,8 +102,8 @@ export const ui = {
     'common.error': 'Něco se nepovedlo.',
   },
   en: {
-    'nav.store': 'ESPRESSO BAR & STORE',
-    'nav.courses': 'BARISTA COURSES',
+    'nav.store': 'STORE',
+    'nav.courses': 'COURSES',
     'nav.blog': 'BLOG',
     'nav.contact': 'CONTACT',
     'nav.cart': 'CART',
