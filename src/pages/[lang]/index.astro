@@ -1,0 +1,190 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SplitFeature from '../../components/SplitFeature.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { allLangs, localePath, useTranslations, type Lang } from '../../i18n/utils';
+import { getCourses, getMerch, formatMoney, imageUrl } from '../../lib/shopify';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const [merch, courses] = await Promise.all([getMerch(lang), getCourses(lang)]);
+const featured = merch.slice(0, 4);
+const collectionRow = merch.slice(0, 3);
+const leadCourse = courses[0];
+
+const intro =
+  lang === 'cs'
+    ? `Kafe Grohova je malé espresso barové místo, kde se všechno točí kolem výběrové kávy Father’s Coffee Roastery. Voda, mletí, extrakce – každý krok ladíme tak, aby vynikl přirozený charakter kávy. Za barem stojí tým lidí, které káva opravdu baví. Ochutnáváme, experimentujeme a každý den posouváme naše baristické dovednosti o kousek dál.
+
+Kafe Grohova se postupně stává také malou komunitní záležitostí Brna – místem, kde se přirozeně potkávají lidé kolem kávy, tvorby a dobré energie.`
+    : `Kafe Grohova is a small espresso bar where everything revolves around specialty coffee from Father’s Coffee Roastery. Water, grind, extraction – we tune every step so the natural character of the coffee comes through. Behind the bar stands a team of people who genuinely love coffee. We taste, we experiment, and every day we push our barista skills a little further.
+
+Kafe Grohova is also becoming a small community corner of Brno – a place where people around coffee, craft and good energy naturally meet.`;
+
+const specialtyCopy =
+  lang === 'cs'
+    ? 'Vozíme kávu od pražíren, které známe jménem, a měníme nabídku podle sezóny. Na baru vždycky najdete jedno espresso, jednu filtrovanou a něco, co zrovna zkoušíme.'
+    : 'We buy from roasters we know by name and rotate the offer with the season. There is always one espresso, one filter, and something we are currently testing.';
+
+const ceramicsCopy =
+  lang === 'cs'
+    ? 'Šálky, ze kterých u nás pijete, se točí ručně v Brně. Každý kus je trochu jiný — a všechny si můžete odnést domů.'
+    : 'The cups you drink from here are thrown by hand in Brno. Every piece is slightly different — and all of them can go home with you.';
+
+const coursesCopy =
+  lang === 'cs'
+    ? 'Otevřeli jsme baristické kurzy. Malé skupiny, profesionální vybavení a lektoři, kteří stojí za barem každý den. Od základů espressa po latte art a filtrovanou kávu doma.'
+    : 'We run barista courses. Small groups, professional equipment and instructors who stand behind the bar every day. From espresso fundamentals to latte art and filter coffee at home.';
+---
+
+<BaseLayout>
+  <div class="flex flex-col gap-10 lg:gap-20">
+    {/* ── Hero tiles ─────────────────────────────────────────── */}
+    <section class="flex flex-col items-center gap-10 w-full md:mt-10 lg:gap-20">
+      <div class="grid w-full grid-cols-2 gap-4">
+        <a
+          href={localePath(lang, '/store')}
+          class="relative h-[calc(50vw-20px)] w-full overflow-hidden group"
+        >
+          <img
+            src="/expressobar.webp"
+            alt=""
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <span class="absolute inset-0 flex items-center justify-center text-[20px] text-white md:text-[32px]">
+            {t('home.espressobar')}
+          </span>
+        </a>
+
+        <a
+          href={localePath(lang, '/store')}
+          class="relative h-[calc(50vw-20px)] w-full overflow-hidden group"
+        >
+          <img
+            src="/store.webp"
+            alt=""
+            class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <span class="absolute inset-0 flex items-center justify-center text-[20px] text-ink md:text-[32px]">
+            {t('home.store')}
+          </span>
+        </a>
+      </div>
+
+      <div class="w-full overflow-hidden">
+        <img
+          src="/img33.webp"
+          alt=""
+          class="h-[24rem] w-full object-cover object-center md:h-[34rem] lg:h-[44rem]"
+        />
+      </div>
+
+      <div class="mb-15 w-full 2xl:w-[58rem]">
+        <p class="whitespace-pre-line text-[18px] lg:text-[24px]">{intro}</p>
+      </div>
+
+      <SplitFeature
+        bg="bg-stone"
+        img="/specialcoffee.webp"
+        title={t('home.specialty')}
+        content={specialtyCopy}
+      />
+    </section>
+
+    {/* ── Collections row ────────────────────────────────────── */}
+    <section class="w-full">
+      <div class="flex w-full flex-col items-center gap-4 text-[16px] md:flex-row lg:text-[24px]">
+        <div class="flex w-full flex-row gap-3">
+          {
+            collectionRow.slice(0, 2).map((product) => (
+              <div class="w-full">
+                <ProductCard product={product} lang={lang} heightClass="h-[40vw] md:h-[25vw]" />
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="flex w-full flex-col">
+          {
+            collectionRow[2] && (
+              <ProductCard
+                product={collectionRow[2]}
+                lang={lang}
+                heightClass="h-[40vw] md:h-[25vw]"
+              />
+            )
+          }
+        </div>
+      </div>
+
+      <SplitFeature
+        bg="bg-cream"
+        img="/ceramic.webp"
+        title={t('home.ceramics')}
+        content={ceramicsCopy}
+        flip
+      />
+    </section>
+
+    {/* ── Barista courses ────────────────────────────────────── */}
+    <section class="w-full">
+      <SplitFeature
+        bg="bg-brick text-cream"
+        img={imageUrl(leadCourse?.featuredImage?.url, 1200) || '/images/OLD03346.webp'}
+        title={t('home.coursesTitle')}
+        content={coursesCopy}
+        href={localePath(lang, '/courses')}
+        cta={t('home.coursesCta')}
+      />
+
+      {
+        courses.length > 0 && (
+          <ul class="mt-6 grid gap-3 md:grid-cols-3">
+            {courses.slice(0, 3).map((course) => (
+              <li>
+                <a
+                  href={localePath(lang, `/courses/${course.handle}`)}
+                  class="flex h-full flex-col justify-between gap-3 border border-ink/25 p-5 transition-colors hover:border-brick hover:text-brick"
+                >
+                  <span class="text-[18px] lg:text-[22px]">{course.title}</span>
+                  <span class="text-[14px] text-ink/60">
+                    {t('courses.from')} {formatMoney(course.priceRange.minVariantPrice, lang)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+
+    {/* ── Shop grid ──────────────────────────────────────────── */}
+    <section class="flex w-full flex-col lg:gap-6">
+      <div class="grid w-full grid-cols-2 gap-3 md:grid-cols-4">
+        {featured.map((product) => <ProductCard product={product} lang={lang} />)}
+      </div>
+
+      <div class="my-5 flex w-full flex-col gap-1 md:mt-0">
+        <div class="w-full overflow-hidden">
+          <img
+            src="/images/OLD03400.webp"
+            alt=""
+            loading="lazy"
+            class="h-[36rem] w-full object-cover object-center lg:h-[58rem]"
+          />
+        </div>
+        <div class="flex w-full justify-between">
+          <p class="md:text-[25px]">{t('home.baristas')}</p>
+          <a href={localePath(lang, '/store')} class="md:text-[25px] hover:text-brick">
+            {t('home.shopCta')} →
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

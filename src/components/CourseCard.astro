@@ -1,0 +1,120 @@
+---
+import type { Product } from '../lib/shopify';
+import {
+  bookableVariants,
+  formatDateTime,
+  formatDuration,
+  formatMoney,
+  imageUrl,
+} from '../lib/shopify';
+import { localePath, useTranslations, type Lang } from '../i18n/utils';
+
+interface Props {
+  product: Product;
+  lang: Lang;
+}
+
+const { product, lang } = Astro.props;
+const t = useTranslations(lang);
+
+const href = localePath(lang, `/courses/${product.handle}`);
+const src = imageUrl(product.featuredImage?.url, 1000);
+const price = formatMoney(product.priceRange.minVariantPrice, lang);
+const open = bookableVariants(product);
+const nextDates = open.slice(0, 3);
+const duration = formatDuration(product.course?.durationMinutes ?? null, lang);
+---
+
+<article
+  class="flex flex-col gap-4 border border-ink/20 md:flex-row"
+>
+  <a href={href} class="md:w-2/5 overflow-hidden group">
+    {
+      src ? (
+        <img
+          src={src}
+          alt={product.featuredImage?.altText ?? product.title}
+          loading="lazy"
+          decoding="async"
+          class="h-64 w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03] md:h-[22rem]"
+        />
+      ) : (
+        <div class="h-64 w-full bg-stone md:h-[22rem]" />
+      )
+    }
+  </a>
+
+  <div class="flex flex-1 flex-col gap-4 p-5 md:p-7">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <a href={href} class="text-[22px] leading-tight hover:text-brick md:text-[28px]">
+        {product.title}
+      </a>
+      <p class="whitespace-nowrap text-[18px]">
+        <span class="text-ink/50 text-[13px]">{t('courses.from')}</span>
+        {price}
+      </p>
+    </div>
+
+    <p class="text-[15px] leading-relaxed text-ink/80 md:text-[17px]">
+      {product.description}
+    </p>
+
+    <dl class="flex flex-wrap gap-x-8 gap-y-2 text-[13px] text-ink/60">
+      {
+        duration && (
+          <div>
+            <dt class="label inline">{t('courses.duration')}: </dt>
+            <dd class="inline">{duration}</dd>
+          </div>
+        )
+      }
+      {
+        product.course?.capacity && (
+          <div>
+            <dt class="label inline">{t('courses.capacity')}: </dt>
+            <dd class="inline">max {product.course.capacity}</dd>
+          </div>
+        )
+      }
+      {
+        product.course?.level && (
+          <div>
+            <dt class="label inline">{t('courses.level')}: </dt>
+            <dd class="inline">{product.course.level}</dd>
+          </div>
+        )
+      }
+    </dl>
+
+    <div class="mt-auto flex flex-wrap items-center gap-3 pt-2">
+      {
+        nextDates.length > 0 ? (
+          nextDates.map((v) => {
+            const qty = v.quantityAvailable;
+            const low = typeof qty === 'number' && qty > 0 && qty < 4;
+            return (
+              <span class="border border-ink/25 px-3 py-1.5 text-[13px]">
+                {v.startsAt ? formatDateTime(v.startsAt, lang) : v.title}
+                {low && <span class="ml-2 text-brick">· {qty}</span>}
+              </span>
+            );
+          })
+        ) : (
+          <span class="text-[13px] text-ink/50">{t('courses.noDates')}</span>
+        )
+      }
+      {
+        open.length > nextDates.length && (
+          <span class="text-[13px] text-ink/50">+{open.length - nextDates.length}</span>
+        )
+      }
+    </div>
+
+    <a
+      href={href}
+      class="mt-2 inline-block self-start border border-ink px-6 py-3 text-[13px] tracking-widest transition-colors hover:bg-ink hover:text-cream"
+    >
+      {open.length > 0 ? t('courses.book') : t('courses.allCourses')}
+    </a>
+  </div>
+</article>

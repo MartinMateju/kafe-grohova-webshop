@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { allLangs, useTranslations, type Lang } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+
+const email = 'ahoj@kafegrohova.cz';
+const hours = lang === 'cs' ? 'pondělí—pátek  7:00—17:00' : 'Monday—Friday  7:00—17:00';
+const mapsUrl = 'https://maps.google.com/?q=Grohova+102/3,+602+00+Brno';
+---
+
+<BaseLayout title={t('contact.title')}>
+  <div class="flex flex-col gap-16 py-10 lg:py-20">
+    <header class="flex flex-col items-center gap-6 text-center">
+      <span class="label inline-block border border-brick/50 px-4 py-1 text-brick">
+        {t('contact.getInTouch')}
+      </span>
+      <h1 class="text-[40px] leading-none md:text-[72px] lg:text-[80px]">
+        {t('contact.lead')}
+        <em class="not-italic text-brick">{t('contact.leadEm')}</em>
+      </h1>
+      <p class="max-w-md text-[16px] leading-relaxed text-ink/60">
+        {t('contact.sub')}
+      </p>
+    </header>
+
+    <div class="mx-auto flex w-full max-w-5xl flex-col gap-12 md:flex-row md:gap-16">
+      {/* ── Form ────────────────────────────────────────────── */}
+      <form
+        class="flex w-full flex-col gap-7 border border-ink/10 p-6 md:w-3/5 md:p-10"
+        data-contact-form
+        data-email={email}
+      >
+        <label class="flex flex-col gap-2">
+          <span class="label text-ink/50">{t('contact.email')} *</span>
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="vy@example.com"
+            class="border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
+          />
+        </label>
+
+        <label class="flex flex-col gap-2">
+          <span class="label text-ink/50">{t('contact.subject')} *</span>
+          <input
+            type="text"
+            name="subject"
+            required
+            class="border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
+          />
+        </label>
+
+        <label class="flex flex-col gap-2">
+          <span class="label text-ink/50">{t('contact.message')} *</span>
+          <textarea
+            name="message"
+            required
+            rows="5"
+            class="resize-y border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
+          ></textarea>
+        </label>
+
+        <button
+          type="submit"
+          class="self-start border border-ink px-8 py-3 text-[13px] tracking-widest transition-colors hover:bg-ink hover:text-cream"
+        >
+          {t('contact.send')}
+        </button>
+
+        <p data-contact-sent hidden class="text-[14px] text-brick">
+          {t('contact.sent')}
+        </p>
+      </form>
+
+      {/* ── Details ─────────────────────────────────────────── */}
+      <aside class="flex w-full flex-col gap-8 md:w-2/5">
+        <div class="flex flex-col gap-2">
+          <h2 class="label text-ink/50">{t('contact.address')}</h2>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" class="text-[18px] hover:text-brick">
+            Grohova 102/3<br />602 00 Brno
+          </a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="label text-ink/50">{t('contact.openingHours')}</h2>
+          <p class="text-[18px]">{hours}</p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="label text-ink/50">E-mail</h2>
+          <a href={`mailto:${email}`} class="text-[18px] hover:text-brick">{email}</a>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="label text-ink/50">Instagram</h2>
+          <a
+            href="https://instagram.com/kafegrohova"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[18px] hover:text-brick"
+          >
+            @kafegrohova
+          </a>
+        </div>
+      </aside>
+    </div>
+
+    <section class="w-full overflow-hidden">
+      <img
+        src="/images/OLD03342.webp"
+        alt=""
+        loading="lazy"
+        class="h-[20rem] w-full object-cover object-center lg:h-[32rem]"
+      />
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  /**
+   * Static build, so there is no server to POST to. The form composes a
+   * mailto: draft — swap this for a Formspree/Basin endpoint (or a Shopify
+   * customer-form app) when you want submissions in an inbox automatically.
+   */
+  const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const to = form.dataset.email ?? '';
+    const subject = encodeURIComponent(String(data.get('subject') ?? ''));
+    const body = encodeURIComponent(
+      `${String(data.get('message') ?? '')}\n\n— ${String(data.get('email') ?? '')}`,
+    );
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    const sent = form.querySelector<HTMLElement>('[data-contact-sent]');
+    if (sent) sent.hidden = false;
+  });
+</script>

@@ -1,0 +1,62 @@
+---
+interface Props {
+  img: string;
+  title: string;
+  content: string;
+  /** Tailwind background utility, e.g. "bg-stone" */
+  bg?: string;
+  /** Put the image on the right instead of the left */
+  flip?: boolean;
+  href?: string;
+  cta?: string;
+}
+
+const {
+  img,
+  title,
+  content,
+  bg = 'bg-stone',
+  flip = false,
+  href,
+  cta,
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    'flex w-full h-auto mt-5 flex-col',
+    flip ? 'md:flex-row-reverse' : 'md:flex-row',
+  ]}
+>
+  <div class="md:w-1/2 w-full">
+    <img
+      src={img}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      class="w-full h-[60vw] md:h-[calc(50vw-20px)] object-cover"
+    />
+  </div>
+
+  <div
+    class:list={[
+      'flex md:w-1/2 w-full items-center justify-center md:pt-0 pt-5 pb-8 md:pb-0 px-6',
+      bg,
+    ]}
+  >
+    <div class="flex flex-col items-center w-full 2xl:w-[38rem] text-center">
+      <b class="text-[18px] lg:text-[24px] mb-6">{title}</b>
+      <b class="text-[16px] lg:text-[24px] font-normal">{content}</b>
+      {
+        href && cta && (
+          <a
+            href={href}
+            class="mt-8 border border-ink px-6 py-3 text-[14px] tracking-widest transition-colors hover:bg-ink hover:text-cream"
+          >
+            {cta}
+          </a>
+        )
+      }
+    </div>
+  </div>
+</div>

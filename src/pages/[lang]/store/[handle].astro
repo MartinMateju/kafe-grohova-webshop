@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AddToCart from '../../../components/AddToCart.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import {
+  allLangs,
+  localePath,
+  useTranslations,
+  type Lang,
+} from '../../../i18n/utils';
+import { getMerch, formatMoney, imageUrl, isCourse } from '../../../lib/shopify';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const lang of allLangs) {
+    const products = await getMerch(lang);
+    for (const product of products) {
+      paths.push({ params: { lang, handle: product.handle }, props: { product } });
+    }
+  }
+  return paths;
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { product } = Astro.props;
+
+const related = (await getMerch(lang))
+  .filter((p) => p.handle !== product.handle && !isCourse(p))
+  .slice(0, 4);
+
+const gallery = product.images.length ? product.images : product.featuredImage ? [product.featuredImage] : [];
+const price = formatMoney(product.priceRange.minVariantPrice, lang);
+---
+
+<BaseLayout
+  title={product.title}
+  description={product.description.slice(0, 160)}
+  image={imageUrl(product.featuredImage?.url, 1200)}
+>
+  <div class="mb-6 flex flex-col gap-12 pt-5 lg:pt-15">
+    <a
+      href={localePath(lang, '/store')}
+      class="text-[14px] text-ink/60 hover:text-brick transition-colors"
+    >
+      &lt; {t('product.back')}
+    </a>
+
+    <div class="flex w-full flex-col gap-8 md:flex-row md:gap-10">
+      {/* Gallery */}
+      <div class="flex w-full flex-col gap-3 md:w-1/2">
+        {
+          gallery.length ? (
+            gallery.map((image, index) => (
+              <img
+                src={imageUrl(image.url, 1200)}
+                alt={image.altText ?? product.title}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                class="h-[580px] w-full object-cover object-center lg:h-[650px]"
+              />
+            ))
+          ) : (
+            <div class="h-[580px] w-full bg-stone lg:h-[650px]" />
+          )
+        }
+      </div>
+
+      {/* Buy box */}
+      <div class="flex w-full flex-col gap-6 md:w-1/2 md:sticky md:top-6 md:self-start">
+        <div class="flex flex-col gap-2">
+          <h1 class="text-[26px] leading-tight lg:text-[36px]">{product.title}</h1>
+          <p class="text-[20px] lg:text-[24px]">{price}</p>
+        </div>
+
+        <AddToCart product={product} lang={lang} />
+
+        {
+          product.descriptionHtml && (
+            <div class="border-t border-ink/15 pt-6">
+              <h2 class="label mb-3 text-ink/60">{t('product.description')}</h2>
+              <div class="rte text-[16px] leading-relaxed lg:text-[18px]" set:html={product.descriptionHtml} />
+            </div>
+          )
+        }
+      </div>
+    </div>
+
+    {/* Related */}
+    {
+      related.length > 0 && (
+        <section class="flex flex-col gap-4 pt-6">
+          <h2 class="text-[18px] md:text-[24px]">{t('product.related')}</h2>
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {related.map((item) => (
+              <ProductCard product={item} lang={lang} soldOutLabel={t('product.soldOut')} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>

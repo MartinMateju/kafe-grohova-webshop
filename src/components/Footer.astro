@@ -1,0 +1,79 @@
+---
+import { getLangFromUrl, useTranslations, localePath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const links = [
+  { label: t('nav.store'), href: localePath(lang, '/store') },
+  { label: t('nav.courses'), href: localePath(lang, '/courses') },
+  { label: t('nav.blog'), href: localePath(lang, '/blog') },
+  { label: t('nav.contact'), href: localePath(lang, '/contact') },
+];
+
+const hours = lang === 'cs' ? 'po—pá  7—17' : 'Mon—Fri  7—17';
+const instagram = 'https://instagram.com/kafegrohova';
+---
+
+<footer class="w-full flex flex-col mt-16">
+  {/* ── DESKTOP ───────────────────────────────────────────────── */}
+  <div class="hidden md:flex flex-row w-full items-end justify-between px-0 py-4 gap-4">
+    <div class="flex flex-col gap-1 text-[15px] lg:text-[18px] min-w-fit">
+      {
+        links.map((l) => (
+          <a href={l.href} class="hover:text-brick transition-colors">
+            {l.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="flex flex-col gap-1 text-[15px] lg:text-[18px] min-w-fit">
+      <p>Grohova 102/3</p>
+      <p>602 00 Brno</p>
+      <p>{hours}</p>
+      <a href={instagram} target="_blank" rel="noopener noreferrer" class="hover:text-brick transition-colors">IG</a>
+    </div>
+
+    <div class="flex flex-row items-start gap-4 text-[15px] lg:text-[18px] px-6">
+      <p>{t('nav.sub2')}</p>
+      <p>{t('nav.sub1')}</p>
+    </div>
+
+    <p class="text-[40px] lg:text-[55px] xl:text-[65px] leading-none font-normal tracking-tight whitespace-nowrap">
+      KAFE GROHOVA
+    </p>
+  </div>
+
+  {/* ── MOBILE ────────────────────────────────────────────────── */}
+  <div class="w-full border border-ink md:hidden block">
+    <div class="grid grid-cols-2 border-b border-ink">
+      <div class="flex flex-col gap-1 p-4 border-r border-ink text-[14px]">
+        {
+          links.map((l) => (
+            <a href={l.href} class="hover:text-brick transition-colors">
+              {l.label}
+            </a>
+          ))
+        }
+      </div>
+
+      <div class="flex flex-col gap-1 p-4 text-[14px]">
+        <p>Grohova 102/3</p>
+        <p>602 00 Brno</p>
+        <p>{hours}</p>
+        <a href={instagram} target="_blank" rel="noopener noreferrer" class="hover:text-brick transition-colors">IG</a>
+      </div>
+    </div>
+
+    <div class="flex flex-row justify-between items-end border-b border-ink px-4 py-2">
+      <p class="text-[48px] leading-none font-normal tracking-tight">KAFE</p>
+      <p class="text-[48px] leading-none font-normal tracking-tight">GROHOVA</p>
+    </div>
+
+    <div class="flex flex-row justify-center items-center gap-4 px-4 py-3 text-[13px]">
+      <p>{t('nav.sub2')}</p>
+      <p>{t('nav.sub1')}</p>
+    </div>
+  </div>
+</footer>
