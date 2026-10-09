@@ -1,4 +1,7 @@
 ---
+import { safeScriptJson } from '../lib/safeScriptJson';
+import { isFutureCourseDate } from '../lib/courseAvailability';
+import { isMockMode } from '../lib/shopify/config';
 import type { Product } from '../lib/shopify';
 import { formatDateTime, formatMoney, imageUrl } from '../lib/shopify';
 import { useTranslations, localePath, type Lang } from '../i18n/utils';
@@ -23,7 +26,7 @@ const dates = product.variants
   .map((v) => ({
     id: v.id,
     title: v.title,
-    available: v.availableForSale,
+    available: v.availableForSale && isFutureCourseDate(v.startsAt) && (v.quantityAvailable === null || v.quantityAvailable > 0),
     seats: v.quantityAvailable,
     startsAt: v.startsAt,
     label: v.startsAt ? formatDateTime(v.startsAt, lang) : v.title,
@@ -50,6 +53,13 @@ const labels = {
   adding: t('product.adding'),
   added: t('product.added'),
   soldOut: t('courses.soldOut'),
+  unavailable: t('courses.unavailable'),
+  loading: t('common.loading'),
+  availabilityError: t('product.availabilityError'),
+  retry: t('product.retry'),
+  seat: t('courses.seatLeft'),
+  seats2: t('courses.seatsLeft2'),
+  seats: t('courses.seatsLeft'),
 };
 ---
 
@@ -75,7 +85,7 @@ const labels = {
             <button
               type="button"
               data-date={date.id}
-              disabled={!date.available}
+              disabled={!isMockMode || !date.available}
               aria-pressed={date.id === firstAvailable?.id ? 'true' : 'false'}
               class:list={[
                 'flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors',
@@ -85,16 +95,16 @@ const labels = {
               ]}
             >
               <span class="flex flex-col gap-0.5">
-                <span class="text-[16px] md:text-[18px]">{date.label}</span>
-                <span class="text-[12px] opacity-70">
+                <span data-date-label class="text-[16px] md:text-[18px]">{date.label}</span>
+                <span data-date-stock class="text-[12px] opacity-70">
                   {date.available
                     ? typeof date.seats === 'number'
                       ? `${date.seats} ${seatWord(date.seats)}`
                       : ''
-                    : t('courses.soldOut')}
+                    : isFutureCourseDate(date.startsAt) ? labels.soldOut : labels.unavailable}
                 </span>
               </span>
-              <span class="whitespace-nowrap text-[15px]">{date.priceLabel}</span>
+              <span data-date-price class="whitespace-nowrap text-[15px]">{date.priceLabel}</span>
             </button>
           </li>
         ))
@@ -126,114 +136,156 @@ const labels = {
         <button
           type="button"
           data-book
-          disabled={!anyAvailable}
+          disabled={!isMockMode || !anyAvailable}
           class="flex-1 min-w-[12rem] border border-ink bg-brick px-6 py-3 tracking-widest text-cream transition-colors hover:bg-ink disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {anyAvailable ? labels.book : labels.soldOut}
+          {!isMockMode ? labels.loading : anyAvailable ? labels.book : labels.soldOut}
         </button>
       </div>
     )
   }
+  <p data-availability-error role="alert" class="text-[13px] text-brick" hidden></p>
+  <button type="button" data-retry class="self-start text-brick underline" hidden>{labels.retry}</button>
 </div>
 
 <script
   is:inline
   type="application/json"
   data-course-booking-data
-  set:html={JSON.stringify({ dates, snapshotBase, labels })}
+  set:html={safeScriptJson({ dates, snapshotBase, labels, lang })}
 />
 
 <script>
-  import { addLine } from '../lib/cart';
+  import { addLine, isMockMode } from '../lib/cart';
+  import { getProduct, formatMoney, formatDateTime } from '../lib/shopify';
+  import { isFutureCourseDate } from '../lib/courseAvailability';
 
   const root = document.querySelector<HTMLElement>('[data-course-booking]');
-  const dataEl = document.querySelector<HTMLScriptElement>(
-    '[data-course-booking-data]',
-  );
+  const dataEl = document.querySelector<HTMLScriptElement>('[data-course-booking-data]');
 
   if (root && dataEl) {
-    const { dates, snapshotBase, labels } = JSON.parse(dataEl.textContent!);
-
+    const data = JSON.parse(dataEl.textContent!);
+    const { snapshotBase, labels, lang } = data;
+    let dates = data.dates;
     const seatsInput = root.querySelector<HTMLInputElement>('[data-seats]');
     const bookBtn = root.querySelector<HTMLButtonElement>('[data-book]');
-    const dateBtns = Array.from(
-      root.querySelectorAll<HTMLButtonElement>('[data-date]'),
-    );
-
-    let selected = dates.find((d: any) => d.available) ?? null;
+    const errorEl = root.querySelector<HTMLElement>('[data-availability-error]')!;
+    const retryBtn = root.querySelector<HTMLButtonElement>('[data-retry]')!;
+    const dateBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-date]'));
+    const bookable = (date: any) => date?.available && isFutureCourseDate(date.startsAt) &&
+      (date.seats === null || date.seats > 0);
+    let selected = dates.find(bookable) ?? null;
+    let ready = isMockMode;
+    let busy = false;
 
     const clampSeats = () => {
       if (!seatsInput) return 1;
-      let n = Number.parseInt(seatsInput.value, 10);
-      if (!Number.isFinite(n) || n < 1) n = 1;
-      const max =
-        typeof selected?.seats === 'number' && selected.seats > 0
-          ? selected.seats
-          : 99;
-      if (n > max) n = max;
+      const max = typeof selected?.seats === 'number' ? Math.max(1, Math.min(99, selected.seats)) : 99;
+      const n = Math.max(1, Math.min(max, Math.floor(Number(seatsInput.value)) || 1));
+      seatsInput.max = String(max);
       seatsInput.value = String(n);
       return n;
     };
 
     const syncUI = () => {
-      dateBtns.forEach((btn) =>
-        btn.setAttribute('aria-pressed', String(btn.dataset.date === selected?.id)),
-      );
+      if (!bookable(selected)) selected = dates.find(bookable) ?? null;
+      dateBtns.forEach((btn) => {
+        const date = dates.find((d: any) => d.id === btn.dataset.date);
+        btn.disabled = busy || !ready || !bookable(date);
+        btn.classList.toggle('text-ink/35', !bookable(date));
+        btn.setAttribute('aria-pressed', String(btn.dataset.date === selected?.id));
+        if (!date) return;
+        btn.querySelector<HTMLElement>('[data-date-label]')!.textContent = date.label;
+        btn.querySelector<HTMLElement>('[data-date-price]')!.textContent = date.priceLabel;
+        const stock = btn.querySelector<HTMLElement>('[data-date-stock]')!;
+        const word = date.seats === 1 ? labels.seat : lang === 'cs' && date.seats >= 2 && date.seats <= 4 ? labels.seats2 : labels.seats;
+        stock.textContent = !isFutureCourseDate(date.startsAt) ? labels.unavailable
+          : !date.available ? labels.soldOut : !ready ? labels.loading
+          : typeof date.seats === 'number' ? `${date.seats} ${word}` : '';
+      });
+      const available = ready && bookable(selected);
       if (bookBtn) {
-        bookBtn.disabled = !selected?.available;
-        bookBtn.textContent = selected?.available ? labels.book : labels.soldOut;
+        bookBtn.disabled = busy || !available;
+        bookBtn.textContent = busy ? labels.adding : !ready ? labels.loading : available ? labels.book : labels.soldOut;
       }
+      if (seatsInput) seatsInput.disabled = busy || !available;
+      root.querySelectorAll<HTMLButtonElement>('[data-seat-up], [data-seat-down]').forEach((button) => {
+        button.disabled = busy || !available;
+      });
       clampSeats();
     };
 
+    const refreshAvailability = async () => {
+      if (isMockMode) return;
+      ready = false;
+      errorEl.hidden = true;
+      retryBtn.hidden = true;
+      syncUI();
+      try {
+        const product = await getProduct(snapshotBase.productHandle, lang);
+        dates = dates.map((previous: any) => {
+          const current = product?.variants.find((variant) => variant.id === previous.id);
+          return current ? {
+            id: current.id, title: current.title, available: current.availableForSale,
+            seats: current.quantityAvailable, startsAt: current.startsAt,
+            label: current.startsAt ? formatDateTime(current.startsAt, lang) || current.title : current.title,
+            amount: current.price.amount, currencyCode: current.price.currencyCode,
+            priceLabel: formatMoney(current.price, lang),
+          } : { ...previous, available: false };
+        });
+        selected = dates.find((date: any) => date.id === selected?.id && bookable(date))
+          ?? dates.find(bookable) ?? null;
+        ready = true;
+      } catch {
+        errorEl.textContent = labels.availabilityError;
+        errorEl.hidden = false;
+        retryBtn.hidden = false;
+      }
+      syncUI();
+    };
+
+    retryBtn.addEventListener('click', () => { void refreshAvailability(); });
     dateBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
-        const match = dates.find((d: any) => d.id === btn.dataset.date);
-        if (match?.available) {
-          selected = match;
-          syncUI();
-        }
+        if (busy || !ready) return;
+        const match = dates.find((date: any) => date.id === btn.dataset.date);
+        if (bookable(match)) { selected = match; syncUI(); }
       });
     });
-
     root.querySelector('[data-seat-up]')?.addEventListener('click', () => {
-      if (!seatsInput) return;
-      seatsInput.value = String(clampSeats() + 1);
-      clampSeats();
+      if (seatsInput) { seatsInput.value = String(clampSeats() + 1); clampSeats(); }
     });
     root.querySelector('[data-seat-down]')?.addEventListener('click', () => {
-      if (!seatsInput) return;
-      seatsInput.value = String(Math.max(1, clampSeats() - 1));
+      if (seatsInput) seatsInput.value = String(Math.max(1, clampSeats() - 1));
     });
     seatsInput?.addEventListener('change', clampSeats);
 
     bookBtn?.addEventListener('click', async () => {
-      if (!selected) return;
-      const original = bookBtn.textContent;
-      bookBtn.disabled = true;
-      bookBtn.textContent = labels.adding;
-      try {
-        await addLine(
-          {
-            ...snapshotBase,
-            merchandiseId: selected.id,
-            variantTitle: selected.label,
-            amount: selected.amount,
-            currencyCode: selected.currencyCode,
-          },
-          clampSeats(),
-        );
+      // Recheck at the actual click, even if the static page was left open overnight.
+      if (busy || !ready || !bookable(selected)) { syncUI(); return; }
+      busy = true;
+      syncUI();
+      const success = await addLine({
+        ...snapshotBase, merchandiseId: selected.id, variantTitle: selected.label,
+        amount: selected.amount, currencyCode: selected.currencyCode,
+        quantityAvailable: selected.seats, startsAt: selected.startsAt,
+      }, clampSeats());
+      if (success) {
+        busy = false;
+        syncUI();
         bookBtn.textContent = labels.added;
-        window.setTimeout(() => {
-          bookBtn.textContent = original;
-          bookBtn.disabled = false;
-        }, 1400);
-      } catch {
-        bookBtn.textContent = original;
-        bookBtn.disabled = false;
+        window.setTimeout(() => { if (!busy) syncUI(); }, 1400);
+      } else {
+        busy = false;
+        syncUI();
       }
     });
 
     syncUI();
+    void refreshAvailability();
+    window.setInterval(() => { if (!busy) syncUI(); }, 30_000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !busy) syncUI();
+    });
   }
 </script>

@@ -91,6 +91,8 @@ export interface CartLine {
   productTitle: string;
   variantTitle: string;
   productHandle: string;
+  /** Present for course lines; null means required scheduling data is missing. */
+  courseStartsAt?: string | null;
   image: ShopImage | null;
   unitPrice: Money;
   totalAmount: Money;

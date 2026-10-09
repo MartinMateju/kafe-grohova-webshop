@@ -115,17 +115,29 @@ export function normalizeArticle(raw: Raw): Article {
 }
 
 export function normalizeCart(raw: Raw): Cart {
-  const lines: CartLine[] = (raw.lines?.nodes ?? []).map((line: Raw) => ({
-    id: line.id,
-    quantity: line.quantity,
-    merchandiseId: line.merchandise?.id,
-    productTitle: line.merchandise?.product?.title ?? '',
-    variantTitle: line.merchandise?.title ?? '',
-    productHandle: line.merchandise?.product?.handle ?? '',
-    image: image(line.merchandise?.image),
-    unitPrice: line.cost?.amountPerQuantity,
-    totalAmount: line.cost?.totalAmount,
-  }));
+  if (raw.lines?.pageInfo?.hasNextPage) {
+    throw new Error('This cart contains more than 250 different items. Please complete it in Shopify checkout or start a smaller cart.');
+  }
+  const lines: CartLine[] = (raw.lines?.nodes ?? []).map((line: Raw) => {
+    const variant = line.merchandise;
+    const product = variant?.product;
+    const courseStartsAt = metafieldValue(variant?.startsAt);
+    const isCourse = product?.productType?.toLowerCase() === 'course' ||
+      product?.tags?.some((tag: string) => tag.toLowerCase() === 'course') ||
+      courseStartsAt !== null || metafieldValue(product?.courseDuration) !== null;
+    return {
+      id: line.id,
+      quantity: line.quantity,
+      merchandiseId: line.merchandise?.id,
+      productTitle: line.merchandise?.product?.title ?? '',
+      variantTitle: line.merchandise?.title ?? '',
+      productHandle: line.merchandise?.product?.handle ?? '',
+      ...(isCourse ? { courseStartsAt } : {}),
+      image: image(line.merchandise?.image),
+      unitPrice: line.cost?.amountPerQuantity,
+      totalAmount: line.cost?.totalAmount,
+    };
+  });
 
   return {
     id: raw.id,

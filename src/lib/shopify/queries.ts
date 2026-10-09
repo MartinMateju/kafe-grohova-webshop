@@ -70,7 +70,8 @@ export const PRODUCT_FRAGMENT = /* GraphQL */ `
         currencyCode
       }
     }
-    variants(first: 100) {
+    variants(first: 50) {
+      pageInfo { hasNextPage endCursor }
       nodes {
         ...VariantFields
       }
@@ -97,8 +98,9 @@ export const COLLECTION_QUERY = /* GraphQL */ `
   query CollectionByHandle(
     $handle: String!
     $first: Int!
+    $after: String
     $language: LanguageCode
-  ) @inContext(language: $language) {
+  ) @inContext(language: $language, country: CZ) {
     collection(handle: $handle) {
       id
       handle
@@ -107,7 +109,8 @@ export const COLLECTION_QUERY = /* GraphQL */ `
       image {
         ...ImageFields
       }
-      products(first: $first) {
+      products(first: $first, after: $after) {
+        pageInfo { hasNextPage endCursor }
         nodes {
           ...ProductFields
         }
@@ -121,9 +124,23 @@ export const PRODUCT_QUERY = /* GraphQL */ `
   ${VARIANT_FRAGMENT}
   ${PRODUCT_FRAGMENT}
   query ProductByHandle($handle: String!, $language: LanguageCode)
-  @inContext(language: $language) {
+  @inContext(language: $language, country: CZ) {
     product(handle: $handle) {
       ...ProductFields
+    }
+  }
+`;
+
+export const PRODUCT_VARIANTS_QUERY = /* GraphQL */ `
+  ${IMAGE_FRAGMENT}
+  ${VARIANT_FRAGMENT}
+  query ProductVariants($handle: String!, $after: String, $language: LanguageCode)
+  @inContext(language: $language, country: CZ) {
+    product(handle: $handle) {
+      variants(first: 100, after: $after) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ...VariantFields }
+      }
     }
   }
 `;
@@ -132,9 +149,10 @@ export const ALL_PRODUCTS_QUERY = /* GraphQL */ `
   ${IMAGE_FRAGMENT}
   ${VARIANT_FRAGMENT}
   ${PRODUCT_FRAGMENT}
-  query AllProducts($first: Int!, $language: LanguageCode)
-  @inContext(language: $language) {
-    products(first: $first, sortKey: BEST_SELLING) {
+  query AllProducts($first: Int!, $after: String, $language: LanguageCode)
+  @inContext(language: $language, country: CZ) {
+    products(first: $first, after: $after, sortKey: BEST_SELLING) {
+      pageInfo { hasNextPage endCursor }
       nodes {
         ...ProductFields
       }
@@ -144,10 +162,11 @@ export const ALL_PRODUCTS_QUERY = /* GraphQL */ `
 
 export const ARTICLES_QUERY = /* GraphQL */ `
   ${IMAGE_FRAGMENT}
-  query Articles($handle: String!, $first: Int!, $language: LanguageCode)
+  query Articles($handle: String!, $first: Int!, $after: String, $language: LanguageCode)
   @inContext(language: $language) {
     blog(handle: $handle) {
-      articles(first: $first, sortKey: PUBLISHED_AT, reverse: true) {
+      articles(first: $first, after: $after, sortKey: PUBLISHED_AT, reverse: true) {
+        pageInfo { hasNextPage endCursor }
         nodes {
           id
           handle
@@ -207,7 +226,8 @@ export const CART_FRAGMENT = /* GraphQL */ `
         currencyCode
       }
     }
-    lines(first: 100) {
+    lines(first: 250) {
+      pageInfo { hasNextPage }
       nodes {
         id
         quantity
@@ -225,6 +245,7 @@ export const CART_FRAGMENT = /* GraphQL */ `
           ... on ProductVariant {
             id
             title
+            startsAt: metafield(namespace: "course", key: "starts_at") { value }
             image {
               url
               altText
@@ -234,6 +255,9 @@ export const CART_FRAGMENT = /* GraphQL */ `
             product {
               title
               handle
+              productType
+              tags
+              courseDuration: metafield(namespace: "course", key: "duration_minutes") { value }
             }
           }
         }
@@ -244,22 +268,26 @@ export const CART_FRAGMENT = /* GraphQL */ `
 
 export const CART_CREATE = /* GraphQL */ `
   ${CART_FRAGMENT}
-  mutation CartCreate($lines: [CartLineInput!]) {
-    cartCreate(input: { lines: $lines }) {
+  mutation CartCreate($lines: [CartLineInput!], $language: LanguageCode)
+  @inContext(language: $language) {
+    cartCreate(input: { lines: $lines, buyerIdentity: { countryCode: CZ } }) {
       cart {
         ...CartFields
       }
       userErrors {
+        code
         field
         message
       }
+      warnings { code message target }
     }
   }
 `;
 
 export const CART_QUERY = /* GraphQL */ `
   ${CART_FRAGMENT}
-  query CartQuery($id: ID!) {
+  query CartQuery($id: ID!, $language: LanguageCode)
+  @inContext(language: $language) {
     cart(id: $id) {
       ...CartFields
     }
@@ -268,45 +296,54 @@ export const CART_QUERY = /* GraphQL */ `
 
 export const CART_LINES_ADD = /* GraphQL */ `
   ${CART_FRAGMENT}
-  mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+  mutation CartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!, $language: LanguageCode)
+  @inContext(language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFields
       }
       userErrors {
+        code
         field
         message
       }
+      warnings { code message target }
     }
   }
 `;
 
 export const CART_LINES_UPDATE = /* GraphQL */ `
   ${CART_FRAGMENT}
-  mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+  mutation CartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $language: LanguageCode)
+  @inContext(language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFields
       }
       userErrors {
+        code
         field
         message
       }
+      warnings { code message target }
     }
   }
 `;
 
 export const CART_LINES_REMOVE = /* GraphQL */ `
   ${CART_FRAGMENT}
-  mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+  mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $language: LanguageCode)
+  @inContext(language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
         ...CartFields
       }
       userErrors {
+        code
         field
         message
       }
+      warnings { code message target }
     }
   }
 `;

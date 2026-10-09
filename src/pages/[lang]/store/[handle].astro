@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { localizedPaths } from '../../../i18n/paths';
 import AddToCart from '../../../components/AddToCart.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import {
-  allLangs,
   localePath,
   useTranslations,
   type Lang,
@@ -11,19 +11,12 @@ import {
 import { getMerch, formatMoney, imageUrl, isCourse } from '../../../lib/shopify';
 
 export async function getStaticPaths() {
-  const paths = [];
-  for (const lang of allLangs) {
-    const products = await getMerch(lang);
-    for (const product of products) {
-      paths.push({ params: { lang, handle: product.handle }, props: { product } });
-    }
-  }
-  return paths;
+  return localizedPaths(getMerch, 'store');
 }
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-const { product } = Astro.props;
+const { item: product, alternatePaths } = Astro.props;
 
 const related = (await getMerch(lang))
   .filter((p) => p.handle !== product.handle && !isCourse(p))
@@ -34,6 +27,7 @@ const price = formatMoney(product.priceRange.minVariantPrice, lang);
 ---
 
 <BaseLayout
+  alternatePaths={alternatePaths}
   title={product.title}
   description={product.description.slice(0, 160)}
   image={imageUrl(product.featuredImage?.url, 1200)}
@@ -69,7 +63,7 @@ const price = formatMoney(product.priceRange.minVariantPrice, lang);
       <div class="flex w-full flex-col gap-6 md:w-1/2 md:sticky md:top-6 md:self-start">
         <div class="flex flex-col gap-2">
           <h1 class="text-[26px] leading-tight lg:text-[36px]">{product.title}</h1>
-          <p class="text-[20px] lg:text-[24px]">{price}</p>
+          <p data-product-price class="text-[20px] lg:text-[24px]" aria-live="polite">{price}</p>
         </div>
 
         <AddToCart product={product} lang={lang} />

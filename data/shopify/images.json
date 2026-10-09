@@ -1,0 +1,108 @@
+[
+  {
+    "handle": "espresso-zaklady",
+    "images": [
+      {
+        "path": "public/images/OLD03346.webp",
+        "altText": "Barista pulling espresso"
+      },
+      {
+        "path": "public/images/OLD03361.webp",
+        "altText": "Espresso machine group head"
+      }
+    ]
+  },
+  {
+    "handle": "latte-art",
+    "images": [
+      {
+        "path": "public/images/OLD03354.webp",
+        "altText": "Latte art being poured"
+      }
+    ]
+  },
+  {
+    "handle": "filtrovana-kava",
+    "images": [
+      {
+        "path": "public/images/OLD03329.webp",
+        "altText": "Pour over brewing"
+      }
+    ]
+  },
+  {
+    "handle": "filtro",
+    "images": [
+      {
+        "path": "public/filtro2.webp",
+        "altText": "Bag of filter coffee"
+      }
+    ]
+  },
+  {
+    "handle": "competicion",
+    "images": [
+      {
+        "path": "public/competicion2.webp",
+        "altText": "Competition roast coffee bag"
+      }
+    ]
+  },
+  {
+    "handle": "camiseta",
+    "images": [
+      {
+        "path": "public/camiseta.webp",
+        "altText": "Kafe Grohova t-shirt"
+      },
+      {
+        "path": "public/camiseta22.webp",
+        "altText": "Kafe Grohova t-shirt"
+      }
+    ]
+  },
+  {
+    "handle": "taza-ceramica",
+    "images": [
+      {
+        "path": "public/images/taza-ceremical.webp",
+        "altText": "Sample ceramic cup"
+      },
+      {
+        "path": "public/ceramic.webp",
+        "altText": "Sample ceramic cup"
+      }
+    ]
+  },
+  {
+    "handle": "taza-espresso",
+    "images": [
+      {
+        "path": "public/images/taze.webp",
+        "altText": "Sample espresso cup"
+      }
+    ]
+  },
+  {
+    "handle": "camiseta-totxres",
+    "images": [
+      {
+        "path": "public/images/camiseta2.webp",
+        "altText": "Totxres t-shirt"
+      },
+      {
+        "path": "public/images/camiseta-text.webp",
+        "altText": "Totxres t-shirt"
+      }
+    ]
+  },
+  {
+    "handle": "tote",
+    "images": [
+      {
+        "path": "public/nomad.webp",
+        "altText": "Canvas tote bag"
+      }
+    ]
+  }
+]

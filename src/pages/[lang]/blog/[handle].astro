@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { localizedPaths } from '../../../i18n/paths';
 import {
-  allLangs,
   localePath,
   useTranslations,
   type Lang,
@@ -9,19 +9,12 @@ import {
 import { getArticles, formatDate, imageUrl } from '../../../lib/shopify';
 
 export async function getStaticPaths() {
-  const paths = [];
-  for (const lang of allLangs) {
-    const articles = await getArticles(lang);
-    for (const article of articles) {
-      paths.push({ params: { lang, handle: article.handle }, props: { article } });
-    }
-  }
-  return paths;
+  return localizedPaths(getArticles, 'blog');
 }
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-const { article } = Astro.props;
+const { item: article, alternatePaths } = Astro.props;
 
 const hero = imageUrl(article.image?.url, 1600);
 const others = (await getArticles(lang))
@@ -30,6 +23,7 @@ const others = (await getArticles(lang))
 ---
 
 <BaseLayout
+  alternatePaths={alternatePaths}
   title={article.title}
   description={article.excerpt.slice(0, 160)}
   image={hero}

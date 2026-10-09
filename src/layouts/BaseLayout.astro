@@ -5,15 +5,17 @@ import Footer from '../components/Footer.astro';
 import CartDrawer from '../components/CartDrawer.astro';
 import { getLangFromUrl, useTranslations, switchLocalePath } from '../i18n/utils';
 import { isMockMode } from '../lib/shopify/config';
+import { safeScriptJson } from '../lib/safeScriptJson';
 
 interface Props {
   title?: string;
   description?: string;
   /** Optional OG image URL */
   image?: string;
+  alternatePaths?: Partial<Record<'cs' | 'en', string>>;
 }
 
-const { title, description, image } = Astro.props;
+const { title, description, image, alternatePaths } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -27,8 +29,8 @@ const pageDescription =
     : 'Espresso bar and store on Grohova in Brno. Specialty coffee, handmade ceramics and barista courses.');
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
-const csHref = new URL(switchLocalePath(Astro.url, 'cs'), canonical);
-const enHref = new URL(switchLocalePath(Astro.url, 'en'), canonical);
+const csHref = new URL(alternatePaths?.cs ?? switchLocalePath(Astro.url, 'cs'), canonical);
+const enHref = new URL(alternatePaths?.en ?? switchLocalePath(Astro.url, 'en'), canonical);
 const ogLocale = lang === 'cs' ? 'cs_CZ' : 'en_US';
 const ogLocaleAlt = lang === 'cs' ? 'en_US' : 'cs_CZ';
 
@@ -70,6 +72,7 @@ const localBusiness = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
+    {isMockMode && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical.href} />
     <link rel="alternate" hreflang="cs" href={csHref.href} />
     <link rel="alternate" hreflang="en" href={enHref.href} />
@@ -92,12 +95,13 @@ const localBusiness = {
     {image && <meta property="og:image" content={image} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#FDEDC3" />
-    <script type="application/ld+json" is:inline set:html={JSON.stringify(localBusiness)} />
+    <script type="application/ld+json" is:inline set:html={safeScriptJson(localBusiness)} />
   </head>
 
   <body class="antialiased p-3 bg-cream text-ink min-h-screen w-full">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-cream focus:p-3">{t('common.skip')}</a>
     <div class="container">
-      <Navbar />
+      <Navbar alternatePaths={alternatePaths} />
       <main id="main">
         <slot />
       </main>
