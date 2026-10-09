@@ -3,14 +3,22 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Headless Astro storefront for Kafe Grohova \u2014 barista courses and merchandise, powered by Shopify",
+  "description": "Headless Astro storefront for Kafe Grohova — barista courses and merchandise, powered by Shopify",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "tsx --test tests/*.test.ts src/lib/shopify/shopify.test.mjs",
+    "test:e2e": "playwright test",
+    "catalog:generate": "node scripts/generate-demo-catalog.mjs",
+    "shopify:verify": "tsx scripts/verify-shopify.ts",
+    "validate": "npm run check && npm test && npm run build",
     "astro": "astro"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
@@ -20,7 +28,9 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.64.0",
     "sharp": "^0.35.3",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   },
   "overrides": {

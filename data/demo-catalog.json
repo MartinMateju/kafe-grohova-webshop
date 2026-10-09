@@ -1,0 +1,819 @@
+{
+  "currency": "CZK",
+  "timezone": "Europe/Prague",
+  "products": [
+    {
+      "id": "gid://shopify/Product/mock-course-espresso",
+      "handle": "espresso-zaklady",
+      "title": {
+        "cs": "ESPRESSO — ZÁKLADY",
+        "en": "ESPRESSO — FUNDAMENTALS"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový čtyřhodinový kurz přípravy espressa. Procvičíte mletí, dávkování, pěchování a posuzování extrakce.</p>",
+        "en": "<p>A sample four-hour espresso class covering grinding, dosing, tamping and evaluating extraction.</p>"
+      },
+      "productType": "Course",
+      "tags": [
+        "course",
+        "espresso",
+        "beginner",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/OLD03346.webp",
+          "altText": "Barista pulling espresso",
+          "width": null,
+          "height": null
+        },
+        {
+          "url": "/images/OLD03361.webp",
+          "altText": "Espresso machine group head",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Termín",
+        "en": "Date"
+      },
+      "course": {
+        "durationMinutes": 240,
+        "capacity": 4,
+        "level": {
+          "cs": "Začátečník",
+          "en": "Beginner"
+        },
+        "syllabus": {
+          "cs": [
+            "Jak poznat čerstvě praženou kávu a co znamenají údaje na sáčku",
+            "Mletí — proč je to nejdůležitější proměnná",
+            "Dávkování, distribuce a temper",
+            "Čtení extrakce: čas, váha, chuť",
+            "Základní údržba pákového kávovaru"
+          ],
+          "en": [
+            "How to spot freshly roasted coffee and read the bag",
+            "Grinding — why it is the variable that matters most",
+            "Dosing, distribution and tamping",
+            "Reading an extraction: time, weight, taste",
+            "Basic espresso machine maintenance"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-e1",
+          "sku": "DEMO-ESPRESSO-ZAKLADY-1",
+          "price": 2200,
+          "quantity": 3,
+          "value": null,
+          "offsetDays": 7,
+          "localHour": 10
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-e2",
+          "sku": "DEMO-ESPRESSO-ZAKLADY-2",
+          "price": 2200,
+          "quantity": 1,
+          "value": null,
+          "offsetDays": 14,
+          "localHour": 10
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-e3",
+          "sku": "DEMO-ESPRESSO-ZAKLADY-3",
+          "price": 2200,
+          "quantity": 4,
+          "value": null,
+          "offsetDays": 21,
+          "localHour": 14
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-e4",
+          "sku": "DEMO-ESPRESSO-ZAKLADY-4",
+          "price": 2200,
+          "quantity": 0,
+          "value": null,
+          "offsetDays": 28,
+          "localHour": 10
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-course-milk",
+      "handle": "latte-art",
+      "title": {
+        "cs": "LATTE ART",
+        "en": "LATTE ART"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový tříhodinový kurz napěňování mléka a nalévání základních vzorů. Pro účastníky se základy přípravy espressa.</p>",
+        "en": "<p>A sample three-hour class on steaming milk and pouring simple patterns. Designed for people familiar with espresso basics.</p>"
+      },
+      "productType": "Course",
+      "tags": [
+        "course",
+        "milk",
+        "intermediate",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/OLD03354.webp",
+          "altText": "Latte art being poured",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Termín",
+        "en": "Date"
+      },
+      "course": {
+        "durationMinutes": 180,
+        "capacity": 6,
+        "level": {
+          "cs": "Mírně pokročilý",
+          "en": "Intermediate"
+        },
+        "syllabus": {
+          "cs": [
+            "Výběr mléka a rostlinných alternativ",
+            "Textura: kdy přestat napěňovat",
+            "Teplota a proč na ní záleží",
+            "Nalévání: srdce, rozeta, tulipán",
+            "Údržba trysky"
+          ],
+          "en": [
+            "Choosing dairy and plant alternatives",
+            "Texture: when to stop stretching",
+            "Temperature and why it matters",
+            "Pouring: heart, rosetta, tulip",
+            "Steam wand maintenance"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-m1",
+          "sku": "DEMO-LATTE-ART-1",
+          "price": 1800,
+          "quantity": 5,
+          "value": null,
+          "offsetDays": 10,
+          "localHour": 17
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-m2",
+          "sku": "DEMO-LATTE-ART-2",
+          "price": 1800,
+          "quantity": 2,
+          "value": null,
+          "offsetDays": 24,
+          "localHour": 17
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-course-filter",
+      "handle": "filtrovana-kava",
+      "title": {
+        "cs": "FILTROVANÁ KÁVA DOMA",
+        "en": "FILTER COFFEE AT HOME"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový tříhodinový kurz domácí přípravy kávy. Vyzkoušíte V60, Aeropress a French press.</p>",
+        "en": "<p>A sample three-hour home brewing class with V60, Aeropress and French press.</p>"
+      },
+      "productType": "Course",
+      "tags": [
+        "course",
+        "filter",
+        "beginner",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/OLD03329.webp",
+          "altText": "Pour over brewing",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Termín",
+        "en": "Date"
+      },
+      "course": {
+        "durationMinutes": 180,
+        "capacity": 8,
+        "level": {
+          "cs": "Začátečník",
+          "en": "Beginner"
+        },
+        "syllabus": {
+          "cs": [
+            "Voda — nejpodceňovanější ingredience",
+            "Poměr kávy a vody",
+            "V60: technika nalévání",
+            "Aeropress: rychlé recepty",
+            "French press bez kalu"
+          ],
+          "en": [
+            "Water — the most underrated ingredient",
+            "Coffee-to-water ratio",
+            "V60: pouring technique",
+            "Aeropress: fast recipes",
+            "French press without the sludge"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-f1",
+          "sku": "DEMO-FILTROVANA-KAVA-1",
+          "price": 1500,
+          "quantity": 6,
+          "value": null,
+          "offsetDays": 5,
+          "localHour": 15
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-f2",
+          "sku": "DEMO-FILTROVANA-KAVA-2",
+          "price": 1500,
+          "quantity": 6,
+          "value": null,
+          "offsetDays": 19,
+          "localHour": 15
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-f3",
+          "sku": "DEMO-FILTROVANA-KAVA-3",
+          "price": 1500,
+          "quantity": 6,
+          "value": null,
+          "offsetDays": 33,
+          "localHour": 15
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-filtro",
+      "handle": "filtro",
+      "title": {
+        "cs": "FILTRO",
+        "en": "FILTRO"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázková zrnková káva na filtr, balení 250 g. Původ a chuťový profil doplňte podle skutečné nabídky.</p>",
+        "en": "<p>Sample whole-bean filter coffee, 250 g. Replace with the actual origin and tasting notes.</p>"
+      },
+      "productType": "Coffee",
+      "tags": [
+        "coffee",
+        "filter",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/filtro2.webp",
+          "altText": "Bag of filter coffee",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 250,
+      "optionName": {
+        "cs": "Title",
+        "en": "Title"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-filtro",
+          "sku": "DEMO-FILTRO-1",
+          "price": 420,
+          "quantity": 24,
+          "value": {
+            "cs": "Default Title",
+            "en": "Default Title"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-competicion",
+      "handle": "competicion",
+      "title": {
+        "cs": "COMPETICIÓN",
+        "en": "COMPETICIÓN"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázková zrnková káva, balení 200 g. Slouží k otestování nabídky s omezenou zásobou.</p>",
+        "en": "<p>Sample whole-bean coffee, 200 g. Use this item to test a small-stock product.</p>"
+      },
+      "productType": "Coffee",
+      "tags": [
+        "coffee",
+        "limited",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/competicion2.webp",
+          "altText": "Competition roast coffee bag",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 200,
+      "optionName": {
+        "cs": "Title",
+        "en": "Title"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-comp",
+          "sku": "DEMO-COMPETICION-1",
+          "price": 560,
+          "quantity": 8,
+          "value": {
+            "cs": "Default Title",
+            "en": "Default Title"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-camiseta",
+      "handle": "camiseta",
+      "title": {
+        "cs": "TRIČKO KAFE GROHOVA",
+        "en": "KAFE GROHOVA T-SHIRT"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkové unisex tričko ve velikostech S až XL. Materiál a rozměry doplňte před prodejem.</p>",
+        "en": "<p>Sample unisex T-shirt in sizes S to XL. Confirm material and measurements before sale.</p>"
+      },
+      "productType": "Apparel",
+      "tags": [
+        "merch",
+        "apparel",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/camiseta.webp",
+          "altText": "Kafe Grohova t-shirt",
+          "width": null,
+          "height": null
+        },
+        {
+          "url": "/camiseta22.webp",
+          "altText": "Kafe Grohova t-shirt",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 250,
+      "optionName": {
+        "cs": "Velikost",
+        "en": "Size"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee-0",
+          "sku": "DEMO-CAMISETA-1",
+          "price": 790,
+          "quantity": 4,
+          "value": {
+            "cs": "S",
+            "en": "S"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee-1",
+          "sku": "DEMO-CAMISETA-2",
+          "price": 790,
+          "quantity": 7,
+          "value": {
+            "cs": "M",
+            "en": "M"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee-2",
+          "sku": "DEMO-CAMISETA-3",
+          "price": 790,
+          "quantity": 3,
+          "value": {
+            "cs": "L",
+            "en": "L"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee-3",
+          "sku": "DEMO-CAMISETA-4",
+          "price": 790,
+          "quantity": 0,
+          "value": {
+            "cs": "XL",
+            "en": "XL"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-taza-ceramica",
+      "handle": "taza-ceramica",
+      "title": {
+        "cs": "KERAMICKÝ ŠÁLEK",
+        "en": "CERAMIC CUP"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový keramický šálek na cappuccino. Objem a informace o údržbě doplňte podle skutečného výrobku.</p>",
+        "en": "<p>Sample ceramic cappuccino cup. Add the actual capacity and care instructions before sale.</p>"
+      },
+      "productType": "Ceramics",
+      "tags": [
+        "ceramics",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/taza-ceremical.webp",
+          "altText": "Sample ceramic cup",
+          "width": null,
+          "height": null
+        },
+        {
+          "url": "/ceramic.webp",
+          "altText": "Sample ceramic cup",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 300,
+      "optionName": {
+        "cs": "Title",
+        "en": "Title"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-cup",
+          "sku": "DEMO-TAZA-CERAMICA-1",
+          "price": 650,
+          "quantity": 12,
+          "value": {
+            "cs": "Default Title",
+            "en": "Default Title"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-taza-espresso",
+      "handle": "taza-espresso",
+      "title": {
+        "cs": "ŠÁLEK NA ESPRESSO",
+        "en": "ESPRESSO CUP"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový šálek na espresso. Fotografie a cena slouží pro demonstraci obchodu.</p>",
+        "en": "<p>Sample espresso cup. The photograph and price demonstrate the storefront.</p>"
+      },
+      "productType": "Ceramics",
+      "tags": [
+        "ceramics",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/taze.webp",
+          "altText": "Sample espresso cup",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 200,
+      "optionName": {
+        "cs": "Title",
+        "en": "Title"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-espresso-cup",
+          "sku": "DEMO-TAZA-ESPRESSO-1",
+          "price": 520,
+          "quantity": 9,
+          "value": {
+            "cs": "Default Title",
+            "en": "Default Title"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-camiseta-totxres",
+      "handle": "camiseta-totxres",
+      "title": {
+        "cs": "TRIČKO TOTXRES",
+        "en": "TOTXRES T-SHIRT"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Druhé ukázkové tričko pro vyzkoušení výběru velikostí a skladové dostupnosti.</p>",
+        "en": "<p>A second sample T-shirt for testing size selection and inventory availability.</p>"
+      },
+      "productType": "Apparel",
+      "tags": [
+        "merch",
+        "apparel",
+        "limited",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/camiseta2.webp",
+          "altText": "Totxres t-shirt",
+          "width": null,
+          "height": null
+        },
+        {
+          "url": "/images/camiseta-text.webp",
+          "altText": "Totxres t-shirt",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 250,
+      "optionName": {
+        "cs": "Velikost",
+        "en": "Size"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee2-0",
+          "sku": "DEMO-CAMISETA-TOTXRES-1",
+          "price": 890,
+          "quantity": 2,
+          "value": {
+            "cs": "S",
+            "en": "S"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee2-1",
+          "sku": "DEMO-CAMISETA-TOTXRES-2",
+          "price": 890,
+          "quantity": 5,
+          "value": {
+            "cs": "M",
+            "en": "M"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee2-2",
+          "sku": "DEMO-CAMISETA-TOTXRES-3",
+          "price": 890,
+          "quantity": 5,
+          "value": {
+            "cs": "L",
+            "en": "L"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-tee2-3",
+          "sku": "DEMO-CAMISETA-TOTXRES-4",
+          "price": 890,
+          "quantity": 2,
+          "value": {
+            "cs": "XL",
+            "en": "XL"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-tote",
+      "handle": "tote",
+      "title": {
+        "cs": "PLÁTĚNÁ TAŠKA",
+        "en": "TOTE BAG"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázková plátěná taška. Rozměry a nosnost doplňte podle skutečného výrobku.</p>",
+        "en": "<p>Sample canvas tote bag. Add actual dimensions and load capacity before sale.</p>"
+      },
+      "productType": "Accessories",
+      "tags": [
+        "merch",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/nomad.webp",
+          "altText": "Canvas tote bag",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": true,
+      "weightGrams": 200,
+      "optionName": {
+        "cs": "Title",
+        "en": "Title"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-tote",
+          "sku": "DEMO-TOTE-1",
+          "price": 390,
+          "quantity": 20,
+          "value": {
+            "cs": "Default Title",
+            "en": "Default Title"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-darkovy-poukaz",
+      "handle": "darkovy-poukaz",
+      "title": {
+        "cs": "DÁRKOVÝ POUKAZ",
+        "en": "GIFT CARD"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový dárkový poukaz v hodnotě 1 000, 2 000 nebo 3 000 Kč. Demo nevytváří platný kód; skutečný poukaz vytvořte v Shopify.</p>",
+        "en": "<p>Sample gift card worth CZK 1,000, 2,000 or 3,000. The demo does not issue a redeemable code; create real gift cards in Shopify.</p>"
+      },
+      "productType": "Gift Card",
+      "tags": [
+        "gift",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/OLD03340.webp",
+          "altText": "Gift card",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Hodnota",
+        "en": "Amount"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-gift-0",
+          "sku": "DEMO-DARKOVY-POUKAZ-1",
+          "price": 1000,
+          "quantity": 99,
+          "value": {
+            "cs": "1000 Kč",
+            "en": "1000 Kč"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-gift-1",
+          "sku": "DEMO-DARKOVY-POUKAZ-2",
+          "price": 2000,
+          "quantity": 99,
+          "value": {
+            "cs": "2000 Kč",
+            "en": "2000 Kč"
+          },
+          "offsetDays": null,
+          "localHour": null
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-gift-2",
+          "sku": "DEMO-DARKOVY-POUKAZ-3",
+          "price": 3000,
+          "quantity": 99,
+          "value": {
+            "cs": "3000 Kč",
+            "en": "3000 Kč"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "handle": {
+        "cs": "zlata-kava",
+        "en": "golden-coffee"
+      },
+      "title": {
+        "cs": "Jak ochutnávat kávu",
+        "en": "How to taste coffee"
+      },
+      "text": {
+        "cs": "Ukázkový článek: připravte dvě kávy stejnou metodou a porovnejte jejich vůni, sladkost a dochuť. Zapište si, co vám chutná, a příště změňte jen jednu proměnnou.",
+        "en": "Sample article: prepare two coffees with the same method and compare aroma, sweetness and aftertaste. Write down what you like and change just one variable next time."
+      },
+      "image": "/images/OLD03375.webp"
+    },
+    {
+      "handle": {
+        "cs": "jak-prazime",
+        "en": "how-we-roast"
+      },
+      "title": {
+        "cs": "Co najdete na sáčku kávy",
+        "en": "Reading a coffee bag"
+      },
+      "text": {
+        "cs": "Ukázkový článek: při výběru kávy si všimněte data pražení, původu a doporučené přípravy. Tento text nahraďte vlastním příběhem a ověřenými údaji o nabídce.",
+        "en": "Sample article: look for the roast date, origin and recommended brew method. Replace this copy with your own story and verified information about the range."
+      },
+      "image": "/images/OLD03389.webp"
+    },
+    {
+      "handle": {
+        "cs": "voda-v-kave",
+        "en": "water-in-coffee"
+      },
+      "title": {
+        "cs": "Malé kroky k lepšímu filtru",
+        "en": "Small steps towards better filter coffee"
+      },
+      "text": {
+        "cs": "Ukázkový článek: važte kávu i vodu, sledujte čas a zapisujte si recept. Při dalším pokusu změňte hrubost mletí a porovnejte výsledek.",
+        "en": "Sample article: weigh your coffee and water, time the brew and write down the recipe. Adjust the grind on your next attempt and compare the result."
+      },
+      "image": "/images/OLD03561.webp"
+    },
+    {
+      "handle": {
+        "cs": "nasi-baristi",
+        "en": "our-baristas"
+      },
+      "title": {
+        "cs": "Co si vyzkoušíte na kurzu",
+        "en": "What to try in a coffee class"
+      },
+      "text": {
+        "cs": "Ukázkový článek: kurz může být příležitostí vyzkoušet různé pomůcky a zeptat se na vlastní recept. Skutečný program, lektory a termíny doplňte před zveřejněním.",
+        "en": "Sample article: a class can be a chance to try different equipment and ask about your own recipe. Confirm the actual programme, instructors and dates before publishing."
+      },
+      "image": "/images/OLD03400.webp"
+    }
+  ]
+}

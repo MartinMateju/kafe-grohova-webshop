@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { localizedPaths } from '../../../i18n/paths';
 import CourseBooking from '../../../components/CourseBooking.astro';
 import {
-  allLangs,
   localePath,
   useTranslations,
   type Lang,
@@ -15,19 +15,12 @@ import {
 } from '../../../lib/shopify';
 
 export async function getStaticPaths() {
-  const paths = [];
-  for (const lang of allLangs) {
-    const courses = await getCourses(lang);
-    for (const course of courses) {
-      paths.push({ params: { lang, handle: course.handle }, props: { course } });
-    }
-  }
-  return paths;
+  return localizedPaths(getCourses, 'courses');
 }
 
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-const { course } = Astro.props;
+const { item: course, alternatePaths } = Astro.props;
 
 const hero = imageUrl(course.featuredImage?.url, 1600);
 const price = formatMoney(course.priceRange.minVariantPrice, lang);
@@ -45,6 +38,7 @@ const facts = [
 ---
 
 <BaseLayout
+  alternatePaths={alternatePaths}
   title={course.title}
   description={course.description.slice(0, 160)}
   image={hero}

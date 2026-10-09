@@ -36,11 +36,13 @@ const mapsUrl = 'https://maps.google.com/?q=Grohova+102/3,+602+00+Brno';
         data-contact-form
         data-email={email}
       >
+        <p class="text-[14px] text-ink/60">{t('contact.note')}</p>
         <label class="flex flex-col gap-2">
           <span class="label text-ink/50">{t('contact.email')} *</span>
           <input
             type="email"
             name="email"
+            autocomplete="email"
             required
             placeholder="vy@example.com"
             class="border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
@@ -74,7 +76,7 @@ const mapsUrl = 'https://maps.google.com/?q=Grohova+102/3,+602+00+Brno';
           {t('contact.send')}
         </button>
 
-        <p data-contact-sent hidden class="text-[14px] text-brick">
+        <p data-contact-sent hidden role="status" class="text-[14px] text-brick">
           {t('contact.sent')}
         </p>
       </form>

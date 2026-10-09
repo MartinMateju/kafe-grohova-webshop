@@ -33,63 +33,64 @@ export async function storefront<T>(
     );
   }
 
-  let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20_000);
   try {
-    response = await fetch(STOREFRONT_ENDPOINT, {
+    const response = await fetch(STOREFRONT_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Shopify-Storefront-Access-Token': SHOPIFY_TOKEN,
       },
       body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
     });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new ShopifyError(
+        `Storefront API responded ${response.status} ${response.statusText}`,
+        body.slice(0, 500),
+      );
+    }
+
+    let json: GraphQLResponse<T>;
+    try {
+      json = (await response.json()) as GraphQLResponse<T>;
+    } catch (cause) {
+      if (controller.signal.aborted) throw cause;
+      throw new ShopifyError('Storefront API returned an invalid JSON response', cause);
+    }
+    if (json?.errors?.length) {
+      throw new ShopifyError(
+        json.errors.map((e) => e.message).join('; '),
+        json.errors,
+      );
+    }
+    if (!json?.data) throw new ShopifyError('Storefront API returned no data');
+    return json.data;
   } catch (cause) {
-    throw new ShopifyError('Could not reach the Shopify Storefront API', cause);
-  }
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
+    if (cause instanceof ShopifyError) throw cause;
     throw new ShopifyError(
-      `Storefront API responded ${response.status} ${response.statusText}`,
-      body.slice(0, 500),
+      controller.signal.aborted
+        ? 'The Shopify Storefront API request timed out. Please try again.'
+        : 'Could not reach the Shopify Storefront API',
+      cause,
     );
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const json = (await response.json()) as GraphQLResponse<T>;
-
-  if (json.errors?.length) {
-    throw new ShopifyError(
-      json.errors.map((e) => e.message).join('; '),
-      json.errors,
-    );
-  }
-
-  if (!json.data) {
-    throw new ShopifyError('Storefront API returned no data');
-  }
-
-  return json.data;
 }
 
 /**
- * Build-time helper: run a query but never break the build. Pages call this so
- * a transient Shopify outage degrades to an empty section instead of a failed
- * deploy.
+ * Demo fallback only. A failed live query must fail the build, otherwise a
+ * bad token or Shopify outage can silently publish an empty catalog.
  */
 export async function storefrontSafe<T>(
   query: string,
   variables: Record<string, unknown> = {},
   fallback: T,
 ): Promise<T> {
-  try {
-    return await storefront<T>(query, variables);
-  } catch (error) {
-    if (!isMockMode) {
-      console.warn(
-        '[shopify] query failed, falling back:',
-        error instanceof Error ? error.message : error,
-      );
-    }
-    return fallback;
-  }
+  if (isMockMode) return fallback;
+  return storefront<T>(query, variables);
 }

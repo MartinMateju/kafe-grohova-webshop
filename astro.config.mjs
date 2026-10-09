@@ -2,8 +2,11 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import { loadEnv } from 'vite';
 
-const site = process.env.PUBLIC_SITE_URL || 'https://kafegrohova.cz';
+const env = loadEnv(process.env.NODE_ENV || 'production', process.cwd(), 'PUBLIC_');
+const site = process.env.PUBLIC_SITE_URL || env.PUBLIC_SITE_URL || 'https://kafegrohova.cz';
+if (!/^https?:\/\//.test(site)) throw new Error('PUBLIC_SITE_URL must be an absolute http(s) URL.');
 
 export default defineConfig({
   site,

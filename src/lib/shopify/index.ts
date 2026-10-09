@@ -1,10 +1,11 @@
-import { storefrontSafe } from './client';
+import { storefront, ShopifyError } from './client';
 import {
   ALL_PRODUCTS_QUERY,
   ARTICLE_QUERY,
   ARTICLES_QUERY,
   COLLECTION_QUERY,
   PRODUCT_QUERY,
+  PRODUCT_VARIANTS_QUERY,
 } from './queries';
 import { normalizeArticle, normalizeProduct } from './normalize';
 import { mockArticles, mockCourses, mockMerch } from './mock';
@@ -16,51 +17,99 @@ import {
 } from './config';
 import type { Article, Product } from './types';
 import { shopifyLanguage, type Lang } from '../../i18n/utils';
+import { isFutureCourseDate } from '../courseAvailability';
 
 export * from './types';
 export { isMockMode } from './config';
+
+type Raw = Record<string, any>;
+interface Connection {
+  nodes: Raw[];
+  pageInfo?: { hasNextPage: boolean; endCursor?: string | null };
+}
+
+/** Exhaust connections so a static build creates every product/article route. */
+async function readConnection(
+  query: string,
+  variables: Record<string, unknown>,
+  select: (data: Raw) => Connection | null | undefined,
+): Promise<Raw[] | null> {
+  const nodes: Raw[] = [];
+  let after: string | null = null;
+  const seen = new Set<string>();
+  while (true) {
+    const data = await storefront<Raw>(query, { ...variables, after });
+    const connection = select(data);
+    if (!connection) {
+      if (after) throw new ShopifyError('Shopify content disappeared while reading a later page. Please retry the build.');
+      return null;
+    }
+    nodes.push(...connection.nodes);
+    if (!connection.pageInfo?.hasNextPage) return nodes;
+    const cursor = connection.pageInfo.endCursor;
+    if (!cursor || seen.has(cursor)) {
+      throw new ShopifyError('Shopify returned an invalid pagination cursor.');
+    }
+    seen.add(cursor);
+    after = cursor;
+  }
+}
+
+async function completeProduct(raw: Raw, lang: Lang): Promise<Product> {
+  if (raw.variants?.pageInfo?.hasNextPage) {
+    const variants = await readConnection(
+      PRODUCT_VARIANTS_QUERY,
+      { handle: raw.handle, language: shopifyLanguage(lang) },
+      (data) => data.product?.variants,
+    );
+    if (!variants) throw new ShopifyError(`Product ${raw.handle} disappeared while reading its variants.`);
+    return normalizeProduct({ ...raw, variants: { nodes: variants } });
+  }
+  return normalizeProduct(raw);
+}
 
 /** Barista course products — one variant per scheduled date. */
 export async function getCourses(lang: Lang): Promise<Product[]> {
   if (isMockMode) return mockCourses(lang);
 
-  const data = await storefrontSafe<any>(
+  const nodes = await readConnection(
     COLLECTION_QUERY,
     {
       handle: COURSES_COLLECTION,
-      first: 50,
+      first: 20,
       language: shopifyLanguage(lang),
     },
-    null,
+    (data) => data.collection?.products,
   );
-
-  const nodes = data?.collection?.products?.nodes ?? [];
-  return nodes.map(normalizeProduct);
+  if (!nodes) {
+    throw new ShopifyError(`The courses collection "${COURSES_COLLECTION}" is missing or not published to the Headless channel.`);
+  }
+  return Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
 }
 
 /** Merchandise products. Falls back to all products if the collection is absent. */
 export async function getMerch(lang: Lang): Promise<Product[]> {
   if (isMockMode) return mockMerch(lang);
 
-  const data = await storefrontSafe<any>(
+  const nodes = await readConnection(
     COLLECTION_QUERY,
     {
       handle: MERCH_COLLECTION,
-      first: 100,
+      first: 20,
       language: shopifyLanguage(lang),
     },
-    null,
+    (data) => data.collection?.products,
   );
 
-  const nodes = data?.collection?.products?.nodes;
-  if (nodes?.length) return nodes.map(normalizeProduct);
+  // An intentionally empty collection is not the same as a missing collection.
+  if (nodes) return Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
 
-  const all = await storefrontSafe<any>(
+  const all = await readConnection(
     ALL_PRODUCTS_QUERY,
-    { first: 100, language: shopifyLanguage(lang) },
-    null,
+    { first: 20, language: shopifyLanguage(lang) },
+    (data) => data.products,
   );
-  const allNodes: Product[] = (all?.products?.nodes ?? []).map(normalizeProduct);
+  const allNodes = await Promise.all((all ?? []).map((raw) => completeProduct(raw, lang)));
   // Keep courses out of the merch grid even when no collections are set up.
   return allNodes.filter((p) => !isCourse(p));
 }
@@ -77,27 +126,26 @@ export async function getProduct(
     );
   }
 
-  const data = await storefrontSafe<any>(
+  const data = await storefront<Raw>(
     PRODUCT_QUERY,
     { handle, language: shopifyLanguage(lang) },
-    null,
   );
-  return data?.product ? normalizeProduct(data.product) : null;
+  return data?.product ? completeProduct(data.product, lang) : null;
 }
 
 export async function getArticles(lang: Lang): Promise<Article[]> {
   if (isMockMode) return mockArticles(lang);
 
-  const data = await storefrontSafe<any>(
+  const nodes = await readConnection(
     ARTICLES_QUERY,
     {
       handle: BLOG_HANDLE,
       first: 30,
       language: shopifyLanguage(lang),
     },
-    null,
+    (data) => data.blog?.articles,
   );
-  return (data?.blog?.articles?.nodes ?? []).map(normalizeArticle);
+  return (nodes ?? []).map(normalizeArticle);
 }
 
 export async function getArticle(
@@ -108,14 +156,13 @@ export async function getArticle(
     return mockArticles(lang).find((a) => a.handle === handle) ?? null;
   }
 
-  const data = await storefrontSafe<any>(
+  const data = await storefront<Raw>(
     ARTICLE_QUERY,
     {
       blogHandle: BLOG_HANDLE,
       handle,
       language: shopifyLanguage(lang),
     },
-    null,
   );
   const raw = data?.blog?.articleByHandle;
   return raw ? normalizeArticle(raw) : null;
@@ -128,24 +175,24 @@ export function isCourse(product: Product): boolean {
   return (
     product.course !== null ||
     product.productType.toLowerCase() === 'course' ||
-    product.tags.some((t) => t.toLowerCase() === 'course')
+    product.tags.some((t) => t.toLowerCase() === 'course') ||
+    product.variants.some((variant) => Boolean(variant.startsAt))
   );
 }
 
 /** Total seats still bookable across every date of a course. */
 export function seatsRemaining(product: Product): number | null {
-  const counts = product.variants
-    .filter((v) => v.availableForSale)
-    .map((v) => v.quantityAvailable)
-    .filter((q): q is number => typeof q === 'number');
-  if (!counts.length) return null;
-  return counts.reduce((a, b) => a + b, 0);
+  const counts = bookableVariants(product).map((v) => v.quantityAvailable);
+  if (counts.some((quantity) => quantity === null)) return null;
+  return counts.reduce<number>((total, quantity) => total + (quantity ?? 0), 0);
 }
 
 /** Variants that still have a seat, sorted by start date when available. */
-export function bookableVariants(product: Product) {
+export function bookableVariants(product: Product, now = Date.now()) {
   return product.variants
-    .filter((v) => v.availableForSale)
+    .filter((v) => v.availableForSale &&
+      (v.quantityAvailable === null || v.quantityAvailable > 0) &&
+      isFutureCourseDate(v.startsAt, now))
     .sort((a, b) => {
       if (a.startsAt && b.startsAt) {
         return Date.parse(a.startsAt) - Date.parse(b.startsAt);
@@ -176,6 +223,7 @@ export function formatDate(iso: string, lang: Lang): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat(lang === 'cs' ? 'cs-CZ' : 'en-GB', {
+    timeZone: 'Europe/Prague',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -186,6 +234,7 @@ export function formatDateTime(iso: string, lang: Lang): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat(lang === 'cs' ? 'cs-CZ' : 'en-GB', {
+    timeZone: 'Europe/Prague',
     weekday: 'short',
     day: 'numeric',
     month: 'long',
