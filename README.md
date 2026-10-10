@@ -2,11 +2,11 @@
 
 Czech/English Astro storefront for **kafegrohova.cz**, with Shopify products, course seats and hosted checkout. Kafe Grohova uses its **own Shopify store**, separate from the other shop. Nothing in this repository connects to or changes that other store.
 
-This is a headless storefront: deploy the static website to a host such as Netlify and connect it to the dedicated Shopify store. It is **not** a Liquid theme ZIP for Shopify's theme editor. Shopify Oxygen hosting is intended for Hydrogen; this project retains the existing Astro implementation.
+This is a headless storefront: deploy the static website to **Vercel** and connect it to the dedicated Shopify store. It is **not** a Liquid theme ZIP for Shopify's theme editor. Shopify Oxygen hosting is intended for Hydrogen; this project retains the existing Astro implementation.
 
 ## Run the demo
 
-Use Node 22 or newer:
+Use Node 22:
 
 ```sh
 npm ci
@@ -112,7 +112,15 @@ The connection-only check reports shop identity and currency; it does not establ
 
 ## Deployment and updates
 
-For Netlify, this repository includes `netlify.toml`: build `npm run build`, publish `dist`, Node 22. Put the dedicated store's public environment variables in the hosting project's build settings. Set `PUBLIC_SHOPIFY_MODE=live` and `PUBLIC_SITE_URL=https://kafegrohova.cz`. Configure the public domain on the hosting project only after reviewing its preview and testing the dedicated Shopify connection. Keep the other shop's hosting and domain settings separate.
+The repository includes `vercel.json`: Astro framework, install `npm ci`, build `npm run build`, output `dist`, a temporary root redirect to `/cs/`, trailing-slash routes and basic response headers. This static app does not need the Vercel server-rendering adapter. Use Node **22.x** in Vercel's project settings.
+
+1. Import `MartinMateju/kafe-grohova-webshop` into a dedicated Vercel project, with the repository root as Root Directory. Select the release branch for the initial review, or merge the release PR before deploying `main`.
+2. For a **demo deployment**, set `PUBLIC_SHOPIFY_MODE=demo`. No Shopify credentials are needed; checkout remains disabled and the demo banner/noindex metadata remain visible. Set `PUBLIC_SITE_URL` to the review deployment's stable HTTPS origin if available. Vercel's first deployment may be labeled Production even when it is only a demo on a `vercel.app` address; that is not a live-shop launch.
+3. Before the **live release**, set all public variables from the dedicated Shopify connection section in Vercel's **Production** environment, including `PUBLIC_SHOPIFY_MODE=live` and `PUBLIC_SITE_URL=https://kafegrohova.cz`. Keep Preview set to `demo` unless deliberately testing the real store. Store variables in Vercel project settings; `.vercelignore` excludes local environment files from CLI uploads. Environment changes require a new deployment.
+4. Run the live-store checks and a Shopify test-payment walkthrough. Deploy and inspect both languages, product pages, cart, checkout and the 404 page on Vercel before attaching the public domain. The live build must succeed with the published Shopify catalog; do not use demo mode to bypass a failed release check.
+5. Add `kafegrohova.cz` and `www.kafegrohova.cz` to this Vercel project, choose the canonical hostname, then update only the DNS records Vercel supplies. Existing DNS currently points to the previous host. Preserve email and unrelated records, and verify HTTPS and redirects after propagation. Keep the other shop's project and domain settings separate.
+
+With Vercel connected to GitHub, pushes create deployments independently of GitHub Actions. Alternatively, authenticate with `npx vercel login`, link the dedicated project with `npx vercel link`, and deploy with `npx vercel`; use `npx vercel --prod` for a subsequent production release. See [Astro on Vercel](https://docs.astro.build/en/guides/deploy/vercel/) and [Vercel deployment commands](https://vercel.com/docs/cli/deploy).
 
 Product, course and blog pages are generated at build time. Live product pages refresh existing variants' price, availability and dates before enabling purchase; Shopify remains authoritative for the cart. **New products, new variants, deleted products, translations and blog edits still need a rebuild.** Rebuild after catalog changes and refresh course listings regularly. A signed Shopify webhook handled by a trusted service can trigger a hosting deploy hook; that automation is not configured in this repo.
 

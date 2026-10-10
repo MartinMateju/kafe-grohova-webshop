@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+data/shopify/
+test-results/
+playwright-report/
