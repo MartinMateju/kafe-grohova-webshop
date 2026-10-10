@@ -1,4 +1,5 @@
 ---
+import { MERCH_ENABLED } from '../lib/shopify/config';
 import { safeScriptJson } from '../lib/safeScriptJson';
 import { getLangFromUrl, useTranslations, localePath } from '../i18n/utils';
 
@@ -8,17 +9,17 @@ const t = useTranslations(lang);
 const strings = {
   title: t('cart.title'),
   empty: t('cart.empty'),
-  continue: t('cart.continue'),
+  continue: MERCH_ENABLED ? t('cart.continue') : t('courses.allCourses'),
   subtotal: t('cart.subtotal'),
   checkout: t('cart.checkout'),
   remove: t('cart.remove'),
   decrease: t('cart.decrease'),
   increase: t('cart.increase'),
-  shippingNote: t('cart.shippingNote'),
+  shippingNote: MERCH_ENABLED ? t('cart.shippingNote') : t('cart.courseNote'),
   close: t('cart.close'),
   mockNotice: t('cart.mockNotice'),
   loading: t('common.loading'),
-  storeHref: localePath(lang, '/store'),
+  storeHref: localePath(lang, MERCH_ENABLED ? '/store' : '/courses'),
   locale: lang === 'cs' ? 'cs-CZ' : 'en-GB',
 };
 ---

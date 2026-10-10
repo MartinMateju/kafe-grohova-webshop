@@ -25,8 +25,8 @@ const pageTitle = title ? `${title} — ${siteName}` : siteName;
 const pageDescription =
   description ??
   (lang === 'cs'
-    ? 'Espresso bar a obchod na Grohové v Brně. Výběrová káva, ruční keramika a baristické kurzy.'
-    : 'Espresso bar and store on Grohova in Brno. Specialty coffee, handmade ceramics and barista courses.');
+    ? 'Espresso bar a baristické kurzy na Grohové v Brně. Latte art, cupping a příprava filtrované kávy v malých skupinách.'
+    : 'Espresso bar and barista courses on Grohova in Brno. Latte art, cupping and filter coffee in small groups.');
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 const csHref = new URL(alternatePaths?.cs ?? switchLocalePath(Astro.url, 'cs'), canonical);
@@ -101,6 +101,12 @@ const localBusiness = {
   <body class="antialiased p-3 bg-cream text-ink min-h-screen w-full">
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-cream focus:p-3">{t('common.skip')}</a>
     <div class="container">
+      {isMockMode && (
+        <div class="mb-3 flex items-center justify-between gap-3 border border-ink/20 px-3 py-2 text-[12px] leading-snug" data-mock-banner>
+          <p><strong class="text-brick">DEMO</strong> — {t('cart.mockNotice')}</p>
+          <button type="button" class="shrink-0 px-2 py-1" onclick="this.closest('[data-mock-banner]').remove()" aria-label={lang === 'cs' ? 'Zavřít oznámení' : 'Dismiss notice'}>✕</button>
+        </div>
+      )}
       <Navbar alternatePaths={alternatePaths} />
       <main id="main">
         <slot />
@@ -109,25 +115,6 @@ const localBusiness = {
     </div>
 
     <CartDrawer />
-
-    {
-      isMockMode && (
-        <div
-          class="fixed bottom-3 left-3 z-40 max-w-xs border border-ink/20 bg-cream/95 px-3 py-2 text-[11px] leading-snug backdrop-blur"
-          data-mock-banner
-        >
-          <strong class="text-brick">DEMO</strong> — {t('cart.mockNotice')}
-          <button
-            type="button"
-            class="ml-2 underline"
-            onclick="this.closest('[data-mock-banner]').remove()"
-            aria-label="Dismiss"
-          >
-            ✕
-          </button>
-        </div>
-      )
-    }
 
   </body>
 </html>

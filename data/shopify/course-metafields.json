@@ -1,18 +1,87 @@
 {
   "note": "Reference values for Shopify admin. Not a Shopify JSON import file. Match variants by SKU after CSV import.",
-  "baseDate": "2026-10-09",
+  "baseDate": "2026-10-10",
   "timezone": "Europe/Prague",
   "language": "cs",
   "currency": "CZK",
   "courses": [
     {
-      "handle": "espresso-zaklady",
+      "handle": "latte-art",
       "metafields": [
         {
           "namespace": "course",
           "key": "duration_minutes",
           "type": "number_integer",
-          "value": "240"
+          "value": "180"
+        },
+        {
+          "namespace": "course",
+          "key": "capacity",
+          "type": "number_integer",
+          "value": "2"
+        },
+        {
+          "namespace": "course",
+          "key": "level",
+          "type": "single_line_text_field",
+          "value": "Začátečník"
+        },
+        {
+          "namespace": "course",
+          "key": "syllabus",
+          "type": "list.single_line_text_field",
+          "value": "[\"Základy práce s mlékem a výběr vhodné konvičky\",\"Bezpečné napěňování a správná teplota\",\"Textura mléka pro latte art\",\"První vzor: jednoduché srdce\",\"Čištění a údržba parní trysky\"]"
+        }
+      ],
+      "variants": [
+        {
+          "sku": "DEMO-LATTE-ART-1",
+          "optionValue": "20. října 2026 v 17:00",
+          "inventory": 2,
+          "metafields": [
+            {
+              "namespace": "course",
+              "key": "starts_at",
+              "type": "date_time",
+              "value": "2026-10-20T15:00:00.000Z"
+            },
+            {
+              "namespace": "course",
+              "key": "ends_at",
+              "type": "date_time",
+              "value": "2026-10-20T18:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "sku": "DEMO-LATTE-ART-2",
+          "optionValue": "3. listopadu 2026 v 17:00",
+          "inventory": 2,
+          "metafields": [
+            {
+              "namespace": "course",
+              "key": "starts_at",
+              "type": "date_time",
+              "value": "2026-11-03T16:00:00.000Z"
+            },
+            {
+              "namespace": "course",
+              "key": "ends_at",
+              "type": "date_time",
+              "value": "2026-11-03T19:00:00.000Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "handle": "cupping",
+      "metafields": [
+        {
+          "namespace": "course",
+          "key": "duration_minutes",
+          "type": "number_integer",
+          "value": "120"
         },
         {
           "namespace": "course",
@@ -30,152 +99,64 @@
           "namespace": "course",
           "key": "syllabus",
           "type": "list.single_line_text_field",
-          "value": "[\"Jak poznat čerstvě praženou kávu a co znamenají údaje na sáčku\",\"Mletí — proč je to nejdůležitější proměnná\",\"Dávkování, distribuce a temper\",\"Čtení extrakce: čas, váha, chuť\",\"Základní údržba pákového kávovaru\"]"
+          "value": "[\"Co je cupping a jak připravit ochutnávku\",\"Vůně suché a zalité kávy\",\"Porovnání sladkosti, kyselosti a těla\",\"Dochuť a změny chuti při chladnutí\",\"Jednoduché zápisky a sdílení dojmů\"]"
         }
       ],
       "variants": [
         {
-          "sku": "DEMO-ESPRESSO-ZAKLADY-1",
-          "optionValue": "16. října 2026 v 10:00",
-          "inventory": 3,
-          "metafields": [
-            {
-              "namespace": "course",
-              "key": "starts_at",
-              "type": "date_time",
-              "value": "2026-10-16T08:00:00.000Z"
-            },
-            {
-              "namespace": "course",
-              "key": "ends_at",
-              "type": "date_time",
-              "value": "2026-10-16T12:00:00.000Z"
-            }
-          ]
-        },
-        {
-          "sku": "DEMO-ESPRESSO-ZAKLADY-2",
-          "optionValue": "23. října 2026 v 10:00",
-          "inventory": 1,
-          "metafields": [
-            {
-              "namespace": "course",
-              "key": "starts_at",
-              "type": "date_time",
-              "value": "2026-10-23T08:00:00.000Z"
-            },
-            {
-              "namespace": "course",
-              "key": "ends_at",
-              "type": "date_time",
-              "value": "2026-10-23T12:00:00.000Z"
-            }
-          ]
-        },
-        {
-          "sku": "DEMO-ESPRESSO-ZAKLADY-3",
-          "optionValue": "30. října 2026 v 14:00",
+          "sku": "DEMO-CUPPING-1",
+          "optionValue": "22. října 2026 v 16:00",
           "inventory": 4,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-10-30T13:00:00.000Z"
+              "value": "2026-10-22T14:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-10-30T17:00:00.000Z"
+              "value": "2026-10-22T16:00:00.000Z"
             }
           ]
         },
         {
-          "sku": "DEMO-ESPRESSO-ZAKLADY-4",
-          "optionValue": "6. listopadu 2026 v 10:00",
-          "inventory": 0,
-          "metafields": [
-            {
-              "namespace": "course",
-              "key": "starts_at",
-              "type": "date_time",
-              "value": "2026-11-06T09:00:00.000Z"
-            },
-            {
-              "namespace": "course",
-              "key": "ends_at",
-              "type": "date_time",
-              "value": "2026-11-06T13:00:00.000Z"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "handle": "latte-art",
-      "metafields": [
-        {
-          "namespace": "course",
-          "key": "duration_minutes",
-          "type": "number_integer",
-          "value": "180"
-        },
-        {
-          "namespace": "course",
-          "key": "capacity",
-          "type": "number_integer",
-          "value": "6"
-        },
-        {
-          "namespace": "course",
-          "key": "level",
-          "type": "single_line_text_field",
-          "value": "Mírně pokročilý"
-        },
-        {
-          "namespace": "course",
-          "key": "syllabus",
-          "type": "list.single_line_text_field",
-          "value": "[\"Výběr mléka a rostlinných alternativ\",\"Textura: kdy přestat napěňovat\",\"Teplota a proč na ní záleží\",\"Nalévání: srdce, rozeta, tulipán\",\"Údržba trysky\"]"
-        }
-      ],
-      "variants": [
-        {
-          "sku": "DEMO-LATTE-ART-1",
-          "optionValue": "19. října 2026 v 17:00",
-          "inventory": 5,
-          "metafields": [
-            {
-              "namespace": "course",
-              "key": "starts_at",
-              "type": "date_time",
-              "value": "2026-10-19T15:00:00.000Z"
-            },
-            {
-              "namespace": "course",
-              "key": "ends_at",
-              "type": "date_time",
-              "value": "2026-10-19T18:00:00.000Z"
-            }
-          ]
-        },
-        {
-          "sku": "DEMO-LATTE-ART-2",
-          "optionValue": "2. listopadu 2026 v 17:00",
+          "sku": "DEMO-CUPPING-2",
+          "optionValue": "5. listopadu 2026 v 16:00",
           "inventory": 2,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-11-02T16:00:00.000Z"
+              "value": "2026-11-05T15:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-11-02T19:00:00.000Z"
+              "value": "2026-11-05T17:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "sku": "DEMO-CUPPING-3",
+          "optionValue": "19. listopadu 2026 v 16:00",
+          "inventory": 0,
+          "metafields": [
+            {
+              "namespace": "course",
+              "key": "starts_at",
+              "type": "date_time",
+              "value": "2026-11-19T15:00:00.000Z"
+            },
+            {
+              "namespace": "course",
+              "key": "ends_at",
+              "type": "date_time",
+              "value": "2026-11-19T17:00:00.000Z"
             }
           ]
         }
@@ -194,7 +175,7 @@
           "namespace": "course",
           "key": "capacity",
           "type": "number_integer",
-          "value": "8"
+          "value": "4"
         },
         {
           "namespace": "course",
@@ -212,58 +193,58 @@
       "variants": [
         {
           "sku": "DEMO-FILTROVANA-KAVA-1",
-          "optionValue": "14. října 2026 v 15:00",
-          "inventory": 6,
+          "optionValue": "15. října 2026 v 15:00",
+          "inventory": 4,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-10-14T13:00:00.000Z"
+              "value": "2026-10-15T13:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-10-14T16:00:00.000Z"
+              "value": "2026-10-15T16:00:00.000Z"
             }
           ]
         },
         {
           "sku": "DEMO-FILTROVANA-KAVA-2",
-          "optionValue": "28. října 2026 v 15:00",
-          "inventory": 6,
+          "optionValue": "29. října 2026 v 15:00",
+          "inventory": 4,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-10-28T14:00:00.000Z"
+              "value": "2026-10-29T14:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-10-28T17:00:00.000Z"
+              "value": "2026-10-29T17:00:00.000Z"
             }
           ]
         },
         {
           "sku": "DEMO-FILTROVANA-KAVA-3",
-          "optionValue": "11. listopadu 2026 v 15:00",
-          "inventory": 6,
+          "optionValue": "12. listopadu 2026 v 15:00",
+          "inventory": 4,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-11-11T14:00:00.000Z"
+              "value": "2026-11-12T14:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-11-11T17:00:00.000Z"
+              "value": "2026-11-12T17:00:00.000Z"
             }
           ]
         }

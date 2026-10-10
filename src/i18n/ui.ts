@@ -18,6 +18,7 @@ export const ui = {
     'nav.close': '✕ ZAVŘÍT',
     'nav.sub1': '(výběrová káva)',
     'nav.sub2': '(ruční keramika)',
+    'nav.subCourses': '(baristické kurzy)',
 
     'home.espressobar': 'espresso bar',
     'home.store': '& store',
@@ -27,6 +28,10 @@ export const ui = {
     'home.coursesTitle': '(barista kurzy)',
     'home.coursesCta': 'REZERVOVAT MÍSTO',
     'home.shopCta': 'DO OBCHODU',
+    'home.coursesHeadline': 'KÁVA, KTEROU ZVLÁDNETE SAMI.',
+    'home.coursesIntro': 'Latte art, cupping a příprava filtrované kávy. Vyberte si kurz, přijďte za bar a naučte se něco nového s našimi baristy.',
+    'home.chooseCourse': 'VYBRAT KURZ',
+    'home.smallGroups': 'Malé skupiny. Více času na vás.',
 
     'store.title': 'ESPRESSO BAR & STORE',
     'store.limited': 'LIMITOVANÁ EDICE',
@@ -66,6 +71,8 @@ export const ui = {
     'courses.allCourses': 'VŠECHNY KURZY',
     'courses.back': 'zpět na kurzy',
     'courses.whatYouLearn': 'CO SE NAUČÍTE',
+    'courses.maxParticipants': 'Max. účastníků: {n}',
+    'courses.openDates': 'VOLNÉ TERMÍNY',
 
     'cart.title': 'KOŠÍK',
     'cart.empty': 'Váš košík je prázdný',
@@ -76,9 +83,10 @@ export const ui = {
     'cart.decrease': 'Snížit množství',
     'cart.increase': 'Zvýšit množství',
     'cart.shippingNote': 'Doprava a daně se spočítají u pokladny.',
+    'cart.courseNote': 'Místo na kurzu je rezervované až po dokončení objednávky.',
     'cart.close': 'Zavřít košík',
     'cart.mockNotice':
-      'Demo režim — Shopify zatím není připojený, takže pokladna je vypnutá.',
+      'Demo režim — termíny a ceny jsou ukázkové. Pokladna je vypnutá.',
 
     'blog.title': 'BLOG',
     'blog.subscribe': 'NAPIŠTE NÁM',
@@ -118,6 +126,7 @@ export const ui = {
     'nav.close': '✕ CLOSE',
     'nav.sub1': '(specialty coffee)',
     'nav.sub2': '(handmade ceramics)',
+    'nav.subCourses': '(barista courses)',
 
     'home.espressobar': 'espresso bar',
     'home.store': '& store',
@@ -127,6 +136,10 @@ export const ui = {
     'home.coursesTitle': '(barista courses)',
     'home.coursesCta': 'BOOK A SEAT',
     'home.shopCta': 'GO TO STORE',
+    'home.coursesHeadline': 'GREAT COFFEE. MADE BY YOU.',
+    'home.coursesIntro': 'Latte art, cupping and filter coffee. Choose a course, step behind the bar and learn something new with our baristas.',
+    'home.chooseCourse': 'CHOOSE A COURSE',
+    'home.smallGroups': 'Small groups. More time for you.',
 
     'store.title': 'ESPRESSO BAR & STORE',
     'store.limited': 'LIMITED EDITION',
@@ -166,6 +179,8 @@ export const ui = {
     'courses.allCourses': 'ALL COURSES',
     'courses.back': 'back to courses',
     'courses.whatYouLearn': 'WHAT YOU WILL LEARN',
+    'courses.maxParticipants': 'Max. participants: {n}',
+    'courses.openDates': 'DATES AVAILABLE',
 
     'cart.title': 'CART',
     'cart.empty': 'Your cart is empty',
@@ -176,8 +191,9 @@ export const ui = {
     'cart.decrease': 'Decrease quantity',
     'cart.increase': 'Increase quantity',
     'cart.shippingNote': 'Shipping and taxes are calculated at checkout.',
+    'cart.courseNote': 'Your course place is reserved only after completing the order.',
     'cart.close': 'Close cart',
-    'cart.mockNotice': 'Demo mode — Shopify is not connected yet, so checkout is disabled.',
+    'cart.mockNotice': 'Demo mode — dates and prices are examples. Checkout is disabled.',
 
     'blog.title': 'BLOG',
     'blog.subscribe': 'WRITE TO US',

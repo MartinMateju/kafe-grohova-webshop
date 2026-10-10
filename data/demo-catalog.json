@@ -3,128 +3,27 @@
   "timezone": "Europe/Prague",
   "products": [
     {
-      "id": "gid://shopify/Product/mock-course-espresso",
-      "handle": "espresso-zaklady",
-      "title": {
-        "cs": "ESPRESSO — ZÁKLADY",
-        "en": "ESPRESSO — FUNDAMENTALS"
-      },
-      "descriptionHtml": {
-        "cs": "<p>Ukázkový čtyřhodinový kurz přípravy espressa. Procvičíte mletí, dávkování, pěchování a posuzování extrakce.</p>",
-        "en": "<p>A sample four-hour espresso class covering grinding, dosing, tamping and evaluating extraction.</p>"
-      },
-      "productType": "Course",
-      "tags": [
-        "course",
-        "espresso",
-        "beginner",
-        "demo"
-      ],
-      "images": [
-        {
-          "url": "/images/OLD03346.webp",
-          "altText": "Barista pulling espresso",
-          "width": null,
-          "height": null
-        },
-        {
-          "url": "/images/OLD03361.webp",
-          "altText": "Espresso machine group head",
-          "width": null,
-          "height": null
-        }
-      ],
-      "requiresShipping": false,
-      "weightGrams": 0,
-      "optionName": {
-        "cs": "Termín",
-        "en": "Date"
-      },
-      "course": {
-        "durationMinutes": 240,
-        "capacity": 4,
-        "level": {
-          "cs": "Začátečník",
-          "en": "Beginner"
-        },
-        "syllabus": {
-          "cs": [
-            "Jak poznat čerstvě praženou kávu a co znamenají údaje na sáčku",
-            "Mletí — proč je to nejdůležitější proměnná",
-            "Dávkování, distribuce a temper",
-            "Čtení extrakce: čas, váha, chuť",
-            "Základní údržba pákového kávovaru"
-          ],
-          "en": [
-            "How to spot freshly roasted coffee and read the bag",
-            "Grinding — why it is the variable that matters most",
-            "Dosing, distribution and tamping",
-            "Reading an extraction: time, weight, taste",
-            "Basic espresso machine maintenance"
-          ]
-        }
-      },
-      "variants": [
-        {
-          "id": "gid://shopify/ProductVariant/mock-e1",
-          "sku": "DEMO-ESPRESSO-ZAKLADY-1",
-          "price": 2200,
-          "quantity": 3,
-          "value": null,
-          "offsetDays": 7,
-          "localHour": 10
-        },
-        {
-          "id": "gid://shopify/ProductVariant/mock-e2",
-          "sku": "DEMO-ESPRESSO-ZAKLADY-2",
-          "price": 2200,
-          "quantity": 1,
-          "value": null,
-          "offsetDays": 14,
-          "localHour": 10
-        },
-        {
-          "id": "gid://shopify/ProductVariant/mock-e3",
-          "sku": "DEMO-ESPRESSO-ZAKLADY-3",
-          "price": 2200,
-          "quantity": 4,
-          "value": null,
-          "offsetDays": 21,
-          "localHour": 14
-        },
-        {
-          "id": "gid://shopify/ProductVariant/mock-e4",
-          "sku": "DEMO-ESPRESSO-ZAKLADY-4",
-          "price": 2200,
-          "quantity": 0,
-          "value": null,
-          "offsetDays": 28,
-          "localHour": 10
-        }
-      ]
-    },
-    {
       "id": "gid://shopify/Product/mock-course-milk",
       "handle": "latte-art",
       "title": {
-        "cs": "LATTE ART",
-        "en": "LATTE ART"
+        "cs": "LATTE ART PRO ZAČÁTEČNÍKY",
+        "en": "LATTE ART FOR BEGINNERS"
       },
       "descriptionHtml": {
-        "cs": "<p>Ukázkový tříhodinový kurz napěňování mléka a nalévání základních vzorů. Pro účastníky se základy přípravy espressa.</p>",
-        "en": "<p>A sample three-hour class on steaming milk and pouring simple patterns. Designed for people familiar with espresso basics.</p>"
+        "cs": "<p>Ukázkový tříhodinový kurz latte art pro začátečníky, maximálně pro dva účastníky. Od základů si vyzkoušíte práci s mlékem, napěňování a nalévání jednoduchého srdce. Předchozí zkušenosti nejsou potřeba.</p>",
+        "en": "<p>A sample three-hour beginner latte art class for a maximum of two participants. Start with milk handling, steaming and pouring a simple heart. No previous experience is required.</p>"
       },
       "productType": "Course",
       "tags": [
         "course",
         "milk",
-        "intermediate",
+        "beginner",
         "demo"
       ],
       "images": [
         {
-          "url": "/images/OLD03354.webp",
-          "altText": "Latte art being poured",
+          "url": "/specialcoffee.webp",
+          "altText": "Milk being poured into a ceramic coffee cup",
           "width": null,
           "height": null
         }
@@ -137,25 +36,25 @@
       },
       "course": {
         "durationMinutes": 180,
-        "capacity": 6,
+        "capacity": 2,
         "level": {
-          "cs": "Mírně pokročilý",
-          "en": "Intermediate"
+          "cs": "Začátečník",
+          "en": "Beginner"
         },
         "syllabus": {
           "cs": [
-            "Výběr mléka a rostlinných alternativ",
-            "Textura: kdy přestat napěňovat",
-            "Teplota a proč na ní záleží",
-            "Nalévání: srdce, rozeta, tulipán",
-            "Údržba trysky"
+            "Základy práce s mlékem a výběr vhodné konvičky",
+            "Bezpečné napěňování a správná teplota",
+            "Textura mléka pro latte art",
+            "První vzor: jednoduché srdce",
+            "Čištění a údržba parní trysky"
           ],
           "en": [
-            "Choosing dairy and plant alternatives",
-            "Texture: when to stop stretching",
-            "Temperature and why it matters",
-            "Pouring: heart, rosetta, tulip",
-            "Steam wand maintenance"
+            "Milk basics and choosing a pitcher",
+            "Safe steaming and the right temperature",
+            "Milk texture for latte art",
+            "First pattern: a simple heart",
+            "Cleaning and maintaining the steam wand"
           ]
         }
       },
@@ -164,7 +63,7 @@
           "id": "gid://shopify/ProductVariant/mock-m1",
           "sku": "DEMO-LATTE-ART-1",
           "price": 1800,
-          "quantity": 5,
+          "quantity": 2,
           "value": null,
           "offsetDays": 10,
           "localHour": 17
@@ -181,15 +80,101 @@
       ]
     },
     {
+      "id": "gid://shopify/Product/mock-course-cupping",
+      "handle": "cupping",
+      "title": {
+        "cs": "CUPPING — OCHUTNÁVKA KÁVY",
+        "en": "CUPPING — COFFEE TASTING"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Ukázkový dvouhodinový cupping pro maximálně čtyři účastníky. Společně porovnáte vůni, sladkost, kyselost a dochuť různých káv a vyzkoušíte si základní postup ochutnávání. Cena a termíny jsou demonstrační.</p>",
+        "en": "<p>A sample two-hour cupping session for a maximum of four participants. Compare the aroma, sweetness, acidity and aftertaste of different coffees and try a basic tasting routine. The price and dates are demonstration data.</p>"
+      },
+      "productType": "Course",
+      "tags": [
+        "course",
+        "cupping",
+        "beginner",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/images/OLD03329.webp",
+          "altText": "Coffee bags and ceramic cups on cafe shelves; illustrative photo",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Termín",
+        "en": "Date"
+      },
+      "course": {
+        "durationMinutes": 120,
+        "capacity": 4,
+        "level": {
+          "cs": "Začátečník",
+          "en": "Beginner"
+        },
+        "syllabus": {
+          "cs": [
+            "Co je cupping a jak připravit ochutnávku",
+            "Vůně suché a zalité kávy",
+            "Porovnání sladkosti, kyselosti a těla",
+            "Dochuť a změny chuti při chladnutí",
+            "Jednoduché zápisky a sdílení dojmů"
+          ],
+          "en": [
+            "What cupping is and how to set up a tasting",
+            "Dry and wet coffee aromas",
+            "Comparing sweetness, acidity and body",
+            "Aftertaste and changes as coffee cools",
+            "Simple tasting notes and sharing impressions"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-c1",
+          "sku": "DEMO-CUPPING-1",
+          "price": 900,
+          "quantity": 4,
+          "value": null,
+          "offsetDays": 12,
+          "localHour": 16
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-c2",
+          "sku": "DEMO-CUPPING-2",
+          "price": 900,
+          "quantity": 2,
+          "value": null,
+          "offsetDays": 26,
+          "localHour": 16
+        },
+        {
+          "id": "gid://shopify/ProductVariant/mock-c3",
+          "sku": "DEMO-CUPPING-3",
+          "price": 900,
+          "quantity": 0,
+          "value": null,
+          "offsetDays": 40,
+          "localHour": 16
+        }
+      ]
+    },
+    {
       "id": "gid://shopify/Product/mock-course-filter",
       "handle": "filtrovana-kava",
       "title": {
-        "cs": "FILTROVANÁ KÁVA DOMA",
-        "en": "FILTER COFFEE AT HOME"
+        "cs": "PŘÍPRAVA FILTROVANÉ KÁVY",
+        "en": "FILTER COFFEE BREWING"
       },
       "descriptionHtml": {
-        "cs": "<p>Ukázkový tříhodinový kurz domácí přípravy kávy. Vyzkoušíte V60, Aeropress a French press.</p>",
-        "en": "<p>A sample three-hour home brewing class with V60, Aeropress and French press.</p>"
+        "cs": "<p>Ukázkový tříhodinový kurz přípravy filtrované kávy, maximálně pro čtyři účastníky. Vyzkoušíte V60, Aeropress a French press, porovnáte mletí a poměry kávy a vody.</p>",
+        "en": "<p>A sample three-hour filter coffee brewing class for a maximum of four participants. Try V60, Aeropress and French press, comparing grind size and coffee-to-water ratios.</p>"
       },
       "productType": "Course",
       "tags": [
@@ -201,7 +186,7 @@
       "images": [
         {
           "url": "/images/OLD03329.webp",
-          "altText": "Pour over brewing",
+          "altText": "Coffee bags and ceramic cups on cafe shelves",
           "width": null,
           "height": null
         }
@@ -214,7 +199,7 @@
       },
       "course": {
         "durationMinutes": 180,
-        "capacity": 8,
+        "capacity": 4,
         "level": {
           "cs": "Začátečník",
           "en": "Beginner"
@@ -241,7 +226,7 @@
           "id": "gid://shopify/ProductVariant/mock-f1",
           "sku": "DEMO-FILTROVANA-KAVA-1",
           "price": 1500,
-          "quantity": 6,
+          "quantity": 4,
           "value": null,
           "offsetDays": 5,
           "localHour": 15
@@ -250,7 +235,7 @@
           "id": "gid://shopify/ProductVariant/mock-f2",
           "sku": "DEMO-FILTROVANA-KAVA-2",
           "price": 1500,
-          "quantity": 6,
+          "quantity": 4,
           "value": null,
           "offsetDays": 19,
           "localHour": 15
@@ -259,7 +244,7 @@
           "id": "gid://shopify/ProductVariant/mock-f3",
           "sku": "DEMO-FILTROVANA-KAVA-3",
           "price": 1500,
-          "quantity": 6,
+          "quantity": 4,
           "value": null,
           "offsetDays": 33,
           "localHour": 15

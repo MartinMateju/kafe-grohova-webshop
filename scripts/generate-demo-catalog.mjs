@@ -10,11 +10,12 @@ const { values } = parseArgs({ options: {
   date: { type: 'string', default: demoBaseDate() },
   lang: { type: 'string', default: 'cs' },
   'image-base': { type: 'string' },
+  'courses-only': { type: 'boolean', default: false },
   out: { type: 'string', default: 'data/shopify' },
   help: { type: 'boolean', default: false },
 } });
 if (values.help) {
-  console.log('node scripts/generate-demo-catalog.mjs [--date YYYY-MM-DD] [--lang cs|en] [--image-base https://your-public-site.example] [--out data/shopify]');
+  console.log('node scripts/generate-demo-catalog.mjs [--date YYYY-MM-DD] [--lang cs|en] [--courses-only] [--image-base https://your-public-site.example] [--out data/shopify]');
   process.exit(0);
 }
 assert(['cs', 'en'].includes(values.lang), '--lang must be cs or en');
@@ -59,7 +60,9 @@ const rows = [];
 const courses = [];
 const imageManifest = [];
 const lang = values.lang;
-const products = catalog.products.filter(product => product.productType !== 'Gift Card');
+const products = catalog.products.filter(product =>
+  product.productType !== 'Gift Card' && (!values['courses-only'] || Boolean(product.course)),
+);
 for (const product of products) {
   const options = new Set();
   const sessions = [];
@@ -129,4 +132,5 @@ await writeFile(join(output, 'course-metafields.json'), JSON.stringify({
 await writeFile(join(output, 'images.json'), JSON.stringify(imageManifest, null, 2) + '\n');
 console.log(`Generated ${products.length} draft products, ${products.reduce((sum, product) => sum + product.variants.length, 0)} variants, and ${courses.length} course metadata records in ${output}`);
 console.log(`Base date: ${values.date}; language: ${lang}; currency: ${catalog.currency}. Gift cards require native Shopify setup.`);
+if (values['courses-only']) console.log('Courses-only export; merchandise remains available in the source catalog for a future launch.');
 console.log(imageBase ? 'Verify the supplied image URLs are public before import.' : 'Images omitted from CSV; upload the files listed in images.json after import.');

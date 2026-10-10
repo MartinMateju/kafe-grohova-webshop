@@ -13,7 +13,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:4321. No Shopify account or credentials are required. The demo includes 3 courses, 8 merchandise/gift products and 4 articles, in both languages. Course sessions roll into the future at build/start time and use Europe/Prague. Prices are CZK.
+Open http://localhost:4321. No Shopify account or credentials are required. The demo shows 3 courses and 4 articles in both languages. Cupping replaces the previous espresso course. Merchandise and gift cards are temporarily hidden; their 8 fixtures remain available for later restoration. Course sessions roll into the future at build/start time and use Europe/Prague. Prices are CZK.
+
+`PUBLIC_MERCH_ENABLED=false` is the default. It hides store navigation, product cards and merchandise detail routes, sends the store landing page to courses, and removes merchandise from restored carts. Set `PUBLIC_MERCH_ENABLED=true` in the relevant Vercel environments and rebuild to restore the shop when photos are ready. No Shopify products are deleted by this setting.
 
 The cart supports variants, quantities, stock limits, removal and persistence. Demo checkout is disabled and pages carry a DEMO banner and noindex metadata. Contact opens an email draft; it does not send mail or falsely report a submission. The blog contact link is not a mailing-list signup.
 
@@ -46,6 +48,7 @@ npm run preview             # serve the static production output locally
 
 ```dotenv
 PUBLIC_SHOPIFY_MODE=live
+PUBLIC_MERCH_ENABLED=false
 PUBLIC_SHOPIFY_STORE_DOMAIN=b1pnun-1t.myshopify.com
 PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your-public-storefront-token
 PUBLIC_SHOPIFY_API_VERSION=2026-07
@@ -59,7 +62,7 @@ The public token is intentionally used in the browser. **Never enter an Admin AP
 
 Modes: `auto` (default) uses demo only with both credentials absent; `demo` explicitly uses fixtures; `live` requires valid credentials. A partial configuration or failed live API request fails visibly instead of silently publishing an empty or demo catalog. Set `live` explicitly in production.
 
-4. Create the `barista-kurzy` and `merch` collections, assign the appropriate products, activate the reviewed products and publish them to the **Headless** sales channel. Confirm collection publication too. An empty merch collection stays empty; a missing merch collection falls back to non-course products. The courses collection is required.
+4. Create the `barista-kurzy` collection, assign the course products, activate the reviewed products and publish them to the **Headless** sales channel. Confirm collection publication too. The `merch` collection is needed only when merchandise is restored. An empty merch collection stays empty; a missing merch collection falls back to non-course products. The courses collection is required.
 5. Configure the Czech market, CZK pricing, shipping for merchandise, payment/test mode and Shopify checkout settings in this dedicated store. Both site languages currently use the Czech market.
 6. Add translations through Shopify Translate & Adapt; the app queries `CS` and `EN`. Language links match resource IDs even when article/product handles are translated.
 
@@ -70,18 +73,20 @@ Current official setup: [Storefront API getting started](https://shopify.dev/doc
 See [demo catalog instructions](docs/demo-catalog.md) for the exact import process and limitations.
 
 ```sh
-npm run catalog:generate
+npm run catalog:generate -- --courses-only
 # Reproducible example, with public URLs only when those images are actually hosted:
-node scripts/generate-demo-catalog.mjs --date 2026-10-09 --lang cs
+node scripts/generate-demo-catalog.mjs --courses-only --date 2026-10-10 --lang cs
 ```
 
-`data/shopify/products.csv` contains **10 draft products / 22 variants**. Course metadata and image manifests are included beside it. All products are initially unpublished and carry a `demo` tag. Review in Kafe Grohova's dedicated store before activating any products. Prices, quantities, articles and descriptions are sample content.
+`data/shopify/products.csv` contains **3 draft courses / 8 date variants**. Course metadata and image manifests are included beside it. All products are initially unpublished and carry a `demo` tag. Review in Kafe Grohova's dedicated store before activating any products. Prices, quantities, articles and descriptions are sample content. Omit `--courses-only` to export the retained full catalog later (10 products / 21 variants, excluding the native gift card).
 
 The local gift-card example is deliberately excluded from CSV: create a native Shopify gift-card product in Shopify Admin, then add it to `merch`. Course variant metafields and translations also need setup; the sidecar JSON documents their values and is not an Admin import endpoint. Without a public image base, upload images from `public/` using the image manifest.
 
 ## Courses and seats
 
 One product per course, one variant per date. Set product type `Course` or tag `course`, and include it in `barista-kurzy`. Track inventory per variant with quantity equal to available seats, disable continuing sales when out of stock, and mark courses as not requiring shipping.
+
+Group limits are **2 for beginner latte art**, **4 for cupping**, and **4 for filtered coffee**. Set both the `course.capacity` product metafield and each date variant's Shopify inventory correctly. The booking controls and cart enforce the per-session limit; Shopify inventory prevents overselling across customers. For an existing session, available inventory is the group limit minus places already sold, not a fresh reset to the full capacity.
 
 Create these custom-data definitions and allow public Storefront read access:
 
@@ -108,7 +113,7 @@ npm run shopify:verify -- --connection-only # authenticate a new store before im
 npm run shopify:verify -- --cart    # create one test cart, validate checkout URL, empty it
 ```
 
-The connection-only check reports shop identity and currency; it does not establish launch readiness. The full check validates CZK, both catalogs and course timestamps, and warns when there are no future bookable sessions to test. The cart probe does not open checkout, take payment or place an order. Finish a separate Shopify test-payment walkthrough for merchandise and a course before accepting real orders. That walkthrough requires access to the dedicated store and has not been performed by the local demo tests.
+The connection-only check reports shop identity and currency; it does not establish launch readiness. The full check validates CZK, course timestamps and the enabled catalogs, and warns when there are no future bookable sessions to test. The cart probe does not open checkout, take payment or place an order. Finish a separate Shopify test-payment walkthrough for a course before accepting real orders; test merchandise too when it is restored. That walkthrough requires access to the dedicated store and has not been performed by the local demo tests.
 
 ## Deployment and updates
 

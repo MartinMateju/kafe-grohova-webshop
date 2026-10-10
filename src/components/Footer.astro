@@ -1,12 +1,13 @@
 ---
+import { MERCH_ENABLED } from '../lib/shopify/config';
 import { getLangFromUrl, useTranslations, localePath } from '../i18n/utils';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 const links = [
-  { label: t('nav.store'), href: localePath(lang, '/store') },
   { label: t('nav.courses'), href: localePath(lang, '/courses') },
+  ...(MERCH_ENABLED ? [{ label: t('nav.store'), href: localePath(lang, '/store') }] : []),
   { label: t('nav.blog'), href: localePath(lang, '/blog') },
   { label: t('nav.contact'), href: localePath(lang, '/contact') },
 ];
@@ -36,7 +37,7 @@ const instagram = 'https://instagram.com/kafegrohova';
     </div>
 
     <div class="hidden flex-row items-start gap-4 text-[15px] lg:flex lg:text-[18px] px-6">
-      <p>{t('nav.sub2')}</p>
+      <p>{MERCH_ENABLED ? t('nav.sub2') : t('nav.subCourses')}</p>
       <p>{t('nav.sub1')}</p>
     </div>
 
@@ -72,7 +73,7 @@ const instagram = 'https://instagram.com/kafegrohova';
     </div>
 
     <div class="flex flex-row justify-center items-center gap-4 px-4 py-3 text-[13px]">
-      <p>{t('nav.sub2')}</p>
+      <p>{MERCH_ENABLED ? t('nav.sub2') : t('nav.subCourses')}</p>
       <p>{t('nav.sub1')}</p>
     </div>
   </div>

@@ -38,12 +38,15 @@ export function resolveShopifyConfig(env: Env) {
   }
   return {
     domain, token, apiVersion, isMockMode,
+    merchEnabled: env.PUBLIC_MERCH_ENABLED?.trim() === 'true',
     endpoint: isMockMode ? '' : `https://${domain}/api/${apiVersion}/graphql.json`,
   };
 }
 
 const env = readEnv();
 const config = resolveShopifyConfig(env);
+/** Merchandise and gift cards stay hidden until explicitly restored. */
+export const MERCH_ENABLED = config.merchEnabled;
 export const SHOPIFY_DOMAIN = config.domain;
 export const SHOPIFY_TOKEN = config.token;
 export const SHOPIFY_API_VERSION = config.apiVersion;

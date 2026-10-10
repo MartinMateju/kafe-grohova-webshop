@@ -2,9 +2,11 @@
 import { storefront } from './shopify/client';
 import { CART_CREATE, CART_LINES_ADD, CART_LINES_REMOVE, CART_LINES_UPDATE, CART_QUERY } from './shopify/queries';
 import { normalizeCart } from './shopify/normalize';
-import { isMockMode } from './shopify/config';
+import { isMockMode, MERCH_ENABLED } from './shopify/config';
+import { getProduct, isCourse, isRetiredCourse } from './shopify';
+import { mockCourses } from './shopify/mock';
 import { isFutureCourseDate } from './courseAvailability';
-import type { Cart, CartLine } from './shopify/types';
+import type { Cart, CartLine, Product } from './shopify/types';
 
 const CART_ID_KEY = 'kafe_cart_id';
 const MOCK_CART_KEY = 'kafe_cart_mock';
@@ -35,6 +37,9 @@ interface MockLineRecord extends LineSnapshot { quantity: number }
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 interface CartOptions {
   mock?: boolean;
+  merchEnabled?: boolean;
+  lookupProduct?: typeof getProduct;
+  demoCourses?: () => Product[];
   request?: typeof storefront;
   storage?: StorageLike | null;
   now?: () => number;
@@ -49,6 +54,8 @@ type Payload = {
 /** Isolated stores also let tests exercise real API failures without a live shop. */
 export function createCartStore(options: CartOptions = {}) {
   const mock = options.mock ?? isMockMode;
+  const merchEnabled = options.merchEnabled ?? MERCH_ENABLED;
+  const lookupProduct = options.lookupProduct ?? getProduct;
   const request = options.request ?? storefront;
   const now = options.now ?? Date.now;
   const state: CartState = { cart: null, loading: false, error: null, notice: null, open: false };
@@ -104,22 +111,55 @@ export function createCartStore(options: CartOptions = {}) {
     }
   }
 
+  function resolveDemoSnapshot(snapshot: LineSnapshot): LineSnapshot {
+    if (isRetiredCourse(snapshot.productHandle)) throw new Error('This course is no longer available. Please choose another course.');
+    const courses = options.demoCourses?.() ?? mockCourses(language() === 'EN' ? 'en' : 'cs');
+    const course = courses.find((product) => product.handle === snapshot.productHandle &&
+      product.variants.some((variant) => variant.id === snapshot.merchandiseId));
+    if (!course) {
+      if (!merchEnabled) throw new Error('Merchandise is temporarily unavailable. Please choose a course.');
+      return snapshot;
+    }
+    const variant = course.variants.find((item) => item.id === snapshot.merchandiseId)!;
+    const capacity = course.course?.capacity;
+    const stock = variant.availableForSale ? stockLimit({ ...snapshot, quantityAvailable: variant.quantityAvailable }) : 0;
+    const limit = typeof capacity === 'number' && Number.isFinite(capacity)
+      ? Math.min(stock, Math.max(0, Math.floor(capacity))) : stock;
+    return {
+      ...snapshot, productTitle: course.title, amount: variant.price.amount,
+      currencyCode: variant.price.currencyCode, quantityAvailable: limit,
+      // Preserve the selected date: a catalog refresh must never move a booking silently.
+      startsAt: snapshot.startsAt ?? null,
+    };
+  }
+
   function readMockLines(): MockLineRecord[] {
-    if (records) return records;
-    records = [];
-    try {
-      const parsed: unknown = JSON.parse(storage()?.getItem(MOCK_CART_KEY) ?? '[]');
-      if (Array.isArray(parsed)) {
-        records = parsed.filter((line): line is MockLineRecord =>
-          line && ['merchandiseId', 'productTitle', 'variantTitle', 'productHandle', 'amount', 'currencyCode']
-            .every((key) => typeof line[key] === 'string') &&
-          Number.isFinite(Number(line.amount)) && Number(line.amount) >= 0 &&
-          Number.isInteger(line.quantity) && line.quantity > 0 &&
-          (!('startsAt' in line) || isFutureCourseDate(line.startsAt, now())),
-        ).map((line) => ({ ...line, quantity: Math.min(line.quantity, stockLimit(line)) }))
-          .filter((line) => line.quantity > 0);
-      }
-    } catch { /* A damaged/blocked storage area starts a fresh session cart. */ }
+    if (!records) {
+      records = [];
+      try {
+        const parsed: unknown = JSON.parse(storage()?.getItem(MOCK_CART_KEY) ?? '[]');
+        if (Array.isArray(parsed)) {
+          records = parsed.filter((line): line is MockLineRecord =>
+            line && ['merchandiseId', 'productTitle', 'variantTitle', 'productHandle', 'amount', 'currencyCode']
+              .every((key) => typeof line[key] === 'string') &&
+            Number.isFinite(Number(line.amount)) && Number(line.amount) >= 0 &&
+            Number.isInteger(line.quantity) && line.quantity > 0,
+          );
+        }
+      } catch { /* A damaged/blocked storage area starts a fresh session cart. */ }
+    }
+    const refreshed = records.flatMap((line) => {
+      try {
+        const current = resolveDemoSnapshot(line);
+        validateDate(current);
+        const quantity = Math.min(line.quantity, stockLimit(current));
+        return quantity > 0 ? [{ ...current, quantity }] : [];
+      } catch { return []; }
+    });
+    if (JSON.stringify(records) !== JSON.stringify(refreshed)) {
+      state.notice = 'Your saved cart was updated to match the currently available courses and seat limits.';
+    }
+    records = refreshed;
     return records;
   }
 
@@ -174,18 +214,47 @@ export function createCartStore(options: CartOptions = {}) {
     return result;
   }
 
-  function acceptCart(payload: Payload | undefined) {
+  async function acceptCart(payload: Payload | undefined): Promise<boolean> {
     const error = payload?.userErrors?.[0]?.message;
     if (error) throw new Error(error);
     if (!payload?.cart) throw new Error('Your cart is unavailable. Please refresh and try again.');
-    state.cart = normalizeCart(payload.cart);
-    storeCartId(state.cart.id);
-    state.notice = payload.warnings?.map((warning) => warning.message).join(' ') || null;
+    let cart = normalizeCart(payload.cart);
+    let removedUnavailable = false;
+    const unavailable = (line: CartLine) => isRetiredCourse(line.productHandle) ||
+      (!merchEnabled && !('courseStartsAt' in line));
+    const hidden = cart.lines.filter(unavailable);
+    if (hidden.length) {
+      // Do not expose a checkout URL until Shopify confirms the removal.
+      state.cart = null;
+      storeCartId(cart.id);
+      try {
+        const data = await request<any>(CART_LINES_REMOVE, {
+          cartId: cart.id, lineIds: hidden.map((line) => line.id), language: language(),
+        });
+        const result: Payload | undefined = data?.cartLinesRemove;
+        const removalError = result?.userErrors?.[0]?.message;
+        if (removalError || !result?.cart) throw new Error(removalError || 'Shopify did not return the updated cart.');
+        cart = normalizeCart(result.cart);
+        if (cart.lines.some(unavailable)) {
+          throw new Error('Shopify still returned unavailable items in the cart.');
+        }
+        removedUnavailable = true;
+      } catch {
+        throw new Error('Some items are no longer available. Your saved cart could not be updated, so checkout is blocked. Please try again.');
+      }
+    }
+    state.cart = cart;
+    storeCartId(cart.id);
+    state.notice = [
+      removedUnavailable ? 'Unavailable items were removed from your cart.' : '',
+      ...(payload.warnings?.map((warning) => warning.message) ?? []),
+    ].filter(Boolean).join(' ') || null;
+    return removedUnavailable;
   }
 
   async function create(lines: { merchandiseId: string; quantity: number }[]) {
     const data = await request<any>(CART_CREATE, { lines, language: language() });
-    acceptCart(data?.cartCreate);
+    await acceptCart(data?.cartCreate);
   }
 
   function initCart(): Promise<boolean> {
@@ -194,16 +263,33 @@ export function createCartStore(options: CartOptions = {}) {
       const id = storedCartId();
       if (!id) return;
       const data = await request<any>(CART_QUERY, { id, language: language() });
-      if (data?.cart) state.cart = normalizeCart(data.cart);
+      if (data?.cart) await acceptCart({ cart: data.cart });
       else { storeCartId(null); state.cart = null; }
     });
+  }
+
+  async function liveCourseLimit(merchandiseId: string, productHandle: string, startsAt: string | null | undefined) {
+    const product = await lookupProduct(productHandle, language() === 'EN' ? 'en' : 'cs');
+    const variant = product?.variants.find((item) => item.id === merchandiseId);
+    if (!product || !isCourse(product)) throw new Error('Merchandise is temporarily unavailable. Please choose a course.');
+    if (!variant?.availableForSale || !isFutureCourseDate(variant.startsAt, now())) {
+      throw new Error('This course date is no longer available. Please remove it and choose another date.');
+    }
+    if (!startsAt || Date.parse(variant.startsAt) !== Date.parse(startsAt)) {
+      throw new Error('This course date has changed. Please remove it and choose the current date.');
+    }
+    const capacity = product.course?.capacity;
+    const stock = stockLimit({ merchandiseId, productHandle, productTitle: '', variantTitle: '', amount: '0', currencyCode: '', quantityAvailable: variant.quantityAvailable });
+    return typeof capacity === 'number' && Number.isFinite(capacity)
+      ? Math.min(stock, Math.max(0, Math.floor(capacity))) : stock;
   }
 
   function addLine(snapshot: LineSnapshot, quantity = 1): Promise<boolean> {
     return runOperation(async () => {
       validateQuantity(quantity);
-      validateDate(snapshot);
       if (mock) {
+        snapshot = resolveDemoSnapshot(snapshot);
+        validateDate(snapshot);
         const lines = readMockLines();
         const existing = lines.find((line) => line.merchandiseId === snapshot.merchandiseId);
         const nextQuantity = (existing?.quantity ?? 0) + quantity;
@@ -214,6 +300,13 @@ export function createCartStore(options: CartOptions = {}) {
         else lines.push({ ...snapshot, quantity });
         saveMockLines(lines);
         return;
+      }
+      validateDate(snapshot);
+      if (!merchEnabled && !('startsAt' in snapshot)) throw new Error('Merchandise is temporarily unavailable. Please choose a course.');
+      if ('startsAt' in snapshot) {
+        const limit = await liveCourseLimit(snapshot.merchandiseId, snapshot.productHandle, snapshot.startsAt);
+        const existing = state.cart?.lines.find((line) => line.merchandiseId === snapshot.merchandiseId)?.quantity ?? 0;
+        if (existing + quantity > limit) throw new Error(`Only ${limit} seats can be added to this course date.`);
       }
       const id = storedCartId();
       const lines = [{ merchandiseId: snapshot.merchandiseId, quantity }];
@@ -226,14 +319,14 @@ export function createCartStore(options: CartOptions = {}) {
         if (!payload?.cart) {
           // Expiration can arrive with userErrors. Confirm it before retrying.
           const current = await request<any>(CART_QUERY, { id, language: language() });
-          if (current?.cart) acceptCart(payload);
+          if (current?.cart) await acceptCart(payload);
           else {
             storeCartId(null);
             state.cart = null;
             await create(lines);
             created = true;
           }
-        } else acceptCart(payload);
+        } else await acceptCart(payload);
       }
       const addedCourse = state.cart?.lines.find((line) => line.merchandiseId === snapshot.merchandiseId);
       if (addedCourse && 'courseStartsAt' in addedCourse && !isFutureCourseDate(addedCourse.courseStartsAt, now())) {
@@ -261,13 +354,20 @@ export function createCartStore(options: CartOptions = {}) {
         return;
       }
       const course = state.cart?.lines.find((line) => line.id === lineId);
+      if (!merchEnabled && (!course || !('courseStartsAt' in course))) {
+        throw new Error('This item is temporarily unavailable. Please remove it from your cart.');
+      }
       if (course && 'courseStartsAt' in course && !isFutureCourseDate(course.courseStartsAt, now())) {
         throw new Error('This course date is no longer available. Please remove it and choose another date.');
+      }
+      if (course && 'courseStartsAt' in course) {
+        const limit = await liveCourseLimit(course.merchandiseId, course.productHandle, course.courseStartsAt);
+        if (quantity > limit && quantity >= course.quantity) throw new Error(`Only ${limit} seats are available. Please reduce the quantity or remove this date.`);
       }
       const id = storedCartId();
       if (!id) throw new Error('Your cart has expired. Please add the item again.');
       const data = await request<any>(CART_LINES_UPDATE, { cartId: id, lines: [{ id: lineId, quantity }], language: language() });
-      acceptCart(data?.cartLinesUpdate);
+      await acceptCart(data?.cartLinesUpdate);
     });
   }
 
@@ -280,7 +380,7 @@ export function createCartStore(options: CartOptions = {}) {
       const id = storedCartId();
       if (!id) throw new Error('Your cart has expired. Please add the item again.');
       const data = await request<any>(CART_LINES_REMOVE, { cartId: id, lineIds: [lineId], language: language() });
-      acceptCart(data?.cartLinesRemove);
+      await acceptCart(data?.cartLinesRemove);
     });
   }
 
@@ -295,11 +395,16 @@ export function createCartStore(options: CartOptions = {}) {
         state.cart = null;
         throw new Error('Your cart has expired. Please add the items again.');
       }
-      acceptCart({ cart: data.cart });
+      const removedUnavailable = await acceptCart({ cart: data.cart });
+      if (removedUnavailable) throw new Error('Unavailable items were removed from your cart. Please review your cart before continuing to checkout.');
       if (!state.cart?.lines.length) throw new Error('Your cart is empty. Please add an item first.');
       for (const line of state.cart.lines) {
-        if ('courseStartsAt' in line && !isFutureCourseDate(line.courseStartsAt, now())) {
-          throw new Error('A course in your cart is no longer available. Please remove it and choose another date.');
+        if ('courseStartsAt' in line) {
+          if (!isFutureCourseDate(line.courseStartsAt, now())) {
+            throw new Error('A course in your cart is no longer available. Please remove it and choose another date.');
+          }
+          const limit = await liveCourseLimit(line.merchandiseId, line.productHandle, line.courseStartsAt);
+          if (line.quantity > limit) throw new Error(`Only ${limit} seats remain for a course in your cart. Please reduce its quantity before checkout.`);
         }
       }
       const url = state.cart.checkoutUrl;

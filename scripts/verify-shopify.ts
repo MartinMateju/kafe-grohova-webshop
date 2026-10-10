@@ -27,11 +27,38 @@ async function main() {
   if (shop.paymentSettings.currencyCode !== 'CZK') {
     throw new Error('This catalog uses CZK prices. Configure the dedicated Shopify store currency as CZK before importing the demo products.');
   }
-  const [merch, courses, articles] = await Promise.all([getMerch('cs'), getCourses('cs'), getArticles('cs')]);
-  if (!merch.length || !courses.length) throw new Error('Publish merchandise and course products to the Headless channel and check collection handles. One or both catalogs are empty.');
+  const [merch, courses, articles] = await Promise.all([
+    config.MERCH_ENABLED ? getMerch('cs') : Promise.resolve([]),
+    getCourses('cs'),
+    getArticles('cs'),
+  ]);
+  if (!courses.length) throw new Error('Publish course products to the Headless channel and check the course collection handle. The course catalog is empty.');
+  if (config.MERCH_ENABLED && !merch.length) throw new Error('Merchandise is enabled but its catalog is empty. Publish merchandise to the Headless channel and check the collection handle, or set PUBLIC_MERCH_ENABLED=false.');
   const courseVariants = courses.flatMap(product => product.variants);
   if (courseVariants.some(variant => variant.quantityAvailable === null)) {
     throw new Error('Course inventory is unavailable. Enable product inventory permission on the Headless storefront.');
+  }
+  const requestedCapacities: Record<string, number> = {
+    'latte-art': 2,
+    cupping: 4,
+    'filtrovana-kava': 4,
+  };
+  for (const course of courses) {
+    const capacity = course.course?.capacity;
+    if (typeof capacity !== 'number' || !Number.isInteger(capacity) || capacity <= 0) {
+      throw new Error(`Course "${course.handle}" needs a positive integer course.capacity metafield with Storefront API access.`);
+    }
+    const requestedCapacity = requestedCapacities[course.handle];
+    if (requestedCapacity !== undefined && capacity !== requestedCapacity) {
+      throw new Error(`Course "${course.handle}" must have capacity ${requestedCapacity}; Shopify currently reports ${capacity}.`);
+    }
+    if (course.variants.length === 0) throw new Error(`Course "${course.handle}" has no scheduled variants.`);
+    if (course.variants.some(variant =>
+      typeof variant.quantityAvailable !== 'number' || !Number.isInteger(variant.quantityAvailable) ||
+      variant.quantityAvailable < 0 || variant.quantityAvailable > capacity,
+    )) {
+      throw new Error(`Course "${course.handle}" seat inventory must be a whole number between 0 and its capacity (${capacity}).`);
+    }
   }
   if (courseVariants.some(variant => !variant.startsAt)) {
     throw new Error('Course dates are missing: set public course.starts_at variant metafields before accepting bookings.');
@@ -43,12 +70,15 @@ async function main() {
     console.warn('No future course session has available seats. Course booking cannot be tested until a future session has stock.');
   }
   console.log(`Catalog OK: ${merch.length} merchandise products, ${courses.length} courses, ${articles.length} articles.`);
+  if (!config.MERCH_ENABLED) console.log('Merchandise is hidden; only courses are required for this launch.');
   if (!process.argv.includes('--cart')) {
     console.log('Read-only verification passed. Use --cart to create and empty a test cart (no order or payment).');
     return;
   }
-  const variant = [...merch, ...courses].flatMap(product => product.variants).find(item => item.availableForSale);
-  if (!variant) throw new Error('No available variant for the cart check.');
+  const variant = merch.flatMap(product => product.variants).find(item => item.availableForSale)
+    ?? courseVariants.find(item => item.availableForSale && item.quantityAvailable !== null &&
+      item.quantityAvailable > 0 && isFutureCourseDate(item.startsAt));
+  if (!variant) throw new Error('No available merchandise variant or future course session with stock for the cart check.');
   const data = await storefront<any>(CART_CREATE, { lines: [{ merchandiseId: variant.id, quantity: 1 }], language: 'CS' });
   const payload = data.cartCreate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors.map((item: any) => item.message).join('; '));

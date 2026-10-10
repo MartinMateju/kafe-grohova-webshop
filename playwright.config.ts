@@ -21,7 +21,7 @@ export default defineConfig({
     command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4322',
     url: 'http://127.0.0.1:4322',
     reuseExistingServer: false,
-    env: { PUBLIC_SHOPIFY_MODE: 'demo' },
+    env: { PUBLIC_SHOPIFY_MODE: 'demo', PUBLIC_MERCH_ENABLED: 'false' },
     timeout: 60_000,
   },
 });

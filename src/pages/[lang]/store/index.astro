@@ -3,12 +3,14 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import { allLangs, useTranslations, type Lang } from '../../../i18n/utils';
 import { getMerch } from '../../../lib/shopify';
+import { MERCH_ENABLED } from '../../../lib/shopify/config';
 
 export function getStaticPaths() {
   return allLangs.map((lang) => ({ params: { lang } }));
 }
 
 const lang = Astro.params.lang as Lang;
+if (!MERCH_ENABLED) return Astro.redirect(`/${lang}/courses/`, 302);
 const t = useTranslations(lang);
 
 const products = await getMerch(lang);

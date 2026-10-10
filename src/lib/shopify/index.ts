@@ -13,6 +13,7 @@ import {
   BLOG_HANDLE,
   COURSES_COLLECTION,
   MERCH_COLLECTION,
+  MERCH_ENABLED,
   isMockMode,
 } from './config';
 import type { Article, Product } from './types';
@@ -20,7 +21,13 @@ import { shopifyLanguage, type Lang } from '../../i18n/utils';
 import { isFutureCourseDate } from '../courseAvailability';
 
 export * from './types';
-export { isMockMode } from './config';
+export { isMockMode, MERCH_ENABLED } from './config';
+
+// Cupping replaced this course; keep earlier Shopify imports out of the storefront.
+const RETIRED_COURSE_HANDLES = new Set(['espresso-zaklady']);
+export function isRetiredCourse(handle: string): boolean {
+  return RETIRED_COURSE_HANDLES.has(handle);
+}
 
 type Raw = Record<string, any>;
 interface Connection {
@@ -70,7 +77,7 @@ async function completeProduct(raw: Raw, lang: Lang): Promise<Product> {
 
 /** Barista course products — one variant per scheduled date. */
 export async function getCourses(lang: Lang): Promise<Product[]> {
-  if (isMockMode) return mockCourses(lang);
+  if (isMockMode) return mockCourses(lang).filter((product) => !isRetiredCourse(product.handle));
 
   const nodes = await readConnection(
     COLLECTION_QUERY,
@@ -84,11 +91,15 @@ export async function getCourses(lang: Lang): Promise<Product[]> {
   if (!nodes) {
     throw new ShopifyError(`The courses collection "${COURSES_COLLECTION}" is missing or not published to the Headless channel.`);
   }
-  return Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
+  const products = await Promise.all(nodes
+    .filter((raw) => !isRetiredCourse(raw.handle))
+    .map((raw) => completeProduct(raw, lang)));
+  return products.filter(isCourse);
 }
 
 /** Merchandise products. Falls back to all products if the collection is absent. */
 export async function getMerch(lang: Lang): Promise<Product[]> {
+  if (!MERCH_ENABLED) return [];
   if (isMockMode) return mockMerch(lang);
 
   const nodes = await readConnection(
@@ -118,9 +129,10 @@ export async function getProduct(
   handle: string,
   lang: Lang,
 ): Promise<Product | null> {
+  if (isRetiredCourse(handle)) return null;
   if (isMockMode) {
     return (
-      [...mockMerch(lang), ...mockCourses(lang)].find(
+      [...(MERCH_ENABLED ? mockMerch(lang) : []), ...mockCourses(lang)].find(
         (p) => p.handle === handle,
       ) ?? null
     );
@@ -130,7 +142,9 @@ export async function getProduct(
     PRODUCT_QUERY,
     { handle, language: shopifyLanguage(lang) },
   );
-  return data?.product ? completeProduct(data.product, lang) : null;
+  if (!data?.product || isRetiredCourse(data.product.handle)) return null;
+  const product = await completeProduct(data.product, lang);
+  return MERCH_ENABLED || isCourse(product) ? product : null;
 }
 
 export async function getArticles(lang: Lang): Promise<Article[]> {
@@ -189,7 +203,13 @@ export function seatsRemaining(product: Product): number | null {
 
 /** Variants that still have a seat, sorted by start date when available. */
 export function bookableVariants(product: Product, now = Date.now()) {
+  const capacity = product.course?.capacity;
+  const limit = typeof capacity === 'number' && Number.isFinite(capacity) ? Math.max(0, Math.floor(capacity)) : null;
   return product.variants
+    .map((variant) => limit === null ? variant : {
+      ...variant,
+      quantityAvailable: limit === 0 ? 0 : variant.quantityAvailable === null ? null : Math.min(variant.quantityAvailable, limit),
+    })
     .filter((v) => v.availableForSale &&
       (v.quantityAvailable === null || v.quantityAvailable > 0) &&
       isFutureCourseDate(v.startsAt, now))

@@ -5,18 +5,19 @@ import { runInNewContext } from 'node:vm';
 import { build, createServer } from 'vite';
 
 // Exercise the real TypeScript modules with synthetic API responses, never a shop.
-const keys = ['PUBLIC_SHOPIFY_MODE', 'PUBLIC_SHOPIFY_STORE_DOMAIN', 'PUBLIC_SHOPIFY_STOREFRONT_TOKEN'];
+const keys = ['PUBLIC_SHOPIFY_MODE', 'PUBLIC_SHOPIFY_STORE_DOMAIN', 'PUBLIC_SHOPIFY_STOREFRONT_TOKEN', 'PUBLIC_MERCH_ENABLED'];
 const previous = keys.map((key) => process.env[key]);
 process.env.PUBLIC_SHOPIFY_MODE = 'live';
 process.env.PUBLIC_SHOPIFY_STORE_DOMAIN = 'integration-test.myshopify.com';
 process.env.PUBLIC_SHOPIFY_STOREFRONT_TOKEN = 'public-test-token';
+process.env.PUBLIC_MERCH_ENABLED = 'true';
 const originalFetch = globalThis.fetch;
 const server = await createServer({
   root: fileURLToPath(new URL('../../..', import.meta.url)),
   configFile: false,
   envFile: false,
   envPrefix: 'PUBLIC_',
-  server: { middlewareMode: true },
+  server: { middlewareMode: true, ws: false },
   appType: 'custom',
   logLevel: 'error',
 });
@@ -24,10 +25,32 @@ const config = await server.ssrLoadModule('/src/lib/shopify/config.ts');
 const shop = await server.ssrLoadModule('/src/lib/shopify/index.ts');
 const { normalizeCart } = await server.ssrLoadModule('/src/lib/shopify/normalize.ts');
 
+// A separate module graph verifies the default hidden state without mutating cached exports.
+delete process.env.PUBLIC_MERCH_ENABLED;
+const hiddenServer = await createServer({
+  root: fileURLToPath(new URL('../../..', import.meta.url)),
+  configFile: false, envFile: false, envPrefix: 'PUBLIC_',
+  server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error',
+});
+const hiddenShop = await hiddenServer.ssrLoadModule('/src/lib/shopify/index.ts');
+process.env.PUBLIC_MERCH_ENABLED = 'true';
+
+process.env.PUBLIC_SHOPIFY_MODE = 'demo';
+const demoServer = await createServer({
+  root: fileURLToPath(new URL('../../..', import.meta.url)),
+  configFile: false, envFile: false, envPrefix: 'PUBLIC_',
+  server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error',
+});
+const demoShop = await demoServer.ssrLoadModule('/src/lib/shopify/index.ts');
+process.env.PUBLIC_SHOPIFY_MODE = 'live';
+
+
 after(async () => {
   globalThis.fetch = originalFetch;
   keys.forEach((key, i) => previous[i] === undefined ? delete process.env[key] : process.env[key] = previous[i]);
   await server.close();
+  await hiddenServer.close();
+  await demoServer.close();
 });
 
 const connection = (nodes, cursor = null) => ({
@@ -83,6 +106,7 @@ test('the production browser bundle receives public Shopify config without Node 
   const bundle = Array.isArray(output) ? output[0] : output;
   runInNewContext(bundle.output[0].code, context);
   assert.equal(context.ShopifyConfig.isMockMode, false);
+  assert.equal(context.ShopifyConfig.MERCH_ENABLED, true);
   assert.equal(context.ShopifyConfig.SHOPIFY_TOKEN, 'public-test-token');
   assert.equal(context.ShopifyConfig.STOREFRONT_ENDPOINT, 'https://integration-test.myshopify.com/api/2026-07/graphql.json');
 });
@@ -160,4 +184,87 @@ test('cart lines retain course dates and flag missing schedules without marking 
   assert.equal(cart.lines[0].courseStartsAt, '2026-11-01T09:00:00Z');
   assert.equal(cart.lines[1].courseStartsAt, null);
   assert.equal('courseStartsAt' in cart.lines[2], false);
+});
+
+test('merchandise defaults hidden and requires an explicit true flag to restore', () => {
+  for (const value of [undefined, '', 'false', 'TRUE', '1']) {
+    assert.equal(config.resolveShopifyConfig({ PUBLIC_MERCH_ENABLED: value }).merchEnabled, false);
+  }
+  assert.equal(config.resolveShopifyConfig({ PUBLIC_MERCH_ENABLED: 'true' }).merchEnabled, true);
+  assert.equal(hiddenShop.MERCH_ENABLED, false);
+  assert.equal(shop.MERCH_ENABLED, true);
+});
+
+test('hidden merchandise lists perform no Storefront API calls', async () => {
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw new Error('No request expected'); };
+  assert.deepEqual(await hiddenShop.getMerch('cs'), []);
+  assert.deepEqual(await hiddenShop.getMerch('en'), []);
+  assert.equal(calls, 0);
+});
+
+test('direct hidden product lookups reject merchandise and gift cards but retain courses', async () => {
+  fakeAPI(({ variables }) => {
+    const raw = product(variables.handle);
+    if (variables.handle !== 'course') {
+      raw.productType = variables.handle === 'gift' ? 'Gift Card' : 'Merchandise';
+      raw.tags = [];
+    }
+    return { product: raw };
+  });
+  assert.equal(await hiddenShop.getProduct('tshirt', 'cs'), null);
+  assert.equal(await hiddenShop.getProduct('gift', 'en'), null);
+  assert.equal((await hiddenShop.getProduct('course', 'en')).handle, 'course');
+  assert.equal((await shop.getProduct('tshirt', 'en')).handle, 'tshirt');
+  assert.equal((await shop.getProduct('gift', 'en')).handle, 'gift');
+});
+
+test('noncourse products accidentally placed in the course collection stay hidden', async () => {
+  const course = product('course');
+  const merch = { ...product('tshirt'), productType: 'Merchandise', tags: [] };
+  const gift = { ...product('gift'), productType: 'Gift Card', tags: [] };
+  fakeAPI(() => ({ collection: { products: connection([course, merch, gift]) } }));
+  assert.deepEqual((await hiddenShop.getCourses('cs')).map((item) => item.handle), ['course']);
+});
+
+test('the retired espresso course stays hidden if its old Shopify record is still published', async () => {
+  fakeAPI(() => ({ collection: { products: connection([
+    product('espresso-zaklady', connection([variant('old-date')], 'old-variants')),
+    product('cupping'), product('new-course'),
+  ]) } }));
+  for (const client of [shop, hiddenShop]) {
+    for (const lang of ['cs', 'en']) {
+      assert.deepEqual((await client.getCourses(lang)).map((item) => item.handle), ['cupping', 'new-course']);
+    }
+  }
+
+  globalThis.fetch = async () => { throw new Error('Retired direct lookups must not call Shopify.'); };
+  for (const client of [shop, hiddenShop, demoShop]) {
+    for (const lang of ['cs', 'en']) {
+      assert.equal(await client.getProduct('espresso-zaklady', lang), null);
+    }
+  }
+
+  fakeAPI(() => ({ product: product('espresso-zaklady') }));
+  assert.equal(await hiddenShop.getProduct('old-course-alias', 'cs'), null);
+});
+
+test('demo courses contain cupping instead of the retired espresso course', async () => {
+  for (const lang of ['cs', 'en']) {
+    const handles = (await demoShop.getCourses(lang)).map((item) => item.handle);
+    assert(handles.includes('cupping'));
+    assert(!handles.includes('espresso-zaklady'));
+  }
+});
+
+test('course availability summaries respect configured capacity without inventing unknown inventory', () => {
+  const course = { course: { capacity: 3 }, variants: [
+    variant('date', { startsAt: '2099-10-10T12:00:00Z', quantityAvailable: 8 }),
+  ] };
+  assert.equal(shop.bookableVariants(course)[0].quantityAvailable, 3);
+  assert.equal(shop.seatsRemaining(course), 3);
+  course.variants[0].quantityAvailable = null;
+  assert.equal(shop.seatsRemaining(course), null);
+  course.course.capacity = 0;
+  assert.deepEqual(shop.bookableVariants(course), []);
 });
