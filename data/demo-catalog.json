@@ -676,18 +676,19 @@
         "en": "GIFT CARD"
       },
       "descriptionHtml": {
-        "cs": "<p>Ukázkový dárkový poukaz v hodnotě 1 000, 2 000 nebo 3 000 Kč. Demo nevytváří platný kód; skutečný poukaz vytvořte v Shopify.</p>",
-        "en": "<p>Sample gift card worth CZK 1,000, 2,000 or 3,000. The demo does not issue a redeemable code; create real gift cards in Shopify.</p>"
+        "cs": "<p>Darujte výběrovou kávu a nové dovednosti. Vyberte poukaz v hodnotě 1 000, 2 000 nebo 3 000 Kč a obdarovaný si zvolí svůj oblíbený baristický kurz.</p><p>V této ukázkové verzi je pokladna vypnutá a nevzniká platný dárkový kód.</p>",
+        "en": "<p>Give specialty coffee and a new skill. Choose a gift card worth CZK 1,000, 2,000 or 3,000 and let the recipient pick their favourite barista course.</p><p>Checkout is disabled in this demo and no redeemable gift code is issued.</p>"
       },
       "productType": "Gift Card",
+      "isGiftCard": true,
       "tags": [
         "gift",
         "demo"
       ],
       "images": [
         {
-          "url": "/images/OLD03340.webp",
-          "altText": "Gift card",
+          "url": "/gift-card-preview.png",
+          "altText": "Kafe Grohova sample gift voucher - not redeemable",
           "width": null,
           "height": null
         }

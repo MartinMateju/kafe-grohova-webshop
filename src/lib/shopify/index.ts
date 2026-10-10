@@ -14,6 +14,7 @@ import {
   COURSES_COLLECTION,
   MERCH_COLLECTION,
   MERCH_ENABLED,
+  GIFT_CARDS_ENABLED,
   isMockMode,
 } from './config';
 import type { Article, Product } from './types';
@@ -21,7 +22,7 @@ import { shopifyLanguage, type Lang } from '../../i18n/utils';
 import { isFutureCourseDate } from '../courseAvailability';
 
 export * from './types';
-export { isMockMode, MERCH_ENABLED } from './config';
+export { isMockMode, MERCH_ENABLED, GIFT_CARDS_ENABLED } from './config';
 
 // Cupping replaced this course; keep earlier Shopify imports out of the storefront.
 const RETIRED_COURSE_HANDLES = new Set(['espresso-zaklady']);
@@ -77,7 +78,7 @@ async function completeProduct(raw: Raw, lang: Lang): Promise<Product> {
 
 /** Barista course products — one variant per scheduled date. */
 export async function getCourses(lang: Lang): Promise<Product[]> {
-  if (isMockMode) return mockCourses(lang).filter((product) => !isRetiredCourse(product.handle));
+  if (isMockMode) return mockCourses(lang).filter((product) => !isRetiredCourse(product.handle) && isCourse(product));
 
   const nodes = await readConnection(
     COLLECTION_QUERY,
@@ -100,7 +101,7 @@ export async function getCourses(lang: Lang): Promise<Product[]> {
 /** Merchandise products. Falls back to all products if the collection is absent. */
 export async function getMerch(lang: Lang): Promise<Product[]> {
   if (!MERCH_ENABLED) return [];
-  if (isMockMode) return mockMerch(lang);
+  if (isMockMode) return mockMerch(lang).filter((product) => !product.isGiftCard && !isCourse(product));
 
   const nodes = await readConnection(
     COLLECTION_QUERY,
@@ -113,7 +114,10 @@ export async function getMerch(lang: Lang): Promise<Product[]> {
   );
 
   // An intentionally empty collection is not the same as a missing collection.
-  if (nodes) return Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
+  if (nodes) {
+    const products = await Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
+    return products.filter((product) => !product.isGiftCard && !isCourse(product));
+  }
 
   const all = await readConnection(
     ALL_PRODUCTS_QUERY,
@@ -122,7 +126,25 @@ export async function getMerch(lang: Lang): Promise<Product[]> {
   );
   const allNodes = await Promise.all((all ?? []).map((raw) => completeProduct(raw, lang)));
   // Keep courses out of the merch grid even when no collections are set up.
-  return allNodes.filter((p) => !isCourse(p));
+  return allNodes.filter((product) => !product.isGiftCard && !isCourse(product));
+}
+
+/** Native Shopify gift cards have independent visibility from physical merchandise. */
+export async function getGiftCards(lang: Lang): Promise<Product[]> {
+  if (!GIFT_CARDS_ENABLED) return [];
+  if (isMockMode) return [...mockMerch(lang), ...mockCourses(lang)].filter((product) => product.isGiftCard);
+  // Storefront product search has no documented native gift-card filter.
+  const nodes = await readConnection(
+    ALL_PRODUCTS_QUERY,
+    { first: 20, language: shopifyLanguage(lang) },
+    (data) => data.products,
+  );
+  return Promise.all((nodes ?? []).filter((raw) => raw.isGiftCard === true)
+    .map((raw) => completeProduct(raw, lang)));
+}
+
+function productEnabled(product: Product): boolean {
+  return product.isGiftCard ? GIFT_CARDS_ENABLED : isCourse(product) || MERCH_ENABLED;
 }
 
 export async function getProduct(
@@ -132,8 +154,8 @@ export async function getProduct(
   if (isRetiredCourse(handle)) return null;
   if (isMockMode) {
     return (
-      [...(MERCH_ENABLED ? mockMerch(lang) : []), ...mockCourses(lang)].find(
-        (p) => p.handle === handle,
+      [...mockMerch(lang), ...mockCourses(lang)].find(
+        (product) => product.handle === handle && productEnabled(product),
       ) ?? null
     );
   }
@@ -144,7 +166,7 @@ export async function getProduct(
   );
   if (!data?.product || isRetiredCourse(data.product.handle)) return null;
   const product = await completeProduct(data.product, lang);
-  return MERCH_ENABLED || isCourse(product) ? product : null;
+  return productEnabled(product) ? product : null;
 }
 
 export async function getArticles(lang: Lang): Promise<Article[]> {
@@ -186,6 +208,7 @@ export async function getArticle(
 
 /** A product counts as a course when it is typed, tagged or metafielded as one. */
 export function isCourse(product: Product): boolean {
+  if (product.isGiftCard) return false;
   return (
     product.course !== null ||
     product.productType.toLowerCase() === 'course' ||

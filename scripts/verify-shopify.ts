@@ -14,7 +14,7 @@ async function main() {
   const config = await import('../src/lib/shopify/config');
   if (config.isMockMode) throw new Error('No live Shopify store is configured. Set Kafe Grohova’s own domain and public Storefront token in .env, then use PUBLIC_SHOPIFY_MODE=live.');
   const { storefront } = await import('../src/lib/shopify/client');
-  const { getMerch, getCourses, getArticles } = await import('../src/lib/shopify');
+  const { getMerch, getGiftCards, getCourses, getArticles } = await import('../src/lib/shopify');
   const { CART_CREATE, CART_LINES_REMOVE } = await import('../src/lib/shopify/queries');
   const { shop } = await storefront<{ shop: { name: string; primaryDomain: { host: string }; paymentSettings: { currencyCode: string } } }>(`
     query VerifyShop { shop { name primaryDomain { host } paymentSettings { currencyCode } } }
@@ -27,13 +27,29 @@ async function main() {
   if (shop.paymentSettings.currencyCode !== 'CZK') {
     throw new Error('This catalog uses CZK prices. Configure the dedicated Shopify store currency as CZK before importing the demo products.');
   }
-  const [merch, courses, articles] = await Promise.all([
+  const [merch, giftCards, courses, articles] = await Promise.all([
     config.MERCH_ENABLED ? getMerch('cs') : Promise.resolve([]),
+    config.GIFT_CARDS_ENABLED ? getGiftCards('cs') : Promise.resolve([]),
     getCourses('cs'),
     getArticles('cs'),
   ]);
   if (!courses.length) throw new Error('Publish course products to the Headless channel and check the course collection handle. The course catalog is empty.');
   if (config.MERCH_ENABLED && !merch.length) throw new Error('Merchandise is enabled but its catalog is empty. Publish merchandise to the Headless channel and check the collection handle, or set PUBLIC_MERCH_ENABLED=false.');
+  if (config.GIFT_CARDS_ENABLED && !giftCards.length) {
+    throw new Error('Gift cards are enabled but no native Shopify gift card products are available. Create a gift card product in Shopify Admin, publish it to the Headless channel, or set PUBLIC_GIFT_CARDS_ENABLED=false. An ordinary product named voucher does not issue a redeemable code.');
+  }
+  for (const giftCard of giftCards) {
+    if (!giftCard.isGiftCard || !giftCard.variants.length || giftCard.variants.some(variant =>
+      !Number.isFinite(Number(variant.price.amount)) || Number(variant.price.amount) <= 0 || variant.price.currencyCode !== 'CZK',
+    )) {
+      throw new Error(`Gift card "${giftCard.handle}" needs native Shopify gift-card denominations with positive CZK prices.`);
+    }
+  }
+  const giftCardVariants = giftCards.flatMap(product => product.variants);
+  // Digital gift cards do not require tracked seat inventory; Shopify's sale flag applies.
+  if (config.GIFT_CARDS_ENABLED && !giftCardVariants.some(variant => variant.availableForSale)) {
+    throw new Error('No gift-card denomination is available for sale. Check Headless publication and market availability before launch.');
+  }
   const courseVariants = courses.flatMap(product => product.variants);
   if (courseVariants.some(variant => variant.quantityAvailable === null)) {
     throw new Error('Course inventory is unavailable. Enable product inventory permission on the Headless storefront.');
@@ -69,16 +85,18 @@ async function main() {
   if (!courseVariants.some(variant => variant.availableForSale && variant.quantityAvailable !== null && variant.quantityAvailable > 0 && isFutureCourseDate(variant.startsAt))) {
     console.warn('No future course session has available seats. Course booking cannot be tested until a future session has stock.');
   }
-  console.log(`Catalog OK: ${merch.length} merchandise products, ${courses.length} courses, ${articles.length} articles.`);
-  if (!config.MERCH_ENABLED) console.log('Merchandise is hidden; only courses are required for this launch.');
+  console.log(`Catalog OK: ${merch.length} merchandise products, ${giftCards.length} native gift cards, ${courses.length} courses, ${articles.length} articles.`);
+  if (!config.MERCH_ENABLED) console.log('Physical merchandise is hidden; course and gift-card availability are checked independently.');
+  if (giftCards.length) console.log('Gift-card issuance, fulfillment email and redemption need a separate Shopify order test. A sample PDF is not a redeemable gift card.');
   if (!process.argv.includes('--cart')) {
     console.log('Read-only verification passed. Use --cart to create and empty a test cart (no order or payment).');
     return;
   }
-  const variant = merch.flatMap(product => product.variants).find(item => item.availableForSale)
+  const variant = giftCardVariants.find(item => item.availableForSale)
+    ?? merch.flatMap(product => product.variants).find(item => item.availableForSale)
     ?? courseVariants.find(item => item.availableForSale && item.quantityAvailable !== null &&
       item.quantityAvailable > 0 && isFutureCourseDate(item.startsAt));
-  if (!variant) throw new Error('No available merchandise variant or future course session with stock for the cart check.');
+  if (!variant) throw new Error('No available gift-card or merchandise variant, or future course session with stock for the cart check.');
   const data = await storefront<any>(CART_CREATE, { lines: [{ merchandiseId: variant.id, quantity: 1 }], language: 'CS' });
   const payload = data.cartCreate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors.map((item: any) => item.message).join('; '));

@@ -9,6 +9,7 @@ interface Props {
   /** Tailwind height utility for the image box */
   heightClass?: string;
   soldOutLabel?: string;
+  section?: 'store' | 'gift-cards';
 }
 
 const {
@@ -16,6 +17,7 @@ const {
   lang,
   heightClass = 'h-[45vw] md:h-[clamp(12rem,28vw,21rem)]',
   soldOutLabel,
+  section = 'store',
 } = Astro.props;
 
 const price = formatMoney(product.priceRange.minVariantPrice, lang);
@@ -25,7 +27,7 @@ const soldOut = !product.availableForSale;
 ---
 
 <a
-  href={localePath(lang, `/store/${product.handle}`)}
+  href={localePath(lang, `/${section}/${product.handle}`)}
   class="group flex flex-col gap-1 text-[16px] md:text-[20px] lg:text-[24px] hover:text-brick transition-colors"
 >
   <div class:list={['relative w-full overflow-hidden bg-stone/40', heightClass]}>
@@ -36,7 +38,7 @@ const soldOut = !product.availableForSale;
           alt={alt}
           loading="lazy"
           decoding="async"
-          class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+          class:list={['h-full w-full transition-transform duration-700 group-hover:scale-[1.03]', section === 'gift-cards' ? 'object-contain p-3' : 'object-cover']}
         />
       ) : (
         <div class="h-full w-full bg-stone/60" />

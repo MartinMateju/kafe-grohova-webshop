@@ -45,6 +45,7 @@ export const PRODUCT_FRAGMENT = /* GraphQL */ `
     description
     descriptionHtml
     productType
+    isGiftCard
     tags
     availableForSale
     featuredImage {
@@ -256,6 +257,7 @@ export const CART_FRAGMENT = /* GraphQL */ `
               title
               handle
               productType
+              isGiftCard
               tags
               courseDuration: metafield(namespace: "course", key: "duration_minutes") { value }
             }

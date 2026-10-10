@@ -1,6 +1,6 @@
 # Demo catalog and Shopify import
 
-The storefront and export share `data/demo-catalog.json`: three courses with eight sessions, seven retained physical products with thirteen variants, one demo gift card with three correctly priced denominations, and four sample articles in Czech and English. Cupping replaces the previous espresso course. Merchandise and gift cards are temporarily hidden by `PUBLIC_MERCH_ENABLED=false`. Prices, stock, dates, weights, descriptions and articles are examples to replace before selling.
+The storefront and export share `data/demo-catalog.json`: three courses with eight sessions, seven retained physical products with thirteen variants, one demo gift card with three correctly priced denominations, and four sample articles in Czech and English. Cupping replaces the previous espresso course. Physical merchandise is temporarily hidden by `PUBLIC_MERCH_ENABLED=false`; gift cards are independently visible with `PUBLIC_GIFT_CARDS_ENABLED=true`. Prices, stock, dates, weights, descriptions and articles are examples to replace before selling.
 
 Course dates roll forward when the local demo starts or builds, using Prague time including daylight saving. A deployed static build keeps its generated dates until rebuilt. Exported dates stay fixed; regenerate just before a fresh import.
 
@@ -34,7 +34,7 @@ Use `--lang en --out data/shopify-en` for an English catalog. Import only one la
 | Product | `course.syllabus` | `list.single_line_text_field` |
 | Variant | `course.starts_at`, `course.ends_at` | `date_time` |
 
-If gift cards return with merchandise, create a native Shopify gift-card product separately with **1000, 2000 and 3000 CZK** denominations, handle `darkovy-poukaz`, and add it to `merch`. The local gift card only demonstrates cart pricing and is currently hidden. Sample articles are local fixtures; add or replace them under the configured Shopify blog when switching to live data.
+Create a native Shopify gift-card product separately with **1000, 2000 and 3000 CZK** denominations and handle `darkovy-poukaz`, then publish it to Headless. No merchandise collection is required. The local gift card demonstrates denomination selection and cart pricing; the public sample PDF is not redeemable. See the README's gift-card section for fulfillment checks and replacing the PDF/image. Sample articles are local fixtures; add or replace them under the configured Shopify blog when switching to live data.
 
 Do not repeatedly overwrite purchased course dates with a freshly generated schedule: changing option values replaces variant IDs. Use real sessions before taking orders. Demo exports deliberately leave tax settings to the store; review applicable taxes and replace sample shipping weights before launch.
 

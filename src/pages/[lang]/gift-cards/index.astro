@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { allLangs, localePath, useTranslations, type Lang } from '../../../i18n/utils';
+import { getGiftCards, isMockMode } from '../../../lib/shopify';
+
+export function getStaticPaths() {
+  return allLangs.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const gifts = await getGiftCards(lang);
+---
+
+<BaseLayout title={t('gifts.title')} description={t('gifts.intro')}>
+  <div class="flex flex-col gap-8 py-8 lg:gap-12 lg:py-14">
+    <header class="max-w-3xl space-y-5">
+      <p class="label text-brick">{t('gifts.title')}</p>
+      <h1 class="text-[36px] leading-tight md:text-[52px]">{t('gifts.headline')}</h1>
+      <p class="text-[18px] leading-relaxed md:text-[21px]">{t('gifts.intro')}</p>
+    </header>
+
+    {gifts.length > 0 ? (
+      <div class="grid items-start gap-8 lg:grid-cols-2 lg:gap-16">
+        <div class="grid gap-8">
+          {gifts.map((gift) => (
+            <article data-gift-card={gift.handle} class="border border-ink/20 bg-white/25 p-4 md:p-6">
+              <ProductCard product={gift} lang={lang} section="gift-cards" heightClass="h-auto aspect-[1.414]" soldOutLabel={t('product.soldOut')} />
+              <a href={localePath(lang, `/gift-cards/${gift.handle}`)} class="mt-6 inline-block bg-brick px-6 py-3 text-[13px] tracking-widest text-cream transition-colors hover:bg-ink">{t('gifts.choose')} →</a>
+            </article>
+          ))}
+        </div>
+        <div class="flex flex-col gap-6 border-t border-ink/20 pt-6 lg:pt-8">
+          <h2 class="text-[24px]">{t('gifts.how')}</h2>
+          <ol class="list-decimal space-y-4 pl-5 text-[17px] leading-relaxed">
+            <li>{t('gifts.step1')}</li>
+            <li>{t('gifts.step2')}</li>
+            <li>{t('gifts.step3')}</li>
+          </ol>
+          {isMockMode && <p class="border border-brick/30 bg-brick/5 p-4 text-[14px] leading-relaxed text-brick">{t('gifts.demo')}</p>}
+          <p class="text-[14px] leading-relaxed text-ink/70">{t('gifts.previewNote')}</p>
+        </div>
+      </div>
+    ) : (
+      <p class="border border-ink/20 p-6">{t('gifts.empty')} <a href={localePath(lang, '/contact')} class="text-brick underline">{t('nav.contact')}</a></p>
+    )}
+  </div>
+</BaseLayout>

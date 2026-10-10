@@ -1,5 +1,5 @@
 ---
-import { MERCH_ENABLED } from '../lib/shopify/config';
+import { MERCH_ENABLED, GIFT_CARDS_ENABLED } from '../lib/shopify/config';
 import { getLangFromUrl, useTranslations, localePath } from '../i18n/utils';
 
 const lang = getLangFromUrl(Astro.url);
@@ -7,6 +7,7 @@ const t = useTranslations(lang);
 
 const links = [
   { label: t('nav.courses'), href: localePath(lang, '/courses') },
+  ...(GIFT_CARDS_ENABLED ? [{ label: t('nav.giftCards'), href: localePath(lang, '/gift-cards') }] : []),
   ...(MERCH_ENABLED ? [{ label: t('nav.store'), href: localePath(lang, '/store') }] : []),
   { label: t('nav.blog'), href: localePath(lang, '/blog') },
   { label: t('nav.contact'), href: localePath(lang, '/contact') },

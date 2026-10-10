@@ -133,6 +133,7 @@ test('demo gift-card prices and localized fixture identities stay consistent', (
   for (const lang of ['cs', 'en'] as const) {
     const merch = mockMerch(lang);
     const gift = merch.find(product => product.handle === 'darkovy-poukaz')!;
+    assert.equal(gift.isGiftCard, true);
     assert.deepEqual(gift.variants.map(variant => Number(variant.price.amount)), [1000, 2000, 3000]);
     assert.equal(gift.priceRange.minVariantPrice.amount, '1000.00');
     assert.equal(gift.priceRange.maxVariantPrice.amount, '3000.00');
@@ -146,7 +147,13 @@ test('demo gift-card prices and localized fixture identities stay consistent', (
 
 // Run the real CLI with synthetic responses from an environment-free directory.
 // This never reads repository env files, contacts Shopify, or creates a real cart.
-function verifyCourses(options: { capacity: number | null; quantity: number; cart?: boolean }) {
+function verifyCourses(options: {
+  capacity: number | null;
+  quantity: number;
+  cart?: boolean;
+  giftCards?: 'native' | 'ordinary' | 'missing' | 'unavailable';
+  giftCardPrice?: string;
+}) {
   const script = `
     import assert from 'node:assert/strict';
     const options = ${JSON.stringify(options)};
@@ -171,9 +178,20 @@ function verifyCourses(options: { capacity: number | null; quantity: number; car
           priceRange: { minVariantPrice: price, maxVariantPrice: price }
         }]) } } });
       }
+      if (query.includes('query AllProducts') && options.giftCards) {
+        const giftPrice = { amount: options.giftCardPrice ?? '1000.00', currencyCode: 'CZK' };
+        return Response.json({ data: { products: connection(options.giftCards === 'missing' ? [] : [{
+          id: 'gift', handle: 'darkovy-poukaz', title: 'Gift card', productType: 'Gift Card', tags: ['gift-card'],
+          isGiftCard: options.giftCards !== 'ordinary',
+          variants: connection([{ id: 'gift-value', title: '1000 CZK',
+            availableForSale: options.giftCards !== 'unavailable', quantityAvailable: null, price: giftPrice }]),
+          priceRange: { minVariantPrice: giftPrice, maxVariantPrice: giftPrice }
+        }]) } });
+      }
       if (query.includes('query Articles')) return Response.json({ data: { blog: { articles: connection([]) } } });
       if (query.includes('mutation CartCreate') && options.cart) {
-        assert.equal(variables.lines[0].merchandiseId, 'future', 'A past course must never be probed');
+        assert.equal(variables.lines[0].merchandiseId, options.giftCards ? 'gift-value' : 'future',
+          'Prefer an enabled native gift card; otherwise probe a future course with stock');
         return Response.json({ data: { cartCreate: { userErrors: [], warnings: [], cart: {
           id: 'test-cart', checkoutUrl: 'https://checkout.example.test/', lines: connection([{ id: 'test-line' }])
         } } } });
@@ -193,6 +211,7 @@ function verifyCourses(options: { capacity: number | null; quantity: number; car
     cwd: scratch, encoding: 'utf8',
     env: {
       ...process.env, PUBLIC_SHOPIFY_MODE: 'live', PUBLIC_MERCH_ENABLED: 'false',
+      PUBLIC_GIFT_CARDS_ENABLED: options.giftCards ? 'true' : 'false',
       PUBLIC_SHOPIFY_STORE_DOMAIN: 'test.myshopify.com', PUBLIC_SHOPIFY_STOREFRONT_TOKEN: 'public-test-token',
       PUBLIC_SHOPIFY_API_VERSION: '2026-07', PUBLIC_SHOPIFY_COURSES_COLLECTION: 'barista-kurzy', PUBLIC_SHOPIFY_BLOG_HANDLE: 'news',
     },
@@ -218,5 +237,33 @@ test('live verifier accepts courses without merchandise and rejects missing or e
 test('course-only cart verification selects a future session with stock and empties its synthetic cart', () => {
   const result = verifyCourses({ capacity: 2, quantity: 2, cart: true });
   assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Test cart emptied/);
+});
+
+test('live verifier accepts native gift cards without tracked inventory while physical merchandise is hidden', () => {
+  const result = verifyCourses({ capacity: 2, quantity: 2, giftCards: 'native' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /0 merchandise products, 1 native gift cards/);
+  assert.match(result.stdout, /issuance, fulfillment email and redemption need a separate Shopify order test/);
+  assert.match(result.stdout, /Read-only verification passed/);
+});
+
+test('live verifier rejects ordinary voucher products, missing gifts and unavailable or invalid denominations', () => {
+  for (const [options, message] of [
+    [{ giftCards: 'ordinary' }, /no native Shopify gift card products/],
+    [{ giftCards: 'missing' }, /no native Shopify gift card products/],
+    [{ giftCards: 'unavailable' }, /No gift-card denomination is available for sale/],
+    [{ giftCards: 'native', giftCardPrice: '0.00' }, /positive CZK prices/],
+  ] as const) {
+    const result = verifyCourses({ capacity: 2, quantity: 2, ...options });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, message);
+  }
+});
+
+test('gift-card cart verification chooses a native denomination and empties its synthetic cart', () => {
+  const result = verifyCourses({ capacity: 2, quantity: 2, giftCards: 'native', cart: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Test cart created/);
   assert.match(result.stdout, /Test cart emptied/);
 });

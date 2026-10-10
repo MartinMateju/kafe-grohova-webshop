@@ -39,14 +39,17 @@ export function resolveShopifyConfig(env: Env) {
   return {
     domain, token, apiVersion, isMockMode,
     merchEnabled: env.PUBLIC_MERCH_ENABLED?.trim() === 'true',
+    giftCardsEnabled: env.PUBLIC_GIFT_CARDS_ENABLED?.trim() !== 'false',
     endpoint: isMockMode ? '' : `https://${domain}/api/${apiVersion}/graphql.json`,
   };
 }
 
 const env = readEnv();
 const config = resolveShopifyConfig(env);
-/** Merchandise and gift cards stay hidden until explicitly restored. */
+/** Physical merchandise stays hidden until explicitly restored. */
 export const MERCH_ENABLED = config.merchEnabled;
+/** Native gift cards can be sold independently of physical merchandise. */
+export const GIFT_CARDS_ENABLED = config.giftCardsEnabled;
 export const SHOPIFY_DOMAIN = config.domain;
 export const SHOPIFY_TOKEN = config.token;
 export const SHOPIFY_API_VERSION = config.apiVersion;

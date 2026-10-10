@@ -21,7 +21,8 @@ const variants = product.variants.map((v) => ({
   id: v.id,
   title: v.title,
   available: v.availableForSale,
-  quantityAvailable: v.quantityAvailable,
+  // Native gift cards are digital value, with no tracked seat/item inventory.
+  quantityAvailable: product.isGiftCard ? null : v.quantityAvailable,
   amount: v.price.amount,
   currencyCode: v.price.currencyCode,
   priceLabel: formatMoney(v.price, lang),
@@ -189,8 +190,8 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
           const current = product?.variants.find((variant) => variant.id === previous.id);
           return current ? {
             id: current.id, title: current.title,
-            available: current.availableForSale && (current.quantityAvailable === null || current.quantityAvailable > 0),
-            quantityAvailable: current.quantityAvailable, amount: current.price.amount,
+            available: current.availableForSale && (product?.isGiftCard || current.quantityAvailable === null || current.quantityAvailable > 0),
+            quantityAvailable: product?.isGiftCard ? null : current.quantityAvailable, amount: current.price.amount,
             currencyCode: current.price.currencyCode, priceLabel: formatMoney(current.price, lang),
           } : { ...previous, available: false };
         });

@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AddToCart from '../../../components/AddToCart.astro';
+import { localizedPaths } from '../../../i18n/paths';
+import { localePath, useTranslations, type Lang } from '../../../i18n/utils';
+import { getGiftCards, formatMoney, imageUrl, isMockMode } from '../../../lib/shopify';
+
+export async function getStaticPaths() {
+  return localizedPaths(getGiftCards, 'gift-cards');
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const { item: product, alternatePaths } = Astro.props;
+const previewImage = imageUrl(product.featuredImage?.url, 1200) || '/gift-card-preview.png';
+---
+
+<BaseLayout alternatePaths={alternatePaths} title={product.title} description={product.description.slice(0, 160)} image={previewImage}>
+  <div class="flex flex-col gap-8 py-8 lg:py-14">
+    <a href={localePath(lang, '/gift-cards')} class="self-start text-[14px] text-ink/60 hover:text-brick">← {t('gifts.back')}</a>
+    <div class="grid items-start gap-8 md:grid-cols-2 lg:gap-14">
+      <div class="flex flex-col gap-5">
+        <div class="border border-ink/20 bg-white/25 p-4 lg:p-7">
+          <img src={previewImage} alt={product.featuredImage?.altText ?? product.title} class="aspect-[1.414] w-full object-contain" />
+        </div>
+        <a href="/downloads/gift-card-sample.pdf" target="_blank" rel="noopener" data-gift-preview class="self-start border-b border-ink pb-1 text-[14px] hover:border-brick hover:text-brick">{t('gifts.preview')} ↗</a>
+        <p class="max-w-xl text-[13px] leading-relaxed text-ink/60">{t('gifts.previewNote')}</p>
+      </div>
+      <div class="flex flex-col gap-6">
+        <div class="space-y-3">
+          <p class="label text-brick">{t('gifts.amount')}</p>
+          <h1 class="text-[30px] leading-tight lg:text-[42px]">{product.title}</h1>
+          <p data-product-price class="text-[24px]" aria-live="polite">{formatMoney(product.priceRange.minVariantPrice, lang)}</p>
+        </div>
+        <AddToCart product={product} lang={lang} />
+        {isMockMode && <p data-gift-demo class="border border-brick/30 bg-brick/5 p-4 text-[14px] leading-relaxed text-brick">{t('gifts.demo')}</p>}
+        {product.descriptionHtml && <div class="rte border-t border-ink/20 pt-6 text-[17px] leading-relaxed" set:html={product.descriptionHtml} />}
+        <div class="border-t border-ink/20 pt-6">
+          <h2 class="label mb-4">{t('gifts.how')}</h2>
+          <ol class="list-decimal space-y-3 pl-5 text-[15px] leading-relaxed text-ink/80">
+            <li>{t('gifts.step1')}</li>
+            <li>{t('gifts.step2')}</li>
+            <li>{t('gifts.step3')}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

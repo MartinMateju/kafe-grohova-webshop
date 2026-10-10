@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createCartStore, type LineSnapshot } from '../src/lib/cart';
+import { createCartStore as createStore, type LineSnapshot } from '../src/lib/cart';
 import type { Product } from '../src/lib/shopify/types';
 import type { storefront } from '../src/lib/shopify/client';
-import { CART_CREATE, CART_LINES_ADD, CART_LINES_REMOVE, CART_QUERY } from '../src/lib/shopify/queries';
+import { CART_CREATE, CART_LINES_ADD, CART_LINES_REMOVE, CART_LINES_UPDATE, CART_QUERY } from '../src/lib/shopify/queries';
 import { isFutureCourseDate } from '../src/lib/courseAvailability';
 import { safeScriptJson } from '../src/lib/safeScriptJson';
+import { mockMerch } from '../src/lib/shopify/mock';
 
 const snapshot: LineSnapshot = {
   merchandiseId: 'variant-1', productTitle: 'Coffee', variantTitle: '250 g',
@@ -32,6 +33,24 @@ function memoryStorage(initial: Record<string, string> = {}) {
     setItem: (key: string, value: string) => { values.set(key, value); },
     removeItem: (key: string) => { values.delete(key); },
   };
+}
+function physicalProduct(handle = snapshot.productHandle): Product {
+  const base = currentCourse();
+  return { ...base, handle, productType: 'Merchandise', tags: [], course: null,
+    variants: [snapshot.merchandiseId, 'variant-10'].map(id => ({
+      ...base.variants[0], id, title: '250 g', startsAt: null, quantityAvailable: 3,
+    })),
+  };
+}
+function createCartStore(options: Parameters<typeof createStore>[0] = {}) {
+  return createStore({
+    lookupProduct: async handle => physicalProduct(handle),
+    demoProducts: () => [physicalProduct()],
+    ...options,
+    // The course injection extends the authoritative catalog rather than replacing gift fixtures.
+    ...(options.demoCourses && !options.demoProducts
+      ? { demoProducts: () => [...options.demoCourses!(), ...mockMerch('cs')] } : {}),
+  });
 }
 const blockedStorage = {
   getItem() { throw new Error('Storage denied'); },
@@ -159,7 +178,9 @@ test('Shopify inventory warnings surface and zero additions are not reported as 
 
 test('course dates require a valid future timestamp at the moment of adding or updating', async () => {
   let now = Date.parse('2026-10-09T12:00:00Z');
-  const cart = createCartStore({ merchEnabled: true, mock: true, storage: null, now: () => now });
+  const course = { ...currentCourse(), handle: snapshot.productHandle,
+    variants: [{ ...currentCourse().variants[0], id: snapshot.merchandiseId }] };
+  const cart = createCartStore({ merchEnabled: true, mock: true, storage: null, now: () => now, demoProducts: () => [course] });
   for (const startsAt of [null, '', 'not a date', '2027-02-30T12:00:00Z', '2026-10-10', '2026-10-09T12:00:00Z', '2026-10-08T12:00:00Z']) {
     assert.equal(await cart.addLine({ ...snapshot, startsAt }), false);
   }
@@ -229,7 +250,7 @@ const courseSnapshot: LineSnapshot = {
 function currentCourse(capacity = 3, quantityAvailable = 8): Product {
   return {
     id: 'course', handle: courseSnapshot.productHandle, title: 'Espresso course',
-    productType: 'Course', tags: ['course'],
+    productType: 'Course', tags: ['course'], isGiftCard: false,
     description: '', descriptionHtml: '', availableForSale: true, featuredImage: null, images: [], options: [],
     priceRange: { minVariantPrice: { amount: '200', currencyCode: 'CZK' }, maxVariantPrice: { amount: '200', currencyCode: 'CZK' } },
     course: { capacity, durationMinutes: 120, level: null, syllabus: [] },
@@ -257,20 +278,19 @@ function mixedCart(): any {
   return cart;
 }
 
-test('hidden merchandise cannot be added in demo or live mode, including gift cards and forged course markers', async () => {
+test('hidden merchandise cannot be added in demo or live mode, including gift-card labels and forged course markers', async () => {
   for (const mock of [true, false]) {
     let requests = 0;
     const cart = createCartStore({
       mock, merchEnabled: false, storage: null,
       demoCourses: () => [currentCourse()],
-      lookupProduct: async () => ({ ...currentCourse(), productType: 'Gift Card', tags: [], course: null,
-        variants: [{ ...currentCourse().variants[0], startsAt: null }] }),
+      lookupProduct: async () => ({ ...physicalProduct(), productType: 'Gift Card', tags: ['gift-card'] }),
       request: (async () => { requests++; throw new Error('No Shopify mutation should be sent.'); }) as typeof storefront,
     });
     assert.equal(await cart.addLine(snapshot), false);
     assert.equal(await cart.addLine({ ...snapshot, productHandle: 'gift-card' }), false);
     assert.equal(await cart.addLine({ ...snapshot, startsAt: courseStart }), false);
-    assert.match(cart.getState().error!, /Merchandise is temporarily unavailable/);
+    assert.match(cart.getState().error!, /temporarily unavailable|no longer available/);
     assert.equal(requests, 0);
     assert.equal(cart.getState().cart, null);
   }
@@ -435,4 +455,196 @@ test('restoring merchandise never restores a retired course in a demo cart', asy
   assert.deepEqual(cart.getState().cart?.lines.map(line => line.productHandle), [snapshot.productHandle]);
   assert.equal(await cart.addLine(retired), false);
   assert.match(cart.getState().error!, /course is no longer available/);
+});
+function nativeGift(): Product {
+  const gift = mockMerch('cs').find(item => item.isGiftCard)!;
+  assert(gift, 'The demo catalog must contain a native gift-card fixture.');
+  return gift;
+}
+function giftSnapshot(index = 0): LineSnapshot {
+  const gift = nativeGift();
+  const variant = gift.variants[index];
+  return {
+    merchandiseId: variant.id, productTitle: gift.title, variantTitle: variant.title,
+    productHandle: gift.handle, amount: variant.price.amount, currencyCode: variant.price.currencyCode,
+  };
+}
+function giftCart(quantity = 1): any {
+  const gift = nativeGift();
+  const cart: any = rawCart('cart-1', quantity, gift.variants[0].id);
+  cart.lines.nodes[0].id = 'gift-line';
+  cart.lines.nodes[0].merchandise.product = {
+    title: gift.title, handle: gift.handle, productType: 'Gift Card', tags: ['course'], isGiftCard: true,
+  };
+  // Accidental course metadata must never change native gift-card identity.
+  cart.lines.nodes[0].merchandise.startsAt = { value: '2000-01-01T10:00:00Z' };
+  cart.lines.nodes[0].cost.amountPerQuantity.amount = '1000.00';
+  cart.lines.nodes[0].cost.totalAmount.amount = String(quantity * 1000);
+  cart.cost.subtotalAmount.amount = String(quantity * 1000);
+  return cart;
+}
+function giftsAndCourses(withPhysical = false): any {
+  const cart = courseCart();
+  cart.lines.nodes.push(...giftCart().lines.nodes);
+  if (withPhysical) cart.lines.nodes.push(...rawCart().lines.nodes);
+  cart.totalQuantity = withPhysical ? 3 : 2;
+  cart.cost.subtotalAmount.amount = withPhysical ? '1400' : '1200';
+  return cart;
+}
+
+test('native demo gift denominations use authoritative prices and discard forged course markers', async () => {
+  const gift = nativeGift();
+  assert.deepEqual(gift.variants.map(variant => Number(variant.price.amount)), [1000, 2000, 3000]);
+  const storage = memoryStorage();
+  const cart = createCartStore({
+    mock: true, merchEnabled: false, giftCardsEnabled: true, storage,
+    demoProducts: () => [gift, physicalProduct(), currentCourse()],
+  });
+  for (let index = 0; index < 3; index++) {
+    assert.equal(await cart.addLine({
+      ...giftSnapshot(index), amount: '1', quantityAvailable: 0, startsAt: null, isGiftCard: false,
+    }), true);
+  }
+  assert.equal(cart.getState().cart?.subtotal.amount, '6000.00');
+  assert(cart.getState().cart?.lines.every(line => line.isGiftCard && !('courseStartsAt' in line)));
+  assert.equal(await cart.updateLine(cart.getState().cart!.lines[0].id, 2), true);
+  assert.equal(cart.getState().cart?.subtotal.amount, '7000.00');
+  assert.equal(await cart.addLine({ ...snapshot, isGiftCard: true }), false);
+  assert.equal(await cart.addLine({ ...giftSnapshot(), merchandiseId: 'made-up-variant' }), false);
+  assert.equal(await cart.checkout(), false, 'Demo checkout remains disabled.');
+
+  const restored = createCartStore({
+    mock: true, merchEnabled: false, giftCardsEnabled: true, storage, demoProducts: () => [gift],
+  });
+  await restored.initCart();
+  assert.equal(restored.getState().cart?.subtotal.amount, '7000.00');
+  assert.equal(restored.getState().cart?.totalQuantity, 4);
+});
+
+test('gift-card visibility is independent when demo carts are restored and merchandise is re-enabled', async () => {
+  for (const merchEnabled of [false, true]) {
+    const gift = nativeGift();
+    const storage = memoryStorage({ kafe_cart_mock: JSON.stringify([
+      { ...giftSnapshot(), quantity: 1, isGiftCard: false },
+      { ...courseSnapshot, quantity: 5 },
+      { ...snapshot, isGiftCard: true, quantity: 1 },
+    ]) });
+    const cart = createCartStore({
+      mock: true, merchEnabled, giftCardsEnabled: false, storage,
+      demoProducts: () => [gift, currentCourse(2), physicalProduct()],
+    });
+    assert.equal(await cart.initCart(), true);
+    assert.deepEqual(cart.getState().cart?.lines.map(line => [line.productHandle, line.quantity]),
+      merchEnabled ? [[courseSnapshot.productHandle, 2], [snapshot.productHandle, 1]]
+        : [[courseSnapshot.productHandle, 2]]);
+    assert.equal(await cart.addLine(giftSnapshot()), false);
+    assert.match(cart.getState().error!, /Gift cards are temporarily unavailable/);
+  }
+});
+
+test('native live gift cards can be added, updated and checked out with physical merchandise hidden', async () => {
+  let quantity = 0;
+  let destination = '';
+  const gift = nativeGift();
+  // Gift-card inventory is not tracked; availableForSale is authoritative.
+  gift.variants[0].quantityAvailable = 0;
+  const queries: string[] = [];
+  const request = (async (query: string, variables: any) => {
+    queries.push(query);
+    if (query === CART_CREATE) {
+      quantity = variables.lines[0].quantity;
+      return { cartCreate: { cart: giftCart(quantity), userErrors: [] } };
+    }
+    if (query === CART_LINES_UPDATE) {
+      quantity = variables.lines[0].quantity;
+      return { cartLinesUpdate: { cart: giftCart(quantity), userErrors: [] } };
+    }
+    assert.equal(query, CART_QUERY);
+    return { cart: giftCart(quantity) };
+  }) as typeof storefront;
+  const cart = createCartStore({
+    mock: false, merchEnabled: false, giftCardsEnabled: true, storage: memoryStorage(), request,
+    lookupProduct: async () => gift, navigate: url => { destination = url; },
+  });
+  assert.equal(await cart.addLine({ ...giftSnapshot(), startsAt: null }, 2), true);
+  assert.equal(cart.getState().cart?.lines[0].isGiftCard, true);
+  assert.equal('courseStartsAt' in cart.getState().cart!.lines[0], false);
+  assert.equal(await cart.updateLine('gift-line', 3), true);
+  assert.equal(await cart.checkout(), true);
+  assert.equal(destination, giftCart().checkoutUrl);
+  assert.deepEqual(queries, [CART_CREATE, CART_LINES_UPDATE, CART_QUERY]);
+});
+
+test('saved live carts retain genuine gifts and courses while removing physical or disabled gift products', async () => {
+  for (const giftCardsEnabled of [false, true]) {
+    for (const merchEnabled of [false, true]) {
+      const source = giftsAndCourses(true);
+      const allowed = source.lines.nodes.filter((line: any) =>
+        line.id === 'course-line' || line.id === 'gift-line' && giftCardsEnabled || line.id === 'line-1' && merchEnabled);
+      const cleaned = { ...source, lines: { ...source.lines, nodes: allowed } };
+      const request = (async (query: string, variables: any) => {
+        if (query === CART_QUERY) return { cart: source };
+        assert.equal(query, CART_LINES_REMOVE);
+        assert.deepEqual(variables.lineIds, [
+          ...(!giftCardsEnabled ? ['gift-line'] : []), ...(!merchEnabled ? ['line-1'] : []),
+        ]);
+        return { cartLinesRemove: { cart: cleaned, userErrors: [] } };
+      }) as typeof storefront;
+      const cart = createCartStore({
+        mock: false, merchEnabled, giftCardsEnabled, storage: memoryStorage({ kafe_cart_id: 'cart-1' }), request,
+      });
+      assert.equal(await cart.initCart(), true);
+      assert.deepEqual(cart.getState().cart?.lines.map(line => line.id), allowed.map((line: any) => line.id));
+    }
+  }
+});
+
+test('mixed live gift and course checkout uses native identity without weakening course capacity checks', async () => {
+  let capacity = 2;
+  let destination = '';
+  const request = (async () => ({ cart: giftsAndCourses() })) as typeof storefront;
+  const cart = createCartStore({
+    mock: false, merchEnabled: false, giftCardsEnabled: true,
+    storage: memoryStorage({ kafe_cart_id: 'cart-1' }), request,
+    lookupProduct: async handle => handle === nativeGift().handle ? nativeGift() : currentCourse(capacity),
+    navigate: url => { destination = url; },
+  });
+  assert.equal(await cart.initCart(), true);
+  assert.equal(await cart.checkout(), true);
+  assert.equal(destination, courseCart().checkoutUrl);
+  destination = '';
+  capacity = 0;
+  assert.equal(await cart.checkout(), false);
+  assert.match(cart.getState().error!, /Only 0 seats remain/);
+  assert.equal(destination, '');
+});
+
+test('gift labels or snapshot flags cannot make physical products purchasable while merchandise is hidden', async () => {
+  let requests = 0;
+  const fakeGift = { ...physicalProduct(), productType: 'Gift Card', tags: ['gift-card'], isGiftCard: false };
+  const cart = createCartStore({
+    mock: false, merchEnabled: false, giftCardsEnabled: true, storage: null,
+    lookupProduct: async () => fakeGift,
+    request: (async () => { requests++; throw new Error('Must not mutate Shopify'); }) as typeof storefront,
+  });
+  assert.equal(await cart.addLine({ ...snapshot, isGiftCard: true }), false);
+  assert.match(cart.getState().error!, /Merchandise is temporarily unavailable/);
+  assert.equal(requests, 0);
+});
+
+test('native live gift cards remain disabled when merchandise is re-enabled and unavailable gifts cannot be added', async () => {
+  let requests = 0;
+  const gift = nativeGift();
+  const options = {
+    mock: false, merchEnabled: true, storage: null, lookupProduct: async () => gift,
+    request: (async () => { requests++; throw new Error('Must not mutate Shopify'); }) as typeof storefront,
+  };
+  const disabled = createCartStore({ ...options, giftCardsEnabled: false });
+  assert.equal(await disabled.addLine(giftSnapshot()), false);
+  assert.match(disabled.getState().error!, /Gift cards are temporarily unavailable/);
+  gift.variants[0].availableForSale = false;
+  const soldOut = createCartStore({ ...options, giftCardsEnabled: true });
+  assert.equal(await soldOut.addLine(giftSnapshot()), false);
+  assert.match(soldOut.getState().error!, /sold out/);
+  assert.equal(requests, 0);
 });

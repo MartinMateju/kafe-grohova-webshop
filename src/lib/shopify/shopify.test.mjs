@@ -5,12 +5,13 @@ import { runInNewContext } from 'node:vm';
 import { build, createServer } from 'vite';
 
 // Exercise the real TypeScript modules with synthetic API responses, never a shop.
-const keys = ['PUBLIC_SHOPIFY_MODE', 'PUBLIC_SHOPIFY_STORE_DOMAIN', 'PUBLIC_SHOPIFY_STOREFRONT_TOKEN', 'PUBLIC_MERCH_ENABLED'];
+const keys = ['PUBLIC_SHOPIFY_MODE', 'PUBLIC_SHOPIFY_STORE_DOMAIN', 'PUBLIC_SHOPIFY_STOREFRONT_TOKEN', 'PUBLIC_MERCH_ENABLED', 'PUBLIC_GIFT_CARDS_ENABLED'];
 const previous = keys.map((key) => process.env[key]);
 process.env.PUBLIC_SHOPIFY_MODE = 'live';
 process.env.PUBLIC_SHOPIFY_STORE_DOMAIN = 'integration-test.myshopify.com';
 process.env.PUBLIC_SHOPIFY_STOREFRONT_TOKEN = 'public-test-token';
 process.env.PUBLIC_MERCH_ENABLED = 'true';
+delete process.env.PUBLIC_GIFT_CARDS_ENABLED;
 const originalFetch = globalThis.fetch;
 const server = await createServer({
   root: fileURLToPath(new URL('../../..', import.meta.url)),
@@ -23,7 +24,7 @@ const server = await createServer({
 });
 const config = await server.ssrLoadModule('/src/lib/shopify/config.ts');
 const shop = await server.ssrLoadModule('/src/lib/shopify/index.ts');
-const { normalizeCart } = await server.ssrLoadModule('/src/lib/shopify/normalize.ts');
+const { normalizeCart, normalizeProduct } = await server.ssrLoadModule('/src/lib/shopify/normalize.ts');
 
 // A separate module graph verifies the default hidden state without mutating cached exports.
 delete process.env.PUBLIC_MERCH_ENABLED;
@@ -34,6 +35,15 @@ const hiddenServer = await createServer({
 });
 const hiddenShop = await hiddenServer.ssrLoadModule('/src/lib/shopify/index.ts');
 process.env.PUBLIC_MERCH_ENABLED = 'true';
+
+process.env.PUBLIC_GIFT_CARDS_ENABLED = 'false';
+const giftsDisabledServer = await createServer({
+  root: fileURLToPath(new URL('../../..', import.meta.url)),
+  configFile: false, envFile: false, envPrefix: 'PUBLIC_',
+  server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error',
+});
+const giftsDisabledShop = await giftsDisabledServer.ssrLoadModule('/src/lib/shopify/index.ts');
+delete process.env.PUBLIC_GIFT_CARDS_ENABLED;
 
 process.env.PUBLIC_SHOPIFY_MODE = 'demo';
 const demoServer = await createServer({
@@ -51,6 +61,7 @@ after(async () => {
   await server.close();
   await hiddenServer.close();
   await demoServer.close();
+  await giftsDisabledServer.close();
 });
 
 const connection = (nodes, cursor = null) => ({
@@ -107,6 +118,7 @@ test('the production browser bundle receives public Shopify config without Node 
   runInNewContext(bundle.output[0].code, context);
   assert.equal(context.ShopifyConfig.isMockMode, false);
   assert.equal(context.ShopifyConfig.MERCH_ENABLED, true);
+  assert.equal(context.ShopifyConfig.GIFT_CARDS_ENABLED, true);
   assert.equal(context.ShopifyConfig.SHOPIFY_TOKEN, 'public-test-token');
   assert.equal(context.ShopifyConfig.STOREFRONT_ENDPOINT, 'https://integration-test.myshopify.com/api/2026-07/graphql.json');
 });
@@ -203,7 +215,7 @@ test('hidden merchandise lists perform no Storefront API calls', async () => {
   assert.equal(calls, 0);
 });
 
-test('direct hidden product lookups reject merchandise and gift cards but retain courses', async () => {
+test('direct hidden product lookups reject physical products with gift labels but retain courses', async () => {
   fakeAPI(({ variables }) => {
     const raw = product(variables.handle);
     if (variables.handle !== 'course') {
@@ -267,4 +279,86 @@ test('course availability summaries respect configured capacity without inventin
   assert.equal(shop.seatsRemaining(course), null);
   course.course.capacity = 0;
   assert.deepEqual(shop.bookableVariants(course), []);
+});
+test('native gifts have an independent default-on flag and explicit false performs no catalog requests', async () => {
+  for (const value of [undefined, '', 'true', 'FALSE', '0']) {
+    assert.equal(config.resolveShopifyConfig({ PUBLIC_GIFT_CARDS_ENABLED: value }).giftCardsEnabled, true);
+  }
+  assert.equal(config.resolveShopifyConfig({ PUBLIC_GIFT_CARDS_ENABLED: ' false ' }).giftCardsEnabled, false);
+  assert.equal(hiddenShop.GIFT_CARDS_ENABLED, true);
+  assert.equal(giftsDisabledShop.MERCH_ENABLED, true);
+  assert.equal(giftsDisabledShop.GIFT_CARDS_ENABLED, false);
+  globalThis.fetch = async () => { throw new Error('Disabled gift listings must not call Shopify'); };
+  assert.deepEqual(await giftsDisabledShop.getGiftCards('cs'), []);
+  assert.deepEqual(await giftsDisabledShop.getGiftCards('en'), []);
+});
+
+test('gift listings scan every page and accept only strict native identity, independently of tags', async () => {
+  const calls = [];
+  const nativeGift = { ...product('native-gift'), isGiftCard: true, productType: 'Course', tags: ['course'] };
+  const labelled = { ...product('gift-labelled'), productType: 'Gift Card', tags: ['gift-card'], isGiftCard: false };
+  const invalid = { ...labelled, handle: 'invalid-flag', isGiftCard: 'true' };
+  fakeAPI(({ query, variables }) => {
+    assert.match(query, /\bisGiftCard\b/);
+    assert.equal(variables.language, 'EN');
+    calls.push(variables.after);
+    return { products: variables.after
+      ? connection([nativeGift])
+      : connection([product('course'), labelled, invalid], 'next-products') };
+  });
+  const gifts = await hiddenShop.getGiftCards('en');
+  assert.deepEqual(calls, [null, 'next-products']);
+  assert.deepEqual(gifts.map(item => item.handle), ['native-gift']);
+  assert.equal(gifts[0].isGiftCard, true);
+  assert.equal(hiddenShop.isCourse(gifts[0]), false);
+});
+
+test('native gifts are excluded from physical and course grids even with accidental course metadata', async () => {
+  const nativeGift = { ...product('native-gift'), isGiftCard: true };
+  const physical = { ...product('physical'), productType: 'Merchandise', tags: [], isGiftCard: false };
+  fakeAPI(() => ({ collection: { products: connection([product('course'), physical, nativeGift]) } }));
+  assert.deepEqual((await shop.getMerch('cs')).map(item => item.handle), ['physical']);
+  assert.deepEqual((await shop.getCourses('cs')).map(item => item.handle), ['course']);
+});
+
+test('native gift direct lookups stay independent of physical merchandise visibility', async () => {
+  fakeAPI(({ variables }) => ({ product: {
+    ...product(variables.handle), productType: 'Course', tags: ['course'], isGiftCard: true,
+  } }));
+  assert.equal((await hiddenShop.getProduct('native-gift', 'cs')).isGiftCard, true);
+  assert.equal(await giftsDisabledShop.getProduct('native-gift', 'cs'), null);
+});
+
+test('normalization trusts the native boolean and excludes course markers from native gift cart lines', () => {
+  for (const value of [undefined, false, 'true', 1]) {
+    assert.equal(normalizeProduct({ ...product('labelled'), productType: 'Gift Card', isGiftCard: value }).isGiftCard, false);
+  }
+  const native = normalizeProduct({ ...product('gift'), isGiftCard: true });
+  assert.equal(native.isGiftCard, true);
+  assert.equal(shop.isCourse(native), false);
+  const cart = normalizeCart({ lines: connection([
+    { merchandise: { startsAt: { value: '2000-01-01T00:00:00Z' }, product: {
+      productType: 'Course', tags: ['course'], courseDuration: { value: '120' }, isGiftCard: true,
+    } } },
+    { merchandise: { product: { productType: 'Gift Card', tags: ['gift-card'], isGiftCard: 'true' } } },
+  ]) });
+  assert.equal(cart.lines[0].isGiftCard, true);
+  assert.equal('courseStartsAt' in cart.lines[0], false);
+  assert.equal(cart.lines[1].isGiftCard, false);
+});
+
+test('demo gift cards retain native identity and all three Czech-koruna denominations', async () => {
+  for (const lang of ['cs', 'en']) {
+    const gifts = await demoShop.getGiftCards(lang);
+    assert.equal(gifts.length, 1);
+    assert.equal(gifts[0].isGiftCard, true);
+    assert.equal(gifts[0].handle, 'darkovy-poukaz');
+    assert.deepEqual(gifts[0].variants.map(item => item.price), [
+      { amount: '1000.00', currencyCode: 'CZK' },
+      { amount: '2000.00', currencyCode: 'CZK' },
+      { amount: '3000.00', currencyCode: 'CZK' },
+    ]);
+    assert.equal((await demoShop.getProduct(gifts[0].handle, lang)).isGiftCard, true);
+    assert(!(await demoShop.getMerch(lang)).some(item => item.isGiftCard));
+  }
 });

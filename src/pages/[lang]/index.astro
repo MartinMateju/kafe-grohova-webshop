@@ -5,7 +5,7 @@ import CourseCard from '../../components/CourseCard.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import { allLangs, localePath, useTranslations, type Lang } from '../../i18n/utils';
 import { getCourses, getMerch, bookableVariants } from '../../lib/shopify';
-import { MERCH_ENABLED } from '../../lib/shopify/config';
+import { MERCH_ENABLED, GIFT_CARDS_ENABLED } from '../../lib/shopify/config';
 
 export function getStaticPaths() {
   return allLangs.map((lang) => ({ params: { lang } }));
@@ -61,6 +61,18 @@ const specialtyCopy = lang === 'cs'
         <p class="border border-ink/20 p-6">{t('courses.noDates')}</p>
       )}
     </section>
+
+    {GIFT_CARDS_ENABLED && (
+      <section class="grid items-center gap-6 border border-brick/30 bg-white/25 p-6 md:grid-cols-[1fr_1.3fr] lg:gap-12 lg:p-10" aria-labelledby="gift-title">
+        <a href={localePath(lang, '/gift-cards')} tabindex="-1" aria-hidden="true"><img src="/gift-card-preview.png" alt="" loading="lazy" class="aspect-[1.414] w-full object-contain" /></a>
+        <div class="flex flex-col items-start gap-5">
+          <p class="label text-brick">{t('gifts.title')}</p>
+          <h2 id="gift-title" class="text-[28px] leading-tight md:text-[38px]">{t('gifts.headline')}</h2>
+          <p class="text-[17px] leading-relaxed">{t('gifts.intro')}</p>
+          <a href={localePath(lang, '/gift-cards')} class="bg-brick px-6 py-3 text-[13px] tracking-widest text-cream transition-colors hover:bg-ink">{t('gifts.choose')} →</a>
+        </div>
+      </section>
+    )}
 
     <section class="grid items-center gap-8 md:grid-cols-2 lg:gap-12" aria-labelledby="cafe-title">
       <img src="/expressobar.webp" alt="" loading="lazy" class="h-[22rem] w-full object-cover md:h-[30rem]" />

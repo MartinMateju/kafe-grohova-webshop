@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs';
 const catalog = JSON.parse(readFileSync(new URL('../../data/demo-catalog.json', import.meta.url), 'utf8'));
 const course = catalog.products.find((product: any) => product.course && product.variants.some((variant: any) => variant.quantity === 0));
 const latte = catalog.products.find((product: any) => product.handle === 'latte-art');
+const gift = catalog.products.find((product: any) => product.isGiftCard);
 const visibleCartToggle = '[data-cart-toggle]:visible';
 
 test('Czech and English core pages load with images and no horizontal overflow', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   for (const lang of ['cs', 'en']) {
-    for (const route of ['', 'courses', 'blog', 'contact']) {
+    for (const route of ['', 'courses', 'gift-cards', `gift-cards/${gift.handle}`, 'blog', 'contact']) {
       const response = await page.goto(`/${lang}/${route}`);
       expect(response?.ok()).toBeTruthy();
       await expect(page.locator('h1')).toHaveCount(1);
@@ -55,10 +56,11 @@ test('course date selection respects sold-out dates and seat capacity', async ({
   await expect(page.locator('[data-cart-body] span.min-w-8')).toHaveText(String(selected.quantity));
 });
 
-test('merchandise and gift cards are hidden while courses lead the homepage', async ({ page }) => {
+test('physical merchandise stays hidden while courses and gift cards are featured', async ({ page }) => {
   for (const lang of ['cs', 'en']) {
     await page.goto(`/${lang}/`);
     await expect(page.locator('a[href*="/store"]')).toHaveCount(0);
+    await expect(page.locator(`a[href="/${lang}/gift-cards"]:visible`).first()).toBeVisible();
     await expect(page.locator('[data-course-card="latte-art"] [data-course-capacity]')).toContainText('2');
     await expect(page.locator('[data-course-card="cupping"] [data-course-capacity]')).toContainText('4');
     await expect(page.locator('[data-course-card="filtrovana-kava"] [data-course-capacity]')).toContainText('4');
@@ -74,6 +76,46 @@ test('merchandise and gift cards are hidden while courses lead the homepage', as
     }
     const removedCourse = await page.goto(`/${lang}/courses/espresso-zaklady/`);
     expect(removedCourse?.status()).toBe(404);
+  }
+});
+
+test('gift-card values have independent cart prices and persist alongside courses', async ({ page }) => {
+  await page.goto(`/en/gift-cards/${gift.handle}/`);
+  await expect(page.locator('[data-gift-demo]')).toContainText('disabled');
+  for (const variant of gift.variants) {
+    await page.locator(`[data-variant="${variant.id}"]`).click();
+    await expect(page.locator('[data-product-price]')).toContainText(variant.price.toLocaleString('en-GB'));
+    await page.locator('[data-add]').click();
+    const row = page.locator('[data-cart-body] [data-line]').filter({ hasText: variant.value.en });
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText(variant.price.toLocaleString('en-GB'));
+    await page.keyboard.press('Escape');
+  }
+  await page.reload();
+  await page.locator(visibleCartToggle).click();
+  await expect(page.locator('[data-cart-body] [data-line]')).toHaveCount(3);
+  await expect(page.locator('[data-cart-subtotal]')).toContainText('6,000');
+  await page.keyboard.press('Escape');
+  await page.goto(`/en/courses/${latte.handle}/`);
+  await page.locator('[data-book]').click();
+  await expect(page.locator('[data-cart-body] [data-line]')).toHaveCount(4);
+  await expect(page.locator('[data-cart-subtotal]')).toContainText('7,800');
+  await expect(page.locator('[data-cart-checkout]')).toBeDisabled();
+});
+
+test('gift-card preview links to a real sample PDF in both languages', async ({ page, request }) => {
+  for (const lang of ['cs', 'en']) {
+    await page.goto(`/${lang}/gift-cards/`);
+    await expect(page.locator(`[data-gift-card="${gift.handle}"]`)).toBeVisible();
+    await page.locator(`[data-gift-card="${gift.handle}"] a`).last().click();
+    await expect(page).toHaveURL(new RegExp(`/${lang}/gift-cards/${gift.handle}/?$`));
+    const preview = page.locator('[data-gift-preview]');
+    await expect(preview).toBeVisible();
+    await expect(preview).toHaveAttribute('target', '_blank');
+    const pdf = await request.get((await preview.getAttribute('href'))!);
+    expect(pdf.ok()).toBeTruthy();
+    expect(pdf.headers()['content-type']).toContain('application/pdf');
+    expect((await pdf.body()).subarray(0, 5).toString()).toBe('%PDF-');
   }
 });
 

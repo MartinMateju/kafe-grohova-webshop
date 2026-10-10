@@ -13,9 +13,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:4321. No Shopify account or credentials are required. The demo shows 3 courses and 4 articles in both languages. Cupping replaces the previous espresso course. Merchandise and gift cards are temporarily hidden; their 8 fixtures remain available for later restoration. Course sessions roll into the future at build/start time and use Europe/Prague. Prices are CZK.
+Open http://localhost:4321. No Shopify account or credentials are required. The demo shows 3 courses, a gift card with 1,000 / 2,000 / 3,000 CZK values, and 4 articles in both languages. Cupping replaces the previous espresso course. Seven physical-product fixtures are retained but temporarily hidden. Course sessions roll into the future at build/start time and use Europe/Prague. Prices are CZK.
 
-`PUBLIC_MERCH_ENABLED=false` is the default. It hides store navigation, product cards and merchandise detail routes, sends the store landing page to courses, and removes merchandise from restored carts. Set `PUBLIC_MERCH_ENABLED=true` in the relevant Vercel environments and rebuild to restore the shop when photos are ready. No Shopify products are deleted by this setting.
+`PUBLIC_MERCH_ENABLED=false` is the default. It hides physical merchandise from store navigation, product cards, detail routes and restored carts, and sends the store landing page to courses. Set `PUBLIC_MERCH_ENABLED=true` in the relevant Vercel environments and rebuild to restore physical products when photos are ready. Gift cards are independently enabled by `PUBLIC_GIFT_CARDS_ENABLED=true` (the default), with their own `/cs/gift-cards/` and `/en/gift-cards/` pages. Set that flag to `false` and rebuild to hide them. No Shopify products are deleted by either setting.
 
 The cart supports variants, quantities, stock limits, removal and persistence. Demo checkout is disabled and pages carry a DEMO banner and noindex metadata. Contact opens an email draft; it does not send mail or falsely report a submission. The blog contact link is not a mailing-list signup.
 
@@ -49,6 +49,7 @@ npm run preview             # serve the static production output locally
 ```dotenv
 PUBLIC_SHOPIFY_MODE=live
 PUBLIC_MERCH_ENABLED=false
+PUBLIC_GIFT_CARDS_ENABLED=true
 PUBLIC_SHOPIFY_STORE_DOMAIN=b1pnun-1t.myshopify.com
 PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your-public-storefront-token
 PUBLIC_SHOPIFY_API_VERSION=2026-07
@@ -80,7 +81,17 @@ node scripts/generate-demo-catalog.mjs --courses-only --date 2026-10-10 --lang c
 
 `data/shopify/products.csv` contains **3 draft courses / 8 date variants**. Course metadata and image manifests are included beside it. All products are initially unpublished and carry a `demo` tag. Review in Kafe Grohova's dedicated store before activating any products. Prices, quantities, articles and descriptions are sample content. Omit `--courses-only` to export the retained full catalog later (10 products / 21 variants, excluding the native gift card).
 
-The local gift-card example is deliberately excluded from CSV: create a native Shopify gift-card product in Shopify Admin, then add it to `merch`. Course variant metafields and translations also need setup; the sidecar JSON documents their values and is not an Admin import endpoint. Without a public image base, upload images from `public/` using the image manifest.
+The local gift-card example is deliberately excluded from CSV: create a native Shopify gift-card product in Shopify Admin and publish it to Headless. It does not need the `merch` collection. Course variant metafields and translations also need setup; the sidecar JSON documents their values and is not an Admin import endpoint. Without a public image base, upload images from `public/` using the image manifest.
+
+## Gift cards and the sample PDF
+
+The storefront lists only Shopify's native `isGiftCard` products as gift cards. A normal product named or tagged "Gift Card" does not qualify. Each denomination is a separate Shopify variant; the cart preserves its actual price. Physical products remain hidden, and course limits remain 2 / 4 / 4.
+
+In the dedicated Shopify Admin, open **Products → Gift cards → Add a gift card product**, with the reviewed 1,000 / 2,000 / 3,000 CZK values and handle `darkovy-poukaz`. Set it active, publish it to the Headless sales channel, and ensure it is available in the Czech market. The gift-card catalog is read independently of collections. Confirm the gift-card fulfillment and customer email settings, then test purchase, fulfillment, delivery of a unique gift code, and redemption against a course order. A public Storefront token can query and buy a published product; it cannot create products or configure fulfillment.
+
+Shopify issues the redeemable gift code when a native gift-card order is fulfilled. The downloadable `public/downloads/gift-card-sample.pdf` is an original bilingual A5 design preview with no monetary value or valid code. Its rendered image is `public/gift-card-preview.png`. To replace the design later, replace those two files and rebuild; update the product image in Shopify for live mode. Never embed a real customer's gift-card code in these public files. This app does not automatically personalize or attach PDFs to order emails; Shopify's gift-card email carries the actual code. A personalized PDF delivery service would need a separate fulfillment integration.
+
+The public deployment remains in demo mode until the native gift card, course collection, real course dates and checkout have been configured. The read-only check on 10 October 2026 found no products published to this Headless storefront and no `barista-kurzy` collection. Unpublished Admin drafts may exist. See [Shopify gift-card products](https://help.shopify.com/en/manual/products/gift-card-products/add-update-gift-card-products) and [gift-card fulfillment](https://help.shopify.com/en/manual/products/gift-card-products/overview).
 
 ## Courses and seats
 
