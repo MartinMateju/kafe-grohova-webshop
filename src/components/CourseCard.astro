@@ -12,9 +12,10 @@ import { localePath, useTranslations, type Lang } from '../i18n/utils';
 interface Props {
   product: Product;
   lang: Lang;
+  layout?: 'row' | 'tile';
 }
 
-const { product, lang } = Astro.props;
+const { product, lang, layout = 'row' } = Astro.props;
 const t = useTranslations(lang);
 
 const href = localePath(lang, `/courses/${product.handle}`);
@@ -26,9 +27,10 @@ const duration = formatDuration(product.course?.durationMinutes ?? null, lang);
 ---
 
 <article
-  class="flex flex-col gap-4 border border-ink/20 md:flex-row"
+  data-course-card={product.handle}
+  class:list={['flex flex-col border border-ink/20 bg-white/25', layout === 'row' && 'md:flex-row']}
 >
-  <a href={href} class="md:w-2/5 overflow-hidden group">
+  <a href={href} class:list={['relative overflow-hidden group', layout === 'row' && 'md:w-2/5 md:shrink-0']}>
     {
       src ? (
         <img
@@ -36,19 +38,21 @@ const duration = formatDuration(product.course?.durationMinutes ?? null, lang);
           alt={product.featuredImage?.altText ?? product.title}
           loading="lazy"
           decoding="async"
-          class="h-64 w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03] md:h-[22rem]"
+          class:list={['h-64 w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]', layout === 'row' && 'md:absolute md:inset-0 md:h-full']}
         />
       ) : (
-        <div class="h-64 w-full bg-stone md:h-[22rem]" />
+        <div class:list={['h-64 w-full bg-stone', layout === 'row' && 'md:absolute md:inset-0 md:h-full']} />
       )
     }
   </a>
 
   <div class="flex flex-1 flex-col gap-4 p-5 md:p-7">
+    <div class="flex flex-wrap gap-2 text-[11px] tracking-wide">
+      {product.course?.capacity && <span data-course-capacity class="bg-ink px-3 py-1.5 text-cream">{t('courses.maxParticipants').replace('{n}', String(product.course.capacity))}</span>}
+      {open.length > 0 && <span class="border border-brick/30 px-3 py-1.5 text-brick">{t('courses.openDates')}</span>}
+    </div>
     <div class="flex flex-wrap items-baseline justify-between gap-3">
-      <a href={href} class="text-[22px] leading-tight hover:text-brick md:text-[28px]">
-        {product.title}
-      </a>
+      <h3 class="text-[22px] leading-tight md:text-[26px]"><a href={href} class="hover:text-brick">{product.title}</a></h3>
       <p class="whitespace-nowrap text-[18px]">
         <span class="text-ink/50 text-[13px]">{t('courses.from')}</span>
         {price}
@@ -65,14 +69,6 @@ const duration = formatDuration(product.course?.durationMinutes ?? null, lang);
           <div>
             <dt class="label inline">{t('courses.duration')}: </dt>
             <dd class="inline">{duration}</dd>
-          </div>
-        )
-      }
-      {
-        product.course?.capacity && (
-          <div>
-            <dt class="label inline">{t('courses.capacity')}: </dt>
-            <dd class="inline">max {product.course.capacity}</dd>
           </div>
         )
       }
@@ -112,7 +108,7 @@ const duration = formatDuration(product.course?.durationMinutes ?? null, lang);
 
     <a
       href={href}
-      class="mt-2 inline-block self-start border border-ink px-6 py-3 text-[13px] tracking-widest transition-colors hover:bg-ink hover:text-cream"
+      class="mt-2 inline-block self-start border border-brick bg-brick px-6 py-3 text-[13px] tracking-widest text-cream transition-colors hover:border-ink hover:bg-ink"
     >
       {open.length > 0 ? t('courses.book') : t('courses.allCourses')}
     </a>

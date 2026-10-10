@@ -33,6 +33,7 @@ function products(lang: Lang, courses: boolean): Product[] {
       description: product.descriptionHtml[lang].replace(/<[^>]+>/g, ' ').trim(),
       descriptionHtml: product.descriptionHtml[lang],
       productType: product.productType, tags: [...product.tags],
+      isGiftCard: 'isGiftCard' in product && product.isGiftCard === true,
       availableForSale: variants.some(variant => variant.availableForSale),
       featuredImage: product.images[0] ?? null, images: product.images.map(image => ({ ...image })),
       options: [{ id: `opt-${product.handle}`, name: product.optionName[lang], values: variants.map(variant => variant.title) }],

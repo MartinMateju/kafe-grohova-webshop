@@ -21,7 +21,8 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 
-const courses = await getCourses(lang);
+const courses = (await getCourses(lang)).sort((a, b) =>
+  Number(bookableVariants(b).length > 0) - Number(bookableVariants(a).length > 0));
 
 /** Flatten every open date across all courses, soonest first. */
 const upcoming = courses
@@ -50,20 +51,20 @@ const upcoming = courses
     {/* ── Next dates strip ───────────────────────────────────── */}
     {
       upcoming.length > 0 && (
-        <section class="flex flex-col gap-3">
-          <h2 class="label text-ink/60">{t('courses.upcoming')}</h2>
+        <section class="flex flex-col gap-4 bg-brick p-5 text-cream md:p-7">
+          <h2 class="label">{t('courses.upcoming')}</h2>
           <ul class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
             {upcoming.map(({ course, variant }) => (
               <li>
                 <a
                   href={localePath(lang, `/courses/${course.handle}`)}
-                  class="flex items-center justify-between gap-4 border border-ink/20 px-4 py-3 transition-colors hover:border-brick hover:text-brick"
+                  class="flex h-full items-center justify-between gap-4 border border-cream/40 px-4 py-3 transition-colors hover:bg-cream hover:text-ink"
                 >
                   <span class="flex flex-col">
                     <span class="text-[15px]">
                       {variant.startsAt ? formatDateTime(variant.startsAt, lang) : variant.title}
                     </span>
-                    <span class="text-[12px] text-ink/50">{course.title}</span>
+                    <span class="text-[12px] opacity-80">{course.title}</span>
                   </span>
                   <span class="whitespace-nowrap text-[14px]">
                     {formatMoney(variant.price, lang)}
@@ -78,6 +79,7 @@ const upcoming = courses
 
     {/* ── Course list ────────────────────────────────────────── */}
     <section class="flex flex-col gap-6">
+      <h2 class="sr-only">{t('courses.allCourses')}</h2>
       {
         courses.length === 0 ? (
           <div class="border border-ink/20 px-6 py-16 text-center">

@@ -88,6 +88,7 @@ export function normalizeProduct(raw: Raw): Product {
     description: raw.description ?? '',
     descriptionHtml: raw.descriptionHtml ?? '',
     productType: raw.productType ?? '',
+    isGiftCard: raw.isGiftCard === true,
     tags: raw.tags ?? [],
     availableForSale: Boolean(raw.availableForSale),
     featuredImage: image(raw.featuredImage),
@@ -122,9 +123,10 @@ export function normalizeCart(raw: Raw): Cart {
     const variant = line.merchandise;
     const product = variant?.product;
     const courseStartsAt = metafieldValue(variant?.startsAt);
-    const isCourse = product?.productType?.toLowerCase() === 'course' ||
+    const isGiftCard = product?.isGiftCard === true;
+    const isCourse = !isGiftCard && (product?.productType?.toLowerCase() === 'course' ||
       product?.tags?.some((tag: string) => tag.toLowerCase() === 'course') ||
-      courseStartsAt !== null || metafieldValue(product?.courseDuration) !== null;
+      courseStartsAt !== null || metafieldValue(product?.courseDuration) !== null);
     return {
       id: line.id,
       quantity: line.quantity,
@@ -132,6 +134,7 @@ export function normalizeCart(raw: Raw): Cart {
       productTitle: line.merchandise?.product?.title ?? '',
       variantTitle: line.merchandise?.title ?? '',
       productHandle: line.merchandise?.product?.handle ?? '',
+      isGiftCard,
       ...(isCourse ? { courseStartsAt } : {}),
       image: image(line.merchandise?.image),
       unitPrice: line.cost?.amountPerQuantity,

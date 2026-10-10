@@ -1,4 +1,5 @@
 ---
+import { MERCH_ENABLED, GIFT_CARDS_ENABLED } from '../lib/shopify/config';
 import {
   getLangFromUrl,
   useTranslations,
@@ -13,13 +14,14 @@ const t = useTranslations(lang);
 const path = Astro.url.pathname;
 
 const navigation = [
-  { label: t('nav.store'), href: localePath(lang, '/store') },
   { label: t('nav.courses'), href: localePath(lang, '/courses') },
+  ...(GIFT_CARDS_ENABLED ? [{ label: t('nav.giftCards'), href: localePath(lang, '/gift-cards') }] : []),
+  ...(MERCH_ENABLED ? [{ label: t('nav.store'), href: localePath(lang, '/store') }] : []),
   { label: t('nav.blog'), href: localePath(lang, '/blog') },
   { label: t('nav.contact'), href: localePath(lang, '/contact') },
 ];
 
-const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+const isActive = (href: string) => path === href || path.startsWith(href);
 
 const other = lang === 'cs' ? 'en' : 'cs';
 const otherHref = alternatePaths?.[other] ?? switchLocalePath(Astro.url, other);
@@ -38,7 +40,7 @@ const otherLabel = other.toUpperCase();
 
     <div class="hidden flex-row gap-4 whitespace-nowrap text-[15px] text-ink 2xl:flex xl:text-[18px]">
       <p>{t('nav.sub1')}</p>
-      <p>{t('nav.sub2')}</p>
+      <p>{MERCH_ENABLED ? t('nav.sub2') : t('nav.subCourses')}</p>
     </div>
 
     <nav class="flex flex-row items-start gap-4 xl:gap-5" aria-label="Main">

@@ -13,6 +13,8 @@ interface Props {
 
 const { product, lang } = Astro.props;
 const t = useTranslations(lang);
+const capacity = Number.isInteger(product.course?.capacity) && (product.course?.capacity ?? 0) > 0
+  ? product.course!.capacity! : 99;
 
 /** Seat wording has three Czech forms; English has two. */
 function seatWord(n: number): string {
@@ -27,7 +29,7 @@ const dates = product.variants
     id: v.id,
     title: v.title,
     available: v.availableForSale && isFutureCourseDate(v.startsAt) && (v.quantityAvailable === null || v.quantityAvailable > 0),
-    seats: v.quantityAvailable,
+    seats: typeof v.quantityAvailable === 'number' ? Math.min(v.quantityAvailable, capacity) : null,
     startsAt: v.startsAt,
     label: v.startsAt ? formatDateTime(v.startsAt, lang) : v.title,
     priceLabel: formatMoney(v.price, lang),
@@ -124,7 +126,7 @@ const labels = {
             data-seats
             value="1"
             min="1"
-            max="99"
+            max={Math.min(firstAvailable?.seats ?? capacity, capacity)}
             class="w-14 border-0 bg-transparent text-center text-[16px] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             aria-label={t('courses.seatsLeft')}
           />
@@ -152,7 +154,7 @@ const labels = {
   is:inline
   type="application/json"
   data-course-booking-data
-  set:html={safeScriptJson({ dates, snapshotBase, labels, lang })}
+  set:html={safeScriptJson({ dates, snapshotBase, labels, lang, capacity })}
 />
 
 <script>
@@ -167,6 +169,7 @@ const labels = {
     const data = JSON.parse(dataEl.textContent!);
     const { snapshotBase, labels, lang } = data;
     let dates = data.dates;
+    let capacity = data.capacity;
     const seatsInput = root.querySelector<HTMLInputElement>('[data-seats]');
     const bookBtn = root.querySelector<HTMLButtonElement>('[data-book]');
     const errorEl = root.querySelector<HTMLElement>('[data-availability-error]')!;
@@ -180,7 +183,7 @@ const labels = {
 
     const clampSeats = () => {
       if (!seatsInput) return 1;
-      const max = typeof selected?.seats === 'number' ? Math.max(1, Math.min(99, selected.seats)) : 99;
+      const max = Math.max(1, Math.min(99, capacity, typeof selected?.seats === 'number' ? selected.seats : 99));
       const n = Math.max(1, Math.min(max, Math.floor(Number(seatsInput.value)) || 1));
       seatsInput.max = String(max);
       seatsInput.value = String(n);
@@ -209,10 +212,11 @@ const labels = {
         bookBtn.textContent = busy ? labels.adding : !ready ? labels.loading : available ? labels.book : labels.soldOut;
       }
       if (seatsInput) seatsInput.disabled = busy || !available;
+      const quantity = clampSeats();
       root.querySelectorAll<HTMLButtonElement>('[data-seat-up], [data-seat-down]').forEach((button) => {
-        button.disabled = busy || !available;
+        button.disabled = busy || !available || (button.hasAttribute('data-seat-up')
+          ? quantity >= Number(seatsInput?.max ?? 99) : quantity <= 1);
       });
-      clampSeats();
     };
 
     const refreshAvailability = async () => {
@@ -223,11 +227,13 @@ const labels = {
       syncUI();
       try {
         const product = await getProduct(snapshotBase.productHandle, lang);
+        const currentCapacity = product?.course?.capacity;
+        if (typeof currentCapacity === 'number' && Number.isInteger(currentCapacity) && currentCapacity > 0) capacity = currentCapacity;
         dates = dates.map((previous: any) => {
           const current = product?.variants.find((variant) => variant.id === previous.id);
           return current ? {
             id: current.id, title: current.title, available: current.availableForSale,
-            seats: current.quantityAvailable, startsAt: current.startsAt,
+            seats: typeof current.quantityAvailable === 'number' ? Math.min(current.quantityAvailable, capacity) : null, startsAt: current.startsAt,
             label: current.startsAt ? formatDateTime(current.startsAt, lang) || current.title : current.title,
             amount: current.price.amount, currencyCode: current.price.currencyCode,
             priceLabel: formatMoney(current.price, lang),
@@ -253,12 +259,12 @@ const labels = {
       });
     });
     root.querySelector('[data-seat-up]')?.addEventListener('click', () => {
-      if (seatsInput) { seatsInput.value = String(clampSeats() + 1); clampSeats(); }
+      if (seatsInput) { seatsInput.value = String(clampSeats() + 1); syncUI(); }
     });
     root.querySelector('[data-seat-down]')?.addEventListener('click', () => {
-      if (seatsInput) seatsInput.value = String(Math.max(1, clampSeats() - 1));
+      if (seatsInput) { seatsInput.value = String(Math.max(1, clampSeats() - 1)); syncUI(); }
     });
-    seatsInput?.addEventListener('change', clampSeats);
+    seatsInput?.addEventListener('change', syncUI);
 
     bookBtn?.addEventListener('click', async () => {
       // Recheck at the actual click, even if the static page was left open overnight.

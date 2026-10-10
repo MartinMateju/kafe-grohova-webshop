@@ -43,6 +43,8 @@ export interface Product {
   description: string;
   descriptionHtml: string;
   productType: string;
+  /** Shopify's native gift-card identity, never inferred from tags or title. */
+  isGiftCard: boolean;
   tags: string[];
   availableForSale: boolean;
   featuredImage: ShopImage | null;
@@ -91,6 +93,7 @@ export interface CartLine {
   productTitle: string;
   variantTitle: string;
   productHandle: string;
+  isGiftCard: boolean;
   /** Present for course lines; null means required scheduling data is missing. */
   courseStartsAt?: string | null;
   image: ShopImage | null;
