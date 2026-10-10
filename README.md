@@ -29,15 +29,24 @@ npm run preview             # serve the static production output locally
 
 ## Dedicated Shopify connection
 
-`kafegrohova.cz` is the public domain, not the internal Shopify API address. The dedicated store must also have an address such as `your-kafe-store.myshopify.com` (replace with the actual assigned address).
+`kafegrohova.cz` is the public website. Its dedicated Shopify store is **Kafe Grohova Store**, at `b1pnun-1t.myshopify.com` ([admin](https://admin.shopify.com/store/b1pnun-1t/)). This is separate from the other shop.
 
 1. Create or open **Kafe Grohova's own store**. Do not reuse the other shop's credentials.
-2. Install Shopify's **Headless** sales channel and create a storefront. Copy its **public Storefront API access token**. Enable product/collection, product inventory, content and cart/checkout permissions required by the channel.
+2. Install Shopify's **Headless** sales channel and create a storefront. Copy its **public Storefront API access token**. In **Storefront API permissions → Edit**, enable the permissions used by this code:
+
+| Scope | Purpose |
+| --- | --- |
+| `unauthenticated_read_product_listings` | Products, variants and collections |
+| `unauthenticated_read_product_inventory` | Course seats and stock availability |
+| `unauthenticated_read_product_tags` | Course/merchandise classification |
+| `unauthenticated_read_content` | Blog articles |
+| `unauthenticated_read_checkouts` | Cart reads |
+| `unauthenticated_write_checkouts` | Cart creation and changes |
 3. Copy `.env.example` to `.env` and fill in:
 
 ```dotenv
 PUBLIC_SHOPIFY_MODE=live
-PUBLIC_SHOPIFY_STORE_DOMAIN=your-kafe-store.myshopify.com
+PUBLIC_SHOPIFY_STORE_DOMAIN=b1pnun-1t.myshopify.com
 PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your-public-storefront-token
 PUBLIC_SHOPIFY_API_VERSION=2026-07
 PUBLIC_SHOPIFY_COURSES_COLLECTION=barista-kurzy
@@ -95,10 +104,11 @@ After credentials, products and metafields are configured:
 
 ```sh
 npm run shopify:verify              # read-only catalog and inventory checks
+npm run shopify:verify -- --connection-only # authenticate a new store before import
 npm run shopify:verify -- --cart    # create one test cart, validate checkout URL, empty it
 ```
 
-The cart probe does not open checkout, take payment or place an order. Finish a separate Shopify test-payment walkthrough for merchandise and a course before accepting real orders. That walkthrough requires access to the dedicated store and has not been performed by the local demo tests.
+The connection-only check reports shop identity and currency; it does not establish launch readiness. The full check validates CZK, both catalogs and course timestamps, and warns when there are no future bookable sessions to test. The cart probe does not open checkout, take payment or place an order. Finish a separate Shopify test-payment walkthrough for merchandise and a course before accepting real orders. That walkthrough requires access to the dedicated store and has not been performed by the local demo tests.
 
 ## Deployment and updates
 
