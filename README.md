@@ -112,7 +112,9 @@ The connection-only check reports shop identity and currency; it does not establ
 
 ## Deployment and updates
 
-The repository includes `vercel.json`: Astro framework, install `npm ci`, build `npm run build`, output `dist`, a temporary root redirect to `/cs/`, trailing-slash routes and basic response headers. This static app does not need the Vercel server-rendering adapter. Use Node **22.x** in Vercel's project settings.
+The dedicated Vercel project is [martinmatejus-projects/kafe-grohova-webshop](https://vercel.com/martinmatejus-projects/kafe-grohova-webshop), connected to this GitHub repository. The [public review site](https://kafe-grohova-webshop.vercel.app/cs/) uses dummy data with checkout disabled. The live-shop domain is `kafegrohova.cz`; connect it after the Shopify catalog and checkout checks pass.
+
+The repository includes `vercel.json`: Astro framework, install `npm ci --no-audit`, build `npm run build`, output `dist`, a temporary root redirect to `/cs/`, trailing-slash routes and basic response headers. This static app does not need the Vercel server-rendering adapter. Use Node **22.x** in Vercel's project settings.
 
 1. Import `MartinMateju/kafe-grohova-webshop` into a dedicated Vercel project, with the repository root as Root Directory. Select the release branch for the initial review, or merge the release PR before deploying `main`.
 2. For a **demo deployment**, set `PUBLIC_SHOPIFY_MODE=demo`. No Shopify credentials are needed; checkout remains disabled and the demo banner/noindex metadata remain visible. Set `PUBLIC_SITE_URL` to the review deployment's stable HTTPS origin if available. Vercel's first deployment may be labeled Production even when it is only a demo on a `vercel.app` address; that is not a live-shop launch.
