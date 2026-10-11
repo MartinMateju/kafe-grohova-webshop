@@ -1,0 +1,63 @@
+---
+import { localePath, type Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = {
+  cs: {
+    title: ['A zítra', 'zase na kafe.'],
+    address: 'Tady jsme doma',
+    directions: 'Najít cestu',
+    contactHeading: 'Zůstaňme v kontaktu',
+    contact: 'Kontakt',
+    blog: 'Blog',
+    backToTop: 'Zpátky nahoru',
+  },
+  en: {
+    title: ['See you', 'for coffee.'],
+    address: 'Find us here',
+    directions: 'Get directions',
+    contactHeading: 'Keep in touch',
+    contact: 'Contact',
+    blog: 'Blog',
+    backToTop: 'Back to top',
+  },
+}[lang];
+const instagram = 'https://instagram.com/kafegrohova';
+const map = 'https://www.google.com/maps/search/?api=1&query=Kafe+Grohova+Grohova+102%2F3+Brno';
+---
+
+<footer class="visit" id="visit">
+  <div class="visit-top">
+    <h2 class="visit-title display">{copy.title.map((line) => <span>{line}</span>)}</h2>
+    <div class="visit-info">
+      <div>
+        <p class="eyebrow">{copy.address}</p>
+        <p>Grohova 102/3<br />602 00 Brno</p>
+        <a href={map} target="_blank" rel="noopener noreferrer">
+          {copy.directions} <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <div>
+        <p class="eyebrow">{copy.contactHeading}</p>
+        <a href={instagram} target="_blank" rel="noopener noreferrer">
+          @kafegrohova <span class="arrow" aria-hidden="true">↗</span>
+        </a><br />
+        <a href={localePath(lang, '/contact')}>
+          {copy.contact} <span class="arrow" aria-hidden="true">↗</span>
+        </a><br />
+        <a href={localePath(lang, '/blog')}>
+          {copy.blog} <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <p class="footer-wordmark display" aria-hidden="true">KAFE GROHOVA</p>
+  <div class="footer-bottom">
+    <span>© Kafe Grohova · Brno</span>
+    <a href="#">{copy.backToTop} <span class="arrow" aria-hidden="true">↑</span></a>
+  </div>
+</footer>

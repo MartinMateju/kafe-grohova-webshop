@@ -60,11 +60,15 @@ test('physical merchandise stays hidden while courses and gift cards are feature
   for (const lang of ['cs', 'en']) {
     await page.goto(`/${lang}/`);
     await expect(page.locator('a[href*="/store"]')).toHaveCount(0);
-    await expect(page.locator(`a[href="/${lang}/gift-cards"]:visible`).first()).toBeVisible();
+    await expect(page.locator('a.courses')).toHaveAttribute('href', `/${lang}/courses`);
+    await expect(page.locator('a.gift-tile')).toHaveAttribute('href', `/${lang}/gift-cards`);
+    await expect(page.locator('[data-home-category]')).toHaveCount(3);
+    await expect(page.locator('a[data-home-category], [data-home-category] a')).toHaveCount(0);
+    await page.locator('a.courses').click();
+    await expect(page).toHaveURL(new RegExp(`/${lang}/courses/?$`));
     await expect(page.locator('[data-course-card="latte-art"] [data-course-capacity]')).toContainText('2');
     await expect(page.locator('[data-course-card="cupping"] [data-course-capacity]')).toContainText('4');
     await expect(page.locator('[data-course-card="filtrovana-kava"] [data-course-capacity]')).toContainText('4');
-    await expect(page.locator('a[href="#courses"]')).toBeVisible();
     await expect(page.locator('[data-course-card]')).toHaveCount(3);
     await expect(page.locator('a[href*="espresso-zaklady"]')).toHaveCount(0);
     await page.goto(`/${lang}/store/`);
@@ -76,6 +80,45 @@ test('physical merchandise stays hidden while courses and gift cards are feature
     }
     const removedCourse = await page.goto(`/${lang}/courses/espresso-zaklady/`);
     expect(removedCourse?.status()).toBe(404);
+  }
+});
+
+test('homepage navigation preserves both locales, category destinations and the dismissible demo notice', async ({ page }) => {
+  for (const lang of ['cs', 'en']) {
+    const other = lang === 'cs' ? 'en' : 'cs';
+    await page.goto('/' + lang + '/');
+    const banner = page.locator('[data-mock-banner]');
+    const shell = page.locator('.homepage-shell');
+    await expect(banner).toBeVisible();
+    const bannerBounds = await banner.boundingBox();
+    const shellBounds = await shell.boundingBox();
+    expect(bannerBounds).not.toBeNull();
+    expect(shellBounds!.y).toBeGreaterThanOrEqual(bannerBounds!.y + bannerBounds!.height - 1);
+    await banner.locator('button').click();
+    await expect(banner).toHaveCount(0);
+    expect((await shell.boundingBox())!.y).toBe(0);
+
+    const menuToggle = page.locator('[data-menu-toggle]:visible');
+    if (await menuToggle.count()) {
+      await expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+      await menuToggle.click();
+      await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator('#mobile-menu')).toBeVisible();
+    }
+    await expect(page.locator(visibleCartToggle)).toHaveCount(1);
+    await expect(page.locator('header a[href="/' + lang + '/courses"]:visible').first()).toBeVisible();
+    await expect(page.locator('header a[href="/' + lang + '/gift-cards"]:visible').first()).toBeVisible();
+    const localeLink = page.locator('header a[hreflang="' + other + '"]:visible').first();
+    await expect(localeLink).toHaveAttribute('href', new RegExp('^/' + other + '/?$'));
+    await localeLink.click();
+    await expect(page).toHaveURL(new RegExp('/' + other + '/?$'));
+    await expect(page.locator('html')).toHaveAttribute('lang', other);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new RegExp('/' + other + '/?$'));
+    await expect(page.locator('link[rel="alternate"][hreflang="cs"]')).toHaveAttribute('href', /\/cs\/?$/);
+    await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', /\/en\/?$/);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+    await page.locator('a.gift-tile').click();
+    await expect(page).toHaveURL(new RegExp('/' + other + '/gift-cards/?$'));
   }
 });
 
@@ -152,12 +195,24 @@ test('translated article URLs switch to the same article', async ({ page }) => {
 });
 
 test('navigation fits tablet and desktop widths in both languages', async ({ page }) => {
-  for (const width of [768, 1024, 1280, 1536]) {
+  for (const width of [768, 1024, 1100, 1280, 1536]) {
     await page.setViewportSize({ width, height: 900 });
     for (const lang of ['cs', 'en']) {
       await page.goto(`/${lang}/`);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${lang} at ${width}px`).toBeTruthy();
       await expect(page.locator(visibleCartToggle)).toBeVisible();
+      const menuToggle = page.locator('[data-menu-toggle]:visible');
+      const usesMenu = await menuToggle.count() > 0;
+      if (usesMenu) {
+        await menuToggle.click();
+        await expect(page.locator('#mobile-menu')).toBeVisible();
+      }
+      await expect(page.locator('header a[href="/' + lang + '/gift-cards"]:visible').first()).toBeVisible();
+      if (usesMenu) {
+        await menuToggle.click();
+        await expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(page.locator('#mobile-menu')).toBeHidden();
+      }
     }
   }
 });

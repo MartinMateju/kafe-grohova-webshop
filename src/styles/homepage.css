@@ -1,0 +1,954 @@
+/* Homepage art direction, scoped away from checkout and catalog pages. */
+
+.homepage-shell {
+  --paper: #f5e9cf;
+  --ink: #242820;
+  --red: #e74428;
+  --gutter: clamp(22px, 3.6vw, 68px);
+  --display: Arial, Helvetica, sans-serif;
+}
+.homepage-shell * {
+  box-sizing: border-box;
+}
+.homepage-shell {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Unient DIN CE", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.homepage-shell a {
+  color: inherit;
+  text-decoration: none;
+}
+.homepage-shell button {
+  font: inherit;
+  color: inherit;
+}
+.homepage-shell button,
+.homepage-shell a {
+  -webkit-tap-highlight-color: transparent;
+}
+.homepage-shell button {
+  cursor: pointer;
+}
+.homepage-shell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.homepage-shell h1,
+.homepage-shell h2,
+.homepage-shell h3,
+.homepage-shell p,
+.homepage-shell figure {
+  margin: 0;
+}
+.homepage-shell button {
+  border-radius: 0;
+}
+.homepage-shell a:focus-visible,
+.homepage-shell button:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 6px;
+}
+.homepage-shell [hidden] {
+  display: none !important;
+}
+.homepage-shell .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.45;
+}
+.homepage-shell .display {
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: -0.065em;
+  text-transform: uppercase;
+}
+.homepage-shell .arrow {
+  font-family: Arial, sans-serif;
+  font-weight: 400;
+}
+.homepage-shell .hero {
+  height: 100svh;
+  min-height: 680px;
+  position: relative;
+  color: var(--paper);
+  isolation: isolate;
+  background: #35382b;
+}
+.homepage-shell .hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  object-position: 50% 44%;
+}
+.homepage-shell .hero:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 20, 17, 0.53) 0%,
+    rgba(12, 20, 17, 0.03) 23%,
+    rgba(12, 20, 17, 0.03) 48%,
+    rgba(12, 20, 17, 0.66) 100%
+  );
+}
+.homepage-shell .header {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  position: absolute;
+  inset: 0 0 auto;
+  padding: 25px var(--gutter);
+  z-index: 5;
+}
+.homepage-shell .brand {
+  font-family: var(--display);
+  font-size: 29px;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  width: 182px;
+}
+.homepage-shell .brand span {
+  display: block;
+}
+.homepage-shell .desktop-nav {
+  display: flex;
+  gap: 28px;
+  margin-left: auto;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.homepage-shell .desktop-nav a {
+  padding: 12px 0;
+  border-bottom: 1px solid transparent;
+}
+.homepage-shell .desktop-nav a:hover {
+  border-color: currentColor;
+}
+.homepage-shell .gift-link {
+  margin-left: 25px;
+  font-size: 13px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f5e9cf88;
+  padding: 12px 0;
+}
+.homepage-shell .menu-button {
+  display: none;
+  border: 0;
+  background: none;
+  padding: 12px 0;
+  text-transform: uppercase;
+}
+.homepage-shell .header-line {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 1px;
+  top: 109px;
+  background: #f5e9cf55;
+}
+.homepage-shell .hero-content {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 28px;
+}
+.homepage-shell .hero-kicker {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 15px;
+}
+.homepage-shell .hero-kicker .eyebrow {
+  max-width: 300px;
+}
+.homepage-shell .hero h1 {
+  font-size: min(14.5vw, 22svh);
+  line-height: 0.9;
+  margin-left: -0.006em;
+}
+.homepage-shell .hero h1 span {
+  display: block;
+  white-space: nowrap;
+}
+.homepage-shell .hero-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f5e9cf66;
+  margin-top: 28px;
+  padding-top: 18px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.homepage-shell .hero-bottom a {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.homepage-shell .hero-bottom .arrow {
+  font-size: 22px;
+}
+.homepage-shell .hero-location {
+  display: flex;
+  gap: 38px;
+}
+.homepage-shell .hero-mark {
+  width: 72px;
+  height: 72px;
+  border: 1px solid #f5e9cfb0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  letter-spacing: 0.04em;
+  transform: rotate(9deg);
+  margin-bottom: 20px;
+}
+.homepage-shell .intro {
+  padding: 78px var(--gutter) 90px;
+}
+.homepage-shell .section-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 55px;
+}
+.homepage-shell .section-meta .dash {
+  width: 48px;
+  height: 1px;
+  background: currentColor;
+}
+.homepage-shell .intro-grid {
+  display: grid;
+  grid-template-columns: 7fr 4fr;
+  gap: 7.5vw;
+  align-items: end;
+}
+.homepage-shell .intro h2 {
+  font-size: clamp(58px, 6.9vw, 116px);
+  line-height: 0.95;
+}
+.homepage-shell .intro h2 em {
+  font-style: normal;
+  color: var(--red);
+}
+.homepage-shell .intro-copy {
+  padding-bottom: 3px;
+}
+.homepage-shell .intro-copy p {
+  font-size: 20px;
+  line-height: 1.5;
+  max-width: 410px;
+}
+.homepage-shell .intro-copy p + p {
+  margin-top: 20px;
+}
+.homepage-shell .text-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 50px;
+  border-bottom: 1px solid currentColor;
+  padding: 20px 0 8px;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.homepage-shell .text-link .arrow {
+  font-size: 24px;
+}
+.homepage-shell .intro-tail {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #24282040;
+  margin-top: 65px;
+  padding-top: 20px;
+}
+.homepage-shell .masonry {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: 29vw 22vw 26vw 19vw;
+  gap: 0;
+  background: var(--ink);
+}
+.homepage-shell .tile {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--paper);
+  border: 0;
+  padding: 0;
+  background: var(--ink);
+  text-align: left;
+  min-width: 0;
+}
+.homepage-shell .tile img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.homepage-shell .tile:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2),
+    transparent 32%,
+    rgba(0, 0, 0, 0.08) 48%,
+    rgba(0, 0, 0, 0.7)
+  );
+}
+.homepage-shell .tile[href]:hover img {
+  transform: scale(1.035);
+}
+.homepage-shell .tile:focus-visible {
+  outline-offset: -8px;
+  outline-color: var(--paper);
+  z-index: 1;
+}
+.homepage-shell .tile-top {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  top: 26px;
+  display: flex;
+  justify-content: space-between;
+}
+.homepage-shell .tile-body {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 28px;
+}
+.homepage-shell .tile-title {
+  font-size: clamp(36px, 5.5vw, 95px);
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+}
+.homepage-shell .tile-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 14px;
+}
+.homepage-shell .tile-bottom .arrow {
+  font-size: 38px;
+  line-height: 1;
+  transition: transform 0.2s;
+}
+.homepage-shell .tile:hover .tile-bottom .arrow {
+  transform: translate(3px, -3px);
+}
+.homepage-shell .courses {
+  grid-column: 1/8;
+  grid-row: 1/3;
+}
+.homepage-shell .courses img {
+  object-position: 52% 50%;
+}
+.homepage-shell .courses .tile-title {
+  font-size: clamp(46px, 6.8vw, 110px);
+}
+.homepage-shell .equipment {
+  grid-column: 8/13;
+  grid-row: 1/2;
+}
+.homepage-shell .equipment img {
+  object-position: 50% 57%;
+}
+.homepage-shell .equipment .tile-title {
+  font-size: 4.7vw;
+}
+.homepage-shell .ritual {
+  grid-column: 8/11;
+  grid-row: 2/3;
+}
+.homepage-shell .ritual:after,
+.homepage-shell .barista:after {
+  display: none;
+}
+.homepage-shell .ritual img {
+  object-position: 50% 52%;
+}
+.homepage-shell .red-note {
+  grid-column: 11/13;
+  grid-row: 2/3;
+  background: var(--red);
+  color: var(--paper);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.homepage-shell .red-note strong {
+  font-family: var(--display);
+  font-size: clamp(30px, 3.2vw, 54px);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+}
+.homepage-shell .red-note .asterisk {
+  font-family: var(--display);
+  font-size: 8vw;
+  line-height: 0.6;
+  font-weight: 400;
+  margin: 10px 0 0;
+}
+.homepage-shell .coffee {
+  grid-column: 1/6;
+  grid-row: 3/5;
+}
+.homepage-shell .coffee img {
+  object-position: 38% 50%;
+}
+.homepage-shell .merch {
+  grid-column: 6/13;
+  grid-row: 3/4;
+  color: var(--ink);
+  background: #ccc6bb;
+}
+.homepage-shell .merch img {
+  object-position: 50% 67%;
+}
+.homepage-shell .merch:after {
+  background: linear-gradient(
+    180deg,
+    rgba(245, 233, 207, 0.08),
+    transparent 50%,
+    rgba(245, 233, 207, 0.64)
+  );
+}
+.homepage-shell .barista {
+  grid-column: 6/10;
+  grid-row: 4/5;
+}
+.homepage-shell .gift-tile {
+  grid-column: 10/13;
+  grid-row: 4/5;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 27px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.homepage-shell .gift-tile:after {
+  display: none;
+}
+.homepage-shell .gift-tile strong {
+  font-size: clamp(28px, 3.3vw, 52px);
+  line-height: 0.98;
+}
+.homepage-shell .gift-tile .gift-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.homepage-shell .gift-tile .arrow {
+  font-size: 32px;
+}
+.homepage-shell .visit {
+  background: var(--red);
+  color: var(--paper);
+  padding: 56px var(--gutter) 0;
+}
+.homepage-shell .visit-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 45px;
+  align-items: start;
+}
+.homepage-shell .visit-title {
+  font-size: clamp(40px, 5.2vw, 83px);
+  line-height: 1;
+}
+.homepage-shell .visit-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  font-size: 17px;
+  line-height: 1.5;
+  padding-top: 4px;
+}
+.homepage-shell .visit-info .eyebrow {
+  margin-bottom: 16px;
+}
+.homepage-shell .visit-info a {
+  border-bottom: 1px solid #f5e9cf77;
+}
+.homepage-shell .footer-wordmark {
+  font-size: 11.45vw;
+  line-height: 0.93;
+  white-space: nowrap;
+  margin: 70px 0 34px;
+  letter-spacing: -0.07em;
+}
+.homepage-shell .footer-bottom {
+  border-top: 1px solid #f5e9cf66;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 0 23px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.homepage-shell .footer-bottom a {
+  border-bottom: 1px solid #f5e9cf66;
+}
+.homepage-shell .mobile-nav {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 28px var(--gutter);
+  box-shadow: 0 15px 35px #0003;
+}
+.homepage-shell .mobile-nav a {
+  display: block;
+  padding: 13px 0;
+  font-size: 28px;
+  letter-spacing: -0.025em;
+  border-bottom: 1px solid #24282030;
+}
+@media (max-width: 1200px) {
+  .homepage-shell .header {
+    gap: 20px;
+  }
+  .homepage-shell .desktop-nav {
+    gap: 20px;
+  }
+  .homepage-shell .gift-link {
+    margin-left: 0;
+  }
+  .homepage-shell .hero {
+    min-height: 630px;
+  }
+  .homepage-shell .intro-copy p {
+    font-size: 18px;
+  }
+  .homepage-shell .tile-top,
+  .homepage-shell .tile-body {
+    left: 24px;
+    right: 24px;
+  }
+  .homepage-shell .tile-bottom {
+    font-size: 12px;
+  }
+  .homepage-shell .intro h2 {
+    font-size: 7vw;
+  }
+  .homepage-shell .red-note {
+    padding: 24px 15px;
+  }
+  .homepage-shell .gift-tile {
+    padding: 24px;
+  }
+  .homepage-shell .visit-info {
+    font-size: 15px;
+  }
+}
+@media (max-width: 700px) {
+  .homepage-shell .hero {
+    height: 100svh;
+    min-height: 690px;
+    max-height: 1000px;
+  }
+  .homepage-shell .hero-photo {
+    object-position: 53% 45%;
+  }
+  .homepage-shell .hero:after {
+    background: linear-gradient(
+      180deg,
+      rgba(12, 20, 17, 0.48),
+      rgba(12, 20, 17, 0.02) 25%,
+      rgba(12, 20, 17, 0.04) 47%,
+      rgba(12, 20, 17, 0.75)
+    );
+  }
+  .homepage-shell .header {
+    padding: 24px var(--gutter);
+    justify-content: space-between;
+  }
+  .homepage-shell .brand {
+    font-size: 24px;
+    width: auto;
+  }
+  .homepage-shell .desktop-nav,
+  .homepage-shell .gift-link {
+    display: none;
+  }
+  .homepage-shell .menu-button {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .homepage-shell .header-line {
+    top: 98px;
+  }
+  .homepage-shell .hero-content {
+    bottom: 22px;
+  }
+  .homepage-shell .hero-kicker {
+    padding-bottom: 18px;
+  }
+  .homepage-shell .hero-kicker .eyebrow {
+    font-size: 10px;
+    max-width: 190px;
+  }
+  .homepage-shell .hero-mark {
+    display: none;
+  }
+  .homepage-shell .hero h1 {
+    font-size: 14vw;
+    line-height: 0.9;
+    letter-spacing: -0.075em;
+  }
+  .homepage-shell .hero-bottom {
+    font-size: 10px;
+    margin-top: 25px;
+    padding-top: 16px;
+  }
+  .homepage-shell .hero-location {
+    gap: 0;
+  }
+  .homepage-shell .hero-location span + span {
+    display: none;
+  }
+  .homepage-shell .hero-bottom a {
+    gap: 15px;
+  }
+  .homepage-shell .intro {
+    padding: 48px var(--gutter) 40px;
+  }
+  .homepage-shell .section-meta {
+    margin-bottom: 35px;
+  }
+  .homepage-shell .eyebrow {
+    font-size: 10px;
+  }
+  .homepage-shell .intro-grid {
+    display: block;
+  }
+  .homepage-shell .intro h2 {
+    font-size: 13vw;
+    line-height: 0.98;
+    letter-spacing: -0.06em;
+  }
+  .homepage-shell .intro-copy {
+    margin: 32px 0 0 auto;
+    max-width: 350px;
+  }
+  .homepage-shell .intro-copy p {
+    font-size: 18px;
+    line-height: 1.45;
+  }
+  .homepage-shell .intro-copy p + p {
+    margin-top: 15px;
+  }
+  .homepage-shell .text-link {
+    font-size: 12px;
+    gap: 44px;
+  }
+  .homepage-shell .intro-tail {
+    margin-top: 42px;
+    padding-top: 18px;
+  }
+  .homepage-shell .intro-tail span:last-child {
+    max-width: 140px;
+    text-align: right;
+  }
+  .homepage-shell .masonry {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+  .homepage-shell .courses {
+    grid-column: 1/-1;
+    grid-row: 1;
+    height: 124vw;
+    max-height: 650px;
+  }
+  .homepage-shell .equipment {
+    grid-column: 1/-1;
+    grid-row: 2;
+    height: 94vw;
+    max-height: 520px;
+  }
+  .homepage-shell .equipment img {
+    object-position: 50% 64%;
+  }
+  .homepage-shell .ritual {
+    grid-column: 1;
+    grid-row: 3;
+    height: auto;
+    min-height: 64vw;
+  }
+  .homepage-shell .red-note {
+    grid-column: 2;
+    grid-row: 3;
+    padding: 25px;
+  }
+  .homepage-shell .red-note strong {
+    font-size: 8.2vw;
+  }
+  .homepage-shell .red-note .asterisk {
+    font-size: 21vw;
+  }
+  .homepage-shell .coffee {
+    grid-column: 1/-1;
+    grid-row: 4;
+    height: 115vw;
+    max-height: 620px;
+  }
+  .homepage-shell .merch {
+    grid-column: 1/-1;
+    grid-row: 5;
+    height: 89vw;
+    max-height: 510px;
+  }
+  .homepage-shell .barista {
+    grid-column: 1;
+    grid-row: 6;
+    height: 65vw;
+  }
+  .homepage-shell .gift-tile {
+    grid-column: 2;
+    grid-row: 6;
+    padding: 23px 18px;
+  }
+  .homepage-shell .gift-tile strong {
+    font-size: 8.5vw;
+  }
+  .homepage-shell .gift-tile .gift-bottom {
+    font-size: 9px;
+    gap: 5px;
+  }
+  .homepage-shell .gift-tile .arrow {
+    font-size: 25px;
+  }
+  .homepage-shell .tile-top {
+    top: 24px;
+  }
+  .homepage-shell .tile-body {
+    bottom: 26px;
+  }
+  .homepage-shell .tile-title,
+  .homepage-shell .equipment .tile-title,
+  .homepage-shell .courses .tile-title {
+    font-size: 14vw;
+  }
+  .homepage-shell .courses .tile-title {
+    font-size: 16vw;
+  }
+  .homepage-shell .tile-bottom {
+    font-size: 12px;
+    margin-top: 18px;
+  }
+  .homepage-shell .tile-bottom .arrow {
+    font-size: 32px;
+  }
+  .homepage-shell .visit {
+    padding-top: 40px;
+  }
+  .homepage-shell .visit-top {
+    display: block;
+  }
+  .homepage-shell .visit-title {
+    font-size: 13vw;
+  }
+  .homepage-shell .visit-info {
+    margin-top: 35px;
+    gap: 25px;
+    font-size: 15px;
+  }
+  .homepage-shell .visit-info .eyebrow {
+    margin-bottom: 12px;
+  }
+  .homepage-shell .footer-wordmark {
+    font-size: 11.1vw;
+    margin: 52px 0 25px;
+  }
+  .homepage-shell .footer-bottom {
+    font-size: 8px;
+    gap: 12px;
+    line-height: 1.5;
+  }
+}
+@media (min-width: 701px) and (max-width: 1100px) {
+  .homepage-shell .red-note {
+    padding: 16px;
+  }
+  .homepage-shell .red-note .asterisk {
+    display: none;
+  }
+  .homepage-shell .red-note strong {
+    font-size: 3vw;
+  }
+  .homepage-shell .red-note .eyebrow {
+    font-size: 8px;
+  }
+  .homepage-shell .gift-tile {
+    padding: 16px;
+  }
+  .homepage-shell .gift-tile strong {
+    font-size: 3vw;
+  }
+  .homepage-shell .gift-tile .eyebrow {
+    font-size: 8px;
+  }
+  .homepage-shell .gift-tile .arrow {
+    font-size: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .homepage-shell *,
+  .homepage-shell *:before,
+  .homepage-shell *:after {
+    transition: none !important;
+  }
+}
+
+/* The header sits above the hero within BaseLayout's relative page shell. */
+.homepage-shell .header {
+  color: var(--paper);
+  gap: 28px;
+}
+.homepage-shell .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.homepage-shell .header-actions button {
+  border: 0;
+  background: none;
+  padding: 12px 0;
+  text-transform: uppercase;
+}
+.homepage-shell .header-actions [data-cart-toggle] {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.homepage-shell .header-actions .menu-button {
+  display: none;
+}
+.homepage-shell .gift-link {
+  margin-left: 0;
+  font-size: 12px;
+}
+.homepage-shell .desktop-nav {
+  gap: 22px;
+  font-size: 13px;
+}
+.homepage-shell .brand {
+  flex-shrink: 0;
+}
+.homepage-shell .hero-mark {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.homepage-shell .intro h2 > span,
+.homepage-shell .tile-title > span,
+.homepage-shell .red-note strong > span,
+.homepage-shell .gift-tile strong > span,
+.homepage-shell .visit-title > span {
+  display: block;
+}
+.homepage-shell .tile-bottom {
+  text-transform: uppercase;
+}
+.homepage-shell .coming-soon {
+  flex-shrink: 0;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 3px;
+}
+.homepage-shell .barista-wide {
+  grid-column: 6/13;
+}
+.homepage-shell .mobile-nav {
+  max-height: calc(100svh - 110px);
+  overflow-y: auto;
+}
+.homepage-shell .mobile-nav a {
+  min-height: 44px;
+}
+@media (max-width: 1200px) {
+  .homepage-shell .header-actions .gift-link {
+    display: none;
+  }
+}
+@media (max-width: 1200px) {
+  .homepage-shell .desktop-nav {
+    display: none;
+  }
+  .homepage-shell .header {
+    justify-content: space-between;
+  }
+  .homepage-shell .header-actions {
+    margin-left: auto;
+  }
+  .homepage-shell .header-actions .menu-button {
+    display: block;
+  }
+}
+@media (max-width: 700px) {
+  .homepage-shell .header {
+    gap: 12px;
+  }
+  .homepage-shell .header-actions {
+    gap: 14px;
+    font-size: 10px;
+  }
+  .homepage-shell .hero-mark {
+    display: none;
+  }
+  .homepage-shell .barista-wide {
+    grid-column: 1/-1;
+  }
+  .homepage-shell .coming-soon {
+    font-size: 9px;
+  }
+}
+@media (max-width: 360px) {
+  .homepage-shell .header-actions {
+    gap: 10px;
+  }
+  .homepage-shell .brand {
+    font-size: 21px;
+  }
+  .homepage-shell .equipment .tile-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.homepage-shell .gift-tile:focus-visible { outline-color: var(--ink); }
+
+@media (max-width: 700px) { .homepage-shell:lang(en) .equipment .tile-title { font-size: 12.5vw; } }

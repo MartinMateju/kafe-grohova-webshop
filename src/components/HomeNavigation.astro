@@ -1,0 +1,127 @@
+---
+import { localePath, type Lang } from '../i18n/utils';
+import { GIFT_CARDS_ENABLED } from '../lib/shopify/config';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const copy = {
+  cs: {
+    home: 'Kafe Grohova — domů',
+    navigation: 'Hlavní navigace',
+    mobileNavigation: 'Mobilní navigace',
+    about: 'O nás',
+    courses: 'Baristické kurzy',
+    shop: 'Obchod',
+    visit: 'Najdete nás',
+    giftCards: 'Dárkové poukazy',
+    cart: 'Košík',
+    menu: 'Menu +',
+    close: 'Zavřít −',
+    switchLanguage: 'Přepnout do angličtiny',
+  },
+  en: {
+    home: 'Kafe Grohova — home',
+    navigation: 'Main navigation',
+    mobileNavigation: 'Mobile navigation',
+    about: 'About us',
+    courses: 'Barista courses',
+    shop: 'Shop',
+    visit: 'Find us',
+    giftCards: 'Gift cards',
+    cart: 'Cart',
+    menu: 'Menu +',
+    close: 'Close −',
+    switchLanguage: 'Switch to Czech',
+  },
+}[lang];
+const other: Lang = lang === 'cs' ? 'en' : 'cs';
+const links = [
+  { href: '#about', label: copy.about },
+  { href: localePath(lang, '/courses'), label: copy.courses },
+  { href: '#shop', label: copy.shop },
+  { href: '#visit', label: copy.visit },
+];
+---
+
+<header class="header" data-home-navigation>
+  <a class="brand" href={localePath(lang)} aria-label={copy.home}>
+    <span>KAFE</span><span>GROHOVA</span>
+  </a>
+  <nav class="desktop-nav" aria-label={copy.navigation}>
+    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+  </nav>
+  <div class="header-actions">
+    {GIFT_CARDS_ENABLED && (
+      <a class="gift-link" href={localePath(lang, '/gift-cards')}>
+        {copy.giftCards} <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+    )}
+    <button class="cart-button" type="button" data-cart-toggle aria-haspopup="dialog" aria-expanded="false">
+      {copy.cart}<span data-cart-count hidden></span>
+    </button>
+    <a class="locale-link" href={localePath(other)} hreflang={other} lang={other} aria-label={copy.switchLanguage}>
+      {other.toUpperCase()}
+    </a>
+    <button
+      class="menu-button"
+      type="button"
+      data-menu-toggle
+      data-close-label={copy.close}
+      aria-controls="mobile-menu"
+      aria-expanded="false"
+    >
+      <span data-menu-label>{copy.menu}</span>
+    </button>
+  </div>
+  <nav id="mobile-menu" class="mobile-nav" aria-label={copy.mobileNavigation} hidden>
+    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    {GIFT_CARDS_ENABLED && (
+      <a href={localePath(lang, '/gift-cards')}>
+        {copy.giftCards} <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+    )}
+  </nav>
+</header>
+
+<script>
+  const navigation = document.querySelector<HTMLElement>('[data-home-navigation]');
+  const toggle = navigation?.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const label = navigation?.querySelector<HTMLElement>('[data-menu-label]');
+  const menu = navigation?.querySelector<HTMLElement>('#mobile-menu');
+
+  if (navigation && toggle && label && menu) {
+    const openLabel = label.textContent ?? 'Menu +';
+    const closeLabel = toggle.dataset.closeLabel ?? openLabel;
+    const desktop = window.matchMedia('(min-width: 1201px)');
+    const closeMenu = () => {
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      label.textContent = openLabel;
+    };
+
+    toggle.addEventListener('click', () => {
+      const open = menu.hidden;
+      menu.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      label.textContent = open ? closeLabel : openLabel;
+    });
+    navigation.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('a, [data-cart-toggle]')) closeMenu();
+    });
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof Node && !navigation.contains(event.target)) closeMenu();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !menu.hidden) {
+        closeMenu();
+        toggle.focus();
+      }
+    });
+    desktop.addEventListener('change', (event) => {
+      if (event.matches) closeMenu();
+    });
+  }
+</script>
