@@ -8,6 +8,7 @@ import { isMockMode } from '../lib/shopify/config';
 import { safeScriptJson } from '../lib/safeScriptJson';
 
 interface Props {
+  fullBleed?: boolean;
   title?: string;
   description?: string;
   /** Optional OG image URL */
@@ -15,7 +16,7 @@ interface Props {
   alternatePaths?: Partial<Record<'cs' | 'en', string>>;
 }
 
-const { title, description, image, alternatePaths } = Astro.props;
+const { title, description, image, alternatePaths, fullBleed = false } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -98,20 +99,24 @@ const localBusiness = {
     <script type="application/ld+json" is:inline set:html={safeScriptJson(localBusiness)} />
   </head>
 
-  <body class="antialiased p-3 bg-cream text-ink min-h-screen w-full">
+  <body class:list={['antialiased bg-cream text-ink min-h-screen w-full', { 'p-3': !fullBleed }]}>
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-cream focus:p-3">{t('common.skip')}</a>
-    <div class="container">
-      {isMockMode && (
-        <div class="mb-3 flex items-center justify-between gap-3 border border-ink/20 px-3 py-2 text-[12px] leading-snug" data-mock-banner>
-          <p><strong class="text-brick">DEMO</strong> — {t('cart.mockNotice')}</p>
-          <button type="button" class="shrink-0 px-2 py-1" onclick="this.closest('[data-mock-banner]').remove()" aria-label={lang === 'cs' ? 'Zavřít oznámení' : 'Dismiss notice'}>✕</button>
-        </div>
-      )}
-      <Navbar alternatePaths={alternatePaths} />
+    {isMockMode && (
+      <div class="mb-3 flex items-center justify-between gap-3 border border-ink/20 px-3 py-2 text-[12px] leading-snug" data-mock-banner>
+        <p><strong class="text-brick">DEMO</strong> — {t('cart.mockNotice')}</p>
+        <button type="button" class="shrink-0 px-2 py-1" onclick="this.closest('[data-mock-banner]').remove()" aria-label={lang === 'cs' ? 'Zavřít oznámení' : 'Dismiss notice'}>✕</button>
+      </div>
+    )}
+    <div class:list={['relative', fullBleed ? 'homepage-shell' : 'container']}>
+      <slot name="navigation">
+        <Navbar alternatePaths={alternatePaths} />
+      </slot>
       <main id="main">
         <slot />
       </main>
-      <Footer />
+      <slot name="footer">
+        <Footer />
+      </slot>
     </div>
 
     <CartDrawer />

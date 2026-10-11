@@ -1,100 +1,87 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SplitFeature from '../../components/SplitFeature.astro';
-import CourseCard from '../../components/CourseCard.astro';
-import ProductCard from '../../components/ProductCard.astro';
+import HomeNavigation from '../../components/HomeNavigation.astro';
+import HomeFooter from '../../components/HomeFooter.astro';
 import { allLangs, localePath, useTranslations, type Lang } from '../../i18n/utils';
-import { getCourses, getMerch, bookableVariants } from '../../lib/shopify';
 import { MERCH_ENABLED, GIFT_CARDS_ENABLED } from '../../lib/shopify/config';
+import '../../styles/homepage.css';
 
 export function getStaticPaths() {
-  return allLangs.map((lang) => ({ params: { lang } }));
+  return allLangs.map(lang => ({ params: { lang } }));
 }
-
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-const [merch, courses] = await Promise.all([getMerch(lang), getCourses(lang)]);
-// Courses with open dates come first; retain catalog order within each group.
-const featuredCourses = [...courses].sort((a, b) =>
-  Number(bookableVariants(b).length > 0) - Number(bookableVariants(a).length > 0));
-
-const intro = lang === 'cs'
-  ? 'Kafe Grohova je malé espresso barové místo v Brně. Výběrová káva, pečlivá příprava a lidé, které káva baví. Za barem ochutnáváme, zkoušíme a každý den se učíme něco nového. Na kurzech se o to všechno podělíme s vámi.'
-  : 'Kafe Grohova is a small espresso bar in Brno. Specialty coffee, thoughtful preparation and people who love what they do. Behind the bar we taste, experiment and learn something new every day. In our courses, we share it all with you.';
-const specialtyCopy = lang === 'cs'
-  ? 'Na kávu se můžete zastavit i bez kurzu. Na baru najdete espresso, filtrovanou kávu a něco, co zrovna zkoušíme. Těšíme se na vás na Grohové.'
-  : 'You can stop by for a coffee without taking a course. There is espresso, filter coffee and something we are currently trying. Find us on Grohova.';
+const copy = (cs: string, en: string) => lang === 'cs' ? cs : en;
+const Category = MERCH_ENABLED ? 'a' : 'div';
+const storeHref = MERCH_ENABLED ? localePath(lang, '/store') : undefined;
+const categories = [
+  {
+    key: 'equipment', src: '/images/OLD03375.webp', width: 2000, height: 3000,
+    alt: copy('Mletí kávy do páky v kavárně.', 'Coffee being ground into a portafilter at the café.'),
+    eyebrow: copy('02 / Pro váš každodenní rituál', '02 / For your daily ritual'),
+    title: [copy('Vybavení.', 'Equipment.')],
+    label: copy('Dobrá káva začíná u detailů', 'Good coffee is in the details'),
+  },
+  {
+    key: 'coffee', src: '/images/OLD03329.webp', width: 2000, height: 1333,
+    alt: copy('Police s výběrovou kávou a keramikou v Kafe Grohova.', 'Shelves of specialty coffee and ceramics at Kafe Grohova.'),
+    eyebrow: copy('03 / To nejlepší ze zrnka', '03 / The best of the bean'),
+    title: [copy('Káva', 'Coffee'), copy('i na doma.', 'for home.')],
+    label: copy('Výběrová káva', 'Specialty coffee'),
+  },
+  {
+    key: 'merch', src: '/ceramic.webp', width: 940, height: 940,
+    alt: copy('Barevná keramika vystavená v kavárně.', 'Colourful ceramics on display at the café.'),
+    eyebrow: copy('04 / Malé věci, velká radost', '04 / Little things, lots of joy'),
+    title: [copy('Kousek', 'A little'), copy('Grohovy.', 'Grohova.')],
+    label: copy('Merch & další radosti', 'Merch & more'),
+  },
+];
+const image = new URL('/img33.webp', Astro.site ?? Astro.url.origin).href;
 ---
-
-<BaseLayout title={t('home.coursesHeadline')} description={t('home.coursesIntro')}>
-  <div class="flex flex-col gap-12 pt-6 lg:gap-20 lg:pt-10">
-    <section class="grid overflow-hidden bg-brick text-cream md:grid-cols-2" aria-labelledby="home-title">
-      <div class="flex flex-col items-start justify-center gap-6 p-6 md:p-8 lg:p-12">
-        <p class="text-[12px] tracking-[0.16em] uppercase">KAFE GROHOVA · BRNO</p>
-        <h1 id="home-title" class="text-[38px] leading-[1.05] sm:text-[48px] lg:text-[68px]">
-          {t('home.coursesHeadline')}
-        </h1>
-        <p class="max-w-lg text-[16px] leading-relaxed lg:text-[20px]">{t('home.coursesIntro')}</p>
-        <a href="#courses" class="inline-flex items-center gap-5 border border-cream bg-cream px-6 py-3 text-[13px] tracking-widest text-ink transition-colors hover:bg-transparent hover:text-cream">
-          {t('home.chooseCourse')} <span aria-hidden="true">↓</span>
-        </a>
-        <p class="text-[13px] text-cream/80">{t('home.smallGroups')}</p>
+<BaseLayout fullBleed image={image}>
+  <HomeNavigation slot="navigation" lang={lang} />
+  <section class="hero" id="home-top" aria-labelledby="home-title">
+    <img class="hero-photo" src="/img33.webp" alt={copy('Pohled z Grohovy ulice do kavárny, kde u okna sedí hosté.', 'Looking through the café window from Grohova street, with guests seated inside.')} width="2000" height="1333" fetchpriority="high" />
+    <div class="header-line" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-kicker">
+        <p class="eyebrow" lang="en">Specialty coffee.<br />Brno state of mind.</p>
+        <span class="hero-mark" aria-hidden="true">{copy('VAŠE|MÍSTO|NA KAFE', 'YOUR|PLACE|FOR COFFEE').split('|').map(line => <span>{line}</span>)}</span>
       </div>
-      <img src="/specialcoffee.webp" alt={lang === 'cs' ? 'Příprava latte art v Kafe Grohova' : 'Making latte art at Kafe Grohova'} fetchpriority="high" class="h-[20rem] w-full object-cover md:h-full md:min-h-[32rem]" />
-    </section>
-
-    <section id="courses" class="flex scroll-mt-6 flex-col gap-6" aria-labelledby="courses-title">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div class="flex flex-col gap-2">
-          <p class="label text-brick">{t('home.smallGroups')}</p>
-          <h2 id="courses-title" class="text-[30px] leading-tight md:text-[44px]">{t('courses.title')}</h2>
-        </div>
-        <a href={localePath(lang, '/courses')} class="border-b border-ink pb-1 text-[13px] tracking-widest hover:text-brick">
-          {t('courses.upcoming')} →
-        </a>
+      <h1 class="display" id="home-title" lang="cs"><span>Stav se.</span><span>Grohova 3.</span></h1>
+      <div class="hero-bottom"><div class="hero-location"><span>Grohova 3, Brno</span><span lang="en">Size doesn't matter. Taste does.</span></div><a href="#about">{copy('Vítejte u nás', 'Welcome in')} <span class="arrow" aria-hidden="true">↓</span></a></div>
+    </div>
+  </section>
+  <section class="intro" id="about" aria-labelledby="intro-title">
+    <div class="section-meta eyebrow"><span>01 / Kafe Grohova</span><span class="dash" aria-hidden="true"></span><span>{copy('Káva nás spojuje.', 'Coffee brings us together.')}</span></div>
+    <div class="intro-grid">
+      <h2 class="display" id="intro-title"><span>{copy('Malý bar.', 'Small bar.')}</span><span>{copy('Velká láska', 'Big love')}</span><span>{copy('ke kávě', 'for coffee')}<em>.</em></span></h2>
+      <div class="intro-copy">
+        <p>{copy('Jsme malé espresso barové místo na Grohově v Brně. Věříme na dobrou kávu, poctivou přípravu a chvíle, které nemusíte uspěchat.', 'We are a small espresso bar on Grohova in Brno. We believe in good coffee, thoughtful preparation and moments you do not have to rush.')}</p>
+        <p>{copy('Stavte se na svoje oblíbené espresso, objevte novou chuť nebo se s námi naučte něco za barem. Místo se tu najde.', 'Drop in for your favourite espresso, discover a new flavour or learn something behind the bar with us. There is a place for you here.')}</p>
+        <a class="text-link" href="#visit">{copy('Potkáme se na Grohově', 'Meet us on Grohova')}<span class="arrow" aria-hidden="true">↗</span></a>
       </div>
-      {featuredCourses.length > 0 ? (
-        <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {featuredCourses.map((course) => <CourseCard product={course} lang={lang} layout="tile" />)}
-        </div>
-      ) : (
-        <p class="border border-ink/20 p-6">{t('courses.noDates')}</p>
-      )}
-    </section>
-
-    {GIFT_CARDS_ENABLED && (
-      <section class="grid items-center gap-6 border border-brick/30 bg-white/25 p-6 md:grid-cols-[1fr_1.3fr] lg:gap-12 lg:p-10" aria-labelledby="gift-title">
-        <a href={localePath(lang, '/gift-cards')} tabindex="-1" aria-hidden="true"><img src="/gift-card-preview.png" alt="" loading="lazy" class="aspect-[1.414] w-full object-contain" /></a>
-        <div class="flex flex-col items-start gap-5">
-          <p class="label text-brick">{t('gifts.title')}</p>
-          <h2 id="gift-title" class="text-[28px] leading-tight md:text-[38px]">{t('gifts.headline')}</h2>
-          <p class="text-[17px] leading-relaxed">{t('gifts.intro')}</p>
-          <a href={localePath(lang, '/gift-cards')} class="bg-brick px-6 py-3 text-[13px] tracking-widest text-cream transition-colors hover:bg-ink">{t('gifts.choose')} →</a>
-        </div>
-      </section>
-    )}
-
-    <section class="grid items-center gap-8 md:grid-cols-2 lg:gap-12" aria-labelledby="cafe-title">
-      <img src="/expressobar.webp" alt="" loading="lazy" class="h-[22rem] w-full object-cover md:h-[30rem]" />
-      <div class="flex flex-col items-start gap-5">
-        <h2 id="cafe-title" class="text-[30px] md:text-[42px]">{t('home.espressobar')}</h2>
-        <p class="text-[17px] leading-relaxed lg:text-[21px]">{intro}</p>
-        <a href={localePath(lang, '/contact')} class="border-b border-ink pb-1 text-[13px] tracking-widest hover:text-brick">{t('contact.findUs')} →</a>
-      </div>
-    </section>
-
-    <SplitFeature bg="bg-stone" img="/specialcoffee.webp" title={t('home.specialty')} content={specialtyCopy} />
-
-    {MERCH_ENABLED && merch.length > 0 && (
-      <section class="flex flex-col gap-5">
-        <div class="flex items-center justify-between gap-4">
-          <h2 class="text-[28px]">{t('store.title')}</h2>
-          <a href={localePath(lang, '/store')} class="text-[13px] tracking-widest hover:text-brick">{t('home.shopCta')} →</a>
-        </div>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {merch.slice(0, 4).map((product) => <ProductCard product={product} lang={lang} />)}
-        </div>
-      </section>
-    )}
-  </div>
+    </div>
+    <div class="intro-tail eyebrow"><span>{copy('02 / Kousek Grohovy pro vás', '02 / A little Grohova for you')}</span><span>{copy('U nás. U vás. Každý den.', 'Here. At home. Every day.')}</span></div>
+  </section>
+  <section class="masonry" id="shop" aria-label={copy('Kurzy, vybavení, káva a merch', 'Courses, equipment, coffee and merch')}>
+    <a class="tile courses" id="courses" href={localePath(lang, '/courses')}>
+      <img src="/specialcoffee.webp" alt={copy('Detail rukou při nalévání latte art.', 'Hands pouring milk into a cup to make latte art.')} width="940" height="940" loading="lazy" />
+      <div class="tile-top eyebrow"><span>{copy('01 / Naučte se to s námi', '01 / Learn with us')}</span><span>Brno, Grohova</span></div>
+      <div class="tile-body"><h2 class="tile-title display"><span>{copy('Za bar', 'Your turn')}</span><span>{copy('můžete i vy.', 'behind the bar.')}</span></h2><div class="tile-bottom"><span>{t('nav.courses')}</span><span class="arrow" aria-hidden="true">↗</span></div></div>
+    </a>
+    {categories.map(category => (
+      <Category class:list={['tile', category.key]} data-home-category={category.key} href={storeHref}>
+        <img src={category.src} alt={category.alt} width={category.width} height={category.height} loading="lazy" />
+        <div class="tile-top eyebrow"><span>{category.eyebrow}</span></div>
+        <div class="tile-body"><h2 class="tile-title display">{category.title.map(line => <span>{line}</span>)}</h2><div class="tile-bottom"><span>{category.label}</span>{MERCH_ENABLED ? <span class="arrow" aria-hidden="true">↗</span> : <span class="coming-soon">{copy('Připravujeme', 'Coming soon')}</span>}</div></div>
+      </Category>
+    ))}
+    <figure class="tile ritual"><img src="/images/OLD03342.webp" alt={copy('Šálek kávy a sklenice vody na baru vedle zelené rostliny.', 'A cup of coffee and a glass of water beside a green plant on the counter.')} width="2000" height="3000" loading="lazy" /></figure>
+    <div class="red-note"><span class="asterisk" aria-hidden="true">✳</span><strong>{copy('O trochu|lepší|každý|den.', 'A little|better.|Every|day.').split('|').map(line => <span>{line}</span>)}</strong><span class="eyebrow">{copy('Od prvního doušku.', 'From the first sip.')}</span></div>
+    <figure class:list={['tile', 'barista', { 'barista-wide': !GIFT_CARDS_ENABLED }]}><img src="/images/OLD03400.webp" alt={copy('Barista připravuje kávu za barem Kafe Grohova.', 'A barista preparing coffee behind the counter at Kafe Grohova.')} width="2000" height="1333" loading="lazy" /></figure>
+    {GIFT_CARDS_ENABLED && <a class="tile gift-tile" href={localePath(lang, '/gift-cards')}><span class="eyebrow">{copy('Pro někoho vašeho', 'For someone you love')}</span><strong class="display">{copy('Darujte|dobré|chvíle.', 'Give|good|times.').split('|').map(line => <span>{line}</span>)}</strong><span class="gift-bottom eyebrow">{t('nav.giftCards')}<span class="arrow" aria-hidden="true">↗</span></span></a>}
+  </section>
+  <HomeFooter slot="footer" lang={lang} />
 </BaseLayout>
