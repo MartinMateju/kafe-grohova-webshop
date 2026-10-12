@@ -109,11 +109,12 @@
   z-index: 5;
 }
 .homepage-shell .brand {
-  font-family: var(--display);
+  /* Keep the original DIN wordmark independent of the bold display headings. */
+  font-family: var(--font-display);
   font-size: 29px;
-  font-weight: 900;
-  letter-spacing: -0.055em;
-  line-height: 0.9;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
   width: 182px;
 }
 .homepage-shell .brand span {
