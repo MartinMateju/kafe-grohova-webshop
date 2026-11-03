@@ -35,7 +35,10 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
     <section class="home-intro" id="about" aria-labelledby="intro-title">
       <div class="home-section-label section-kicker"><span>01 / Kafe Grohova</span><span>{c('Místo s vlastním rytmem', 'A place with its own rhythm')}</span></div>
       <div class="intro-grid">
-        <h2 id="intro-title">{c('Kafe do ruky.', 'Coffee in hand.')}<br /><em>{c('Město pod kůží.', 'City at heart.')}</em></h2>
+        <h2 id="intro-title" class="intro-title">
+          <span class="intro-lead"><span>{c('Kafe', 'Coffee')}</span>{' '}<span class="intro-aside">{c('do ruky.', 'in hand.')}</span></span>
+          <em>{c('Město pod kůží.', 'City at heart.')}</em>
+        </h2>
         <div class="intro-copy"><p>{c('Ranní espresso. Známá tvář za barem. Hrnek, který není jako ostatní. Jsme Kafe Grohova — malý espresso bar a store v Brně, kde mají dobré věci svoje místo.', 'Morning espresso. A familiar face behind the bar. A cup like no other. We are Kafe Grohova — a small espresso bar and store in Brno, with a place for the good things.')}</p><a class="home-text-link" href={localePath(lang, '/contact')}>{c('Potkáme se na Grohově', 'Meet us on Grohova')} ↗</a></div>
       </div>
       <div class="life-photos">
@@ -47,12 +50,16 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
 
     <section class="home-course" id="courses" aria-labelledby="course-title">
       <div class="course-photo"><img src="/photos/latte-pour.webp" width="960" height="1440" alt={c('Nalévání mléka do kávy a vznikající latte art.', 'Pouring milk into coffee to create latte art.')} loading="lazy" /><span class="section-kicker">02 / {c('Za barem jste vy', 'Your turn behind the bar')}</span></div>
-      <div class="course-copy"><p class="section-kicker">{c('Latte art pro začátečníky', 'Latte art for beginners')}</p><h2 id="course-title" lang="en">pour.<br /><em>practice.</em><br />repeat.</h2><p class="course-description">{c('Od prvního správně našlehaného mléka k vlastnímu srdci v šálku. Malá skupina, ruce na konvičce a prostor zkoušet.', 'From your first silky milk to a heart in the cup. A small group, hands on the pitcher, and room to practise.')}</p><div class="home-course-meta"><span>25. 11. 2026 · 17:00</span><span>{c('2,5 hodiny · 2 100 Kč / osoba', '2.5 hours · CZK 2,100 / person')}</span></div><a class="courses home-button" href={localePath(lang, '/courses')}>{c('Chci za bar', 'Take me behind the bar')}<span aria-hidden="true">↗</span></a></div>
+      <div class="course-copy"><p class="section-kicker">{c('Latte art pro začátečníky', 'Latte art for beginners')}</p><h2 id="course-title" lang="en">
+        <span class="course-line"><span class="course-step" aria-hidden="true">01</span>pour.</span>
+        <span class="course-line"><span class="course-step" aria-hidden="true">02</span><em>practice.</em></span>
+        <span class="course-line"><span class="course-step" aria-hidden="true">03</span>repeat.</span>
+      </h2><p class="course-description">{c('Od prvního správně našlehaného mléka k vlastnímu srdci v šálku. Malá skupina, ruce na konvičce a prostor zkoušet.', 'From your first silky milk to a heart in the cup. A small group, hands on the pitcher, and room to practise.')}</p><div class="home-course-meta"><span>25. 11. 2026 · 17:00</span><span>{c('2,5 hodiny · 2 100 Kč / osoba', '2.5 hours · CZK 2,100 / person')}</span></div><a class="courses home-button" href={localePath(lang, '/courses')}>{c('Chci za bar', 'Take me behind the bar')}<span aria-hidden="true">↗</span></a></div>
     </section>
 
     <section class="home-objects" id="shop" aria-labelledby="objects-title">
       <div class="home-section-label section-kicker"><span>03 / Espresso bar & store</span><span>{c('Káva. Keramika. Každodennost.', 'Coffee. Ceramics. Everyday life.')}</span></div>
-      <div class="objects-heading"><h2 id="objects-title">{c('Dobrý věci.', 'Good things.')}<br /><em>{c('Na každý den.', 'For every day.')}</em></h2><p>{c('Máme rádi věci, na kterých je vidět lidská ruka. Šálky s charakterem. Kávu, ke které se vracíte. Prohlédněte si je naživo u nás na Grohově.', 'We like things with a human touch. Cups with character. Coffee you come back to. Come and see them in person on Grohova.')}</p></div>
+      <div class="objects-heading"><h2 id="objects-title" class="objects-title"><span>{c('Dobrý věci.', 'Good things.')}</span><em>{c('Na každý den.', 'For every day.')}</em></h2><p>{c('Máme rádi věci, na kterých je vidět lidská ruka. Šálky s charakterem. Kávu, ke které se vracíte. Prohlédněte si je naživo u nás na Grohově.', 'We like things with a human touch. Cups with character. Coffee you come back to. Come and see them in person on Grohova.')}</p></div>
       <div class="object-grid">{categories.map(item => <Category data-home-category={item.key} class="object-item" href={MERCH_ENABLED ? localePath(lang, '/store') : undefined}><div class="object-image"><img src={item.src} width={item.width} height={item.height} alt={item.alt} loading="lazy" /></div><p class="section-kicker">{item.label}</p><h3>{item.title}</h3></Category>)}</div>
     </section>
 
@@ -63,7 +70,7 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
     </section>
 
     {GIFT_CARDS_ENABLED && <section class="home-gift" aria-labelledby="gift-title">
-      <div class="gift-copy"><p class="section-kicker">05 / {c('Pro někoho vašeho', 'For someone you love')}</p><h2 id="gift-title">{c('Darujte', 'Give them')}<br /><em>{c('první srdce.', 'a first heart.')}</em></h2><p>{c('Dárkový poukaz na latte art pro začátečníky. Dvě a půl hodiny nových zkušeností, kávy a vlastních malých úspěchů.', 'A gift voucher for beginner latte art. Two and a half hours of new skills, coffee, and little victories.')}</p><span class="gift-price">{c('2 100 Kč / osoba', 'CZK 2,100 / person')}</span><a class="gift-tile home-text-link" href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')} ↗</a></div>
+      <div class="gift-copy"><p class="section-kicker">05 / {c('Pro někoho vašeho', 'For someone you love')}</p><h2 id="gift-title" class="gift-title"><span class="gift-title-lead">{c('Darujte', 'Give them')}</span><em><span>{c('první', 'a first')}</span>{' '}<span>{c('srdce.', 'heart.')}</span></em></h2><p>{c('Dárkový poukaz na latte art pro začátečníky. Dvě a půl hodiny nových zkušeností, kávy a vlastních malých úspěchů.', 'A gift voucher for beginner latte art. Two and a half hours of new skills, coffee, and little victories.')}</p><span class="gift-price">{c('2 100 Kč / osoba', 'CZK 2,100 / person')}</span><a class="gift-tile home-text-link" href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')} ↗</a></div>
       <div class="gift-visual"><img src="/photos/latte-on-table.webp" width="960" height="1440" alt={c('Latte art v keramickém šálku na stole.', 'Latte art in a ceramic cup on a table.')} loading="lazy" /><div class="gift-paper" aria-hidden="true"><img src="/brand/logo-black.svg" width="120" height="47" alt="" /><span class="section-kicker">Gift a little Grohova</span><strong>LATTE<br /><em>ART.</em></strong><span class="section-kicker">2 100 Kč · 1 {c('osoba', 'person')}</span></div></div>
     </section>}
   </div>
