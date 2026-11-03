@@ -1,12 +1,12 @@
 .home-editorial h1,.home-editorial h2,.home-editorial h3,.home-editorial p,.home-editorial figure { margin: 0; }
-.home-editorial em { font-family: Georgia,'Times New Roman',serif; font-weight: 400; }
+.home-editorial em { font-family: var(--font-sans); font-style: italic; font-weight: 400; }
 .hero { isolation: isolate; position: relative; min-height: 650px; height: 100svh; max-height: 1180px; display: flex; flex-direction: column; justify-content: space-between; padding: 146px var(--kg-gutter) 32px; color: var(--kg-paper); background: var(--kg-ink); }
 .hero::after { content:''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg,rgba(20,15,10,.55),rgba(20,15,10,.05) 38%,rgba(20,15,10,.60)); }
 .hero-picture { position: absolute; inset: 0; z-index: -2; }
 .hero-picture img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 48%; }
 .hero-topline { display: flex; justify-content: space-between; }
 .hero-bottom > .section-kicker { margin-bottom: 22px; }
-.hero h1 { font-size: clamp(92px,15.8vw,240px); letter-spacing: -.074em; line-height: .78; font-weight: 900; text-transform: uppercase; }
+.hero h1 { font-size: clamp(92px,15.8vw,240px); letter-spacing: -.045em; word-spacing: .04em; line-height: .84; font-weight: 700; text-transform: uppercase; }
 .hero h1 > span { display: block; }
 .hero h1 > span + span { margin-top: .09em; }
 .hero-dot { color: var(--kg-honey); }
@@ -15,7 +15,7 @@
 .home-intro,.home-objects { padding: 80px var(--kg-gutter) 96px; }
 .home-section-label { display: flex; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid currentColor; }
 .intro-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 70px; align-items: start; margin-top: 65px; }
-.intro-grid h2,.objects-heading h2,.gift-copy h2 { font-size: clamp(40px,5.6vw,86px); font-weight: 800; letter-spacing: -.055em; line-height: 1.02; }
+.intro-grid h2,.objects-heading h2,.gift-copy h2 { font-size: clamp(40px,5.6vw,86px); font-weight: 600; letter-spacing: -.055em; line-height: 1.02; }
 .intro-grid h2 em,.objects-heading h2 em,.gift-copy h2 em { letter-spacing: -.06em; }
 .intro-copy { max-width: 44ch; padding-top: 8px; }
 .intro-copy p,.objects-heading > p,.gift-copy > p:not(.section-kicker) { font-size: 17px; line-height: 1.65; }
@@ -31,10 +31,10 @@
 .course-photo img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
 .course-photo > span { position: absolute; left: var(--kg-gutter); top: 35px; padding: 7px 10px; color:var(--kg-ink); background:var(--kg-paper); }
 .course-copy { padding: 55px clamp(28px,4.5vw,90px); display:flex; flex-direction:column; align-items:flex-start; }
-.course-copy h2 { font-size: clamp(60px,7.5vw,118px); font-weight: 800; letter-spacing: -.065em; line-height: .88; margin: 45px 0 32px; }
+.course-copy h2 { font-size: clamp(60px,7.5vw,118px); font-weight: 600; letter-spacing: -.065em; line-height: .88; margin: 45px 0 32px; }
 .course-copy h2 em { letter-spacing: -.075em; }
 .course-description { max-width:38ch; font-size:15px; line-height:1.6; }
-.home-course-meta { display:flex; flex-direction:column; gap:7px; width:100%; padding-top:22px; margin-top:28px; border-top:1px solid #f3e8d96b; font:12px/1.5 'Unient DIN CE',Arial,sans-serif; }
+.home-course-meta { display:flex; flex-direction:column; gap:7px; width:100%; padding-top:22px; margin-top:28px; border-top:1px solid #f3e8d96b; font:12px/1.5 var(--font-display); }
 .home-button { margin-top:27px; width:100%; display:flex; justify-content:space-between; gap:20px; padding:17px 20px; background:var(--kg-paper); color:var(--kg-ink); font-size:13px; }
 .objects-heading { display:flex; justify-content:space-between; gap:65px; margin:55px 0; align-items:end; }
 .objects-heading > p { max-width:39ch; }
@@ -46,7 +46,7 @@ a.object-item:hover img { transform:scale(1.025); }
 .object-item > p { margin-top:18px; font-size:10px; }
 .object-item > h3 { font-size:clamp(20px,2.3vw,34px); font-weight:600; letter-spacing:-.04em; margin-top:8px; }
 .home-soundtrack { background:var(--kg-blue); color:var(--kg-paper); padding:48px var(--kg-gutter) 55px; }
-.home-soundtrack h2 { font-size:clamp(58px,10.5vw,164px); font-weight:800; letter-spacing:-.065em; line-height:.9; padding:55px 0; }
+.home-soundtrack h2 { font-size:clamp(58px,10.5vw,164px); font-weight: 600; letter-spacing:-.065em; line-height:.9; padding:55px 0; }
 .home-soundtrack h2 > * { display:block; }
 .home-soundtrack h2 > em { color:var(--kg-honey); margin-left:12%; font-size:1.14em; }
 .soundtrack-bottom { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:60px; border-top:1px solid #f3e8d94d; padding-top:25px; }
@@ -63,14 +63,14 @@ a.object-item:hover img { transform:scale(1.025); }
 .gift-paper { position:absolute; left:0; bottom:0; width:56%; background:var(--kg-paper); transform:rotate(-9deg); padding:25px; display:flex; flex-direction:column; gap:20px; border:1px solid var(--kg-line); box-shadow:3px 10px 25px #29211d33; }
 .gift-paper > img { width:90px; height:auto; }
 .gift-paper .section-kicker { font-size:8px; }
-.gift-paper strong { font-size:clamp(35px,4.2vw,68px); font-weight:900; line-height:.85; letter-spacing:-.06em; }
+.gift-paper strong { font-size:clamp(35px,4.2vw,68px); font-weight: 700; line-height:.85; letter-spacing:-.06em; }
 @media(min-width:1600px) { .hero h1 { font-size:240px; } }
 @media(max-width:1000px) { .hero { padding-top:128px; } .intro-grid { gap:35px; } .home-course { grid-template-columns:.9fr 1fr; } .course-photo { min-height:690px; } .course-copy { padding:40px 28px; } .course-copy h2 { font-size:clamp(58px,8vw,88px); } .objects-heading { gap:35px; } .objects-heading > p { max-width:32ch; } .home-gift { gap:35px; } .life-photos { gap:20px; } }
 @media(max-width:600px) {
  .hero { min-height:640px; max-height:900px; padding-top:114px; padding-bottom:30px; }
  .hero-picture img { object-position:50% 43%; } .hero::after { background:linear-gradient(180deg,#140f0aa6,transparent 35%,#140f0abf); }
  .hero-topline { font-size:9px; gap:15px; } .hero-topline > span:last-child { text-align:right; }
- .hero h1 { font-size:16vw; letter-spacing:-.075em; line-height:.85; }
+ .hero h1 { font-size:16vw; letter-spacing:-.045em; line-height:.9; }
  .hero-bottom > .section-kicker { font-size:9px; margin-bottom:18px; } .hero-sublink { margin-top:27px; max-width:230px; }
  .home-intro,.home-objects { padding-top:45px; padding-bottom:55px; }
  .home-section-label { font-size:9px; } .home-section-label > span:last-child { text-align:right; }

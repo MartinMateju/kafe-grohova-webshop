@@ -81,13 +81,9 @@ const localBusiness = {
     <link rel="alternate" hreflang="en" href={enHref.href} />
     <link rel="alternate" hreflang="x-default" href={csHref.href} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link
-      rel="preload"
-      href="/fonts/dince-regular.ttf"
-      as="font"
-      type="font/ttf"
-      crossorigin
-    />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=switzer@1,2&amp;display=swap" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={pageTitle} />

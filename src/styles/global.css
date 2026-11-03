@@ -13,15 +13,8 @@
   --color-olive: #616645;
   --color-honey: #C49A55;
 
-  --font-display: 'Unient DIN CE', 'Helvetica Neue', Arial, sans-serif;
-}
-
-@font-face {
-  font-family: 'Unient DIN CE';
-  src: url('/fonts/dince-regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  --font-sans: 'Switzer', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: var(--font-sans);
 }
 
 /* Everything below MUST stay inside @layer, otherwise unlayered rules beat
@@ -34,7 +27,7 @@
   }
 
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-sans);
   }
 
   :focus-visible {

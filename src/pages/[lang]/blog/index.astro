@@ -78,7 +78,7 @@ const copy = lang === 'cs' ? {
   .lead-image img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
   .lead-copy { min-width: 0; padding-block: 1rem; }
   time { display: block; margin-top: 1rem; font-family: var(--font-display); font-size: .8rem; color: color-mix(in srgb, var(--color-ink) 70%, transparent); }
-  .lead-copy h2 { font-family: Arial, sans-serif; font-size: clamp(2rem, 3.8vw, 3.8rem); font-weight: 700; letter-spacing: -.045em; line-height: 1.05; margin-block: 1.25rem; overflow-wrap: anywhere; }
+  .lead-copy h2 { font-family: var(--font-sans); font-size: clamp(2rem, 3.8vw, 3.8rem); font-weight: 700; letter-spacing: -.045em; line-height: 1.05; margin-block: 1.25rem; overflow-wrap: anywhere; }
   .lead-copy > p:not(.section-kicker), .story > p { font-size: 1rem; line-height: 1.75; }
   h2 a:hover, h3 a:hover, .read-link:hover { color: var(--color-brick); }
   .read-link { display: inline-flex; align-items: baseline; gap: 2rem; border-bottom: 1px solid currentColor; padding-bottom: .35rem; margin-top: 1.5rem; font-size: .95rem; }
@@ -89,9 +89,9 @@ const copy = lang === 'cs' ? {
   .story { min-width: 0; }
   .story-image { display: block; overflow: hidden; }
   .story-image img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
-  .story h3 { margin-block: 1rem; font-family: Arial, sans-serif; font-size: clamp(1.4rem, 2.1vw, 2rem); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .story h3 { margin-block: 1rem; font-family: var(--font-sans); font-size: clamp(1.4rem, 2.1vw, 2rem); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; overflow-wrap: anywhere; }
   .journal-contact { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-top: clamp(3rem, 7vw, 7rem); border-block: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent); padding-block: 2rem; }
-  .journal-contact h2 { font-family: Arial, sans-serif; font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.1; font-weight: 700; letter-spacing: -.04em; margin-top: 1rem; }
+  .journal-contact h2 { font-family: var(--font-sans); font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.1; font-weight: 700; letter-spacing: -.04em; margin-top: 1rem; }
   .journal-contact .read-link { flex-shrink: 0; }
   .journal-empty { padding-block: 3rem; border-block: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent); }
   @media (max-width: 760px) { .lead-story { grid-template-columns: 1fr; gap: 1.5rem; } .story-grid { grid-template-columns: 1fr; gap: 2.5rem; } .story-image img { aspect-ratio: 4 / 3; } .journal-contact { align-items: flex-start; flex-direction: column; } .journal-contact .read-link { margin-top: 0; } }
