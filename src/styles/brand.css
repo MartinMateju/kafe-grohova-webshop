@@ -8,7 +8,10 @@
   --kg-line: rgba(41,33,29,.24);
   --kg-gutter: clamp(22px,4vw,76px);
 }
-.brand-site { font-family: var(--font-sans); }
+.brand-site { font-family: var(--font-sans); --kg-italic-color: var(--kg-terra); --kg-italic-background: transparent; }
+/* Italic copy always carries a brand accent, including Shopify rich text.
+   Override these tokens on colored surfaces to keep the accent legible. */
+.brand-site :where(em, i, .italic) { color: var(--kg-italic-color); background-color: var(--kg-italic-background); }
 .site-header { position: relative; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 116px; padding: 26px var(--kg-gutter); border-bottom: 1px solid var(--kg-line); }
 .site-header-overlay { position: absolute; inset: 0 0 auto; color: var(--kg-paper); border-color: rgba(243,232,217,.35); }
 .site-logo { flex-shrink: 0; display: block; width: 148px; }
@@ -30,7 +33,7 @@
 .brand-site input, .brand-site select, .brand-site textarea, .brand-site button { border-radius: 0; }
 .brand-site :focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
 .demo-notice { font: 12px/1.5 var(--font-sans); padding: 10px var(--kg-gutter); border-bottom: 1px solid var(--kg-line); }
-.site-footer { background: var(--kg-ink); color: var(--kg-paper); padding: 60px var(--kg-gutter) 24px; }
+.site-footer { --kg-italic-color: var(--kg-honey); background: var(--kg-ink); color: var(--kg-paper); padding: 60px var(--kg-gutter) 24px; }
 .footer-hello { display: flex; align-items: baseline; justify-content: space-between; gap: 30px; border-bottom: 1px solid #f3e8d94d; padding: 25px 0 45px; margin-bottom: 44px; }
 .footer-hello a { font-size: clamp(42px,8vw,116px); line-height: .98; font-weight: 600; letter-spacing: -.055em; }
 .footer-hello > span { font-size: clamp(38px,6vw,80px); }

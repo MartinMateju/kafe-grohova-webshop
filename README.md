@@ -31,6 +31,10 @@ npm run preview             # serve the static production output locally
 
 `dist/` is the deployable website. CI runs validation and the browser tests on pull requests.
 
+### Italic accents
+
+Italic text always uses a contrasting brand color: terracotta on paper by default, olive in the objects section, and honey on dark blue or ink. The course panel uses olive italic text on a small paper highlight because the other palette colors do not have enough contrast directly on terracotta. The shared rule covers `em`, `i`, and `.italic`, including Shopify rich text; use `--kg-italic-color` and `--kg-italic-background` when adding a different surface.
+
 ## Dedicated Shopify connection
 
 `kafegrohova.cz` is the public website. Its dedicated Shopify store is **Kafe Grohova Store**, at `b1pnun-1t.myshopify.com` ([admin](https://admin.shopify.com/store/b1pnun-1t/)). This is separate from the other shop.
