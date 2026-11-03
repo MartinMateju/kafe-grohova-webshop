@@ -1,0 +1,51 @@
+---
+import { localePath, switchLocalePath, type Lang } from '../i18n/utils';
+import { GIFT_CARDS_ENABLED, MERCH_ENABLED } from '../lib/shopify/config';
+interface Props { lang: Lang; overlay?: boolean; alternatePaths?: Partial<Record<Lang, string>>; }
+const { lang, overlay = false, alternatePaths } = Astro.props;
+const copy = {
+  cs: { home: 'Kafe Grohova — domů', navigation: 'Hlavní navigace', mobile: 'Mobilní navigace', about: 'Naše místo', courses: 'Kurzy', shop: 'Obchod', visit: 'Najdete nás', gifts: 'Darovat kurz', blog: 'Zápisky', cart: 'Košík', menu: 'Menu +', close: 'Zavřít −', switch: 'Switch to English' },
+  en: { home: 'Kafe Grohova — home', navigation: 'Main navigation', mobile: 'Mobile navigation', about: 'Our place', courses: 'Courses', shop: 'Shop', visit: 'Find us', gifts: 'Gift a course', blog: 'Journal', cart: 'Cart', menu: 'Menu +', close: 'Close −', switch: 'Přepnout do češtiny' },
+}[lang];
+const other: Lang = lang === 'cs' ? 'en' : 'cs';
+const otherHref = alternatePaths?.[other] ?? switchLocalePath(Astro.url, other);
+const links = [
+  { href: overlay ? '#about' : localePath(lang) + '#about', label: copy.about },
+  { href: localePath(lang, '/courses'), label: copy.courses },
+  ...(GIFT_CARDS_ENABLED ? [{ href: localePath(lang, '/gift-cards'), label: copy.gifts }] : []),
+  ...(MERCH_ENABLED ? [{ href: localePath(lang, '/store'), label: copy.shop }] : []),
+  { href: localePath(lang, '/contact'), label: copy.visit },
+];
+---
+<header class:list={['site-header', { 'site-header-overlay': overlay }]} data-site-navigation data-home-navigation>
+  <a class="site-logo" href={localePath(lang)} aria-label={copy.home}>
+    <img src={overlay ? '/brand/logo-white.svg' : '/brand/logo-black.svg'} width="148" height="58" alt="Kafe Grohova" />
+  </a>
+  <nav class="desktop-nav" aria-label={copy.navigation}>
+    {links.map(link => <a href={link.href} aria-current={Astro.url.pathname.replace(/\/$/, '') === link.href ? 'page' : undefined}>{link.label}</a>)}
+  </nav>
+  <div class="header-actions">
+    <button class="cart-button" type="button" data-cart-toggle aria-haspopup="dialog" aria-expanded="false">{copy.cart}<span data-cart-count hidden></span></button>
+    <a class="locale-link" href={otherHref} hreflang={other} lang={other} aria-label={copy.switch}>{other.toUpperCase()}</a>
+    <button class="menu-button" type="button" data-menu-toggle data-close-label={copy.close} aria-controls="mobile-menu" aria-expanded="false"><span data-menu-label>{copy.menu}</span></button>
+  </div>
+  <nav id="mobile-menu" class="mobile-nav" aria-label={copy.mobile} hidden>
+    {[...links, { href: localePath(lang, '/blog'), label: copy.blog }].map((link, index) => <a href={link.href}><span aria-hidden="true">0{index + 1}</span>{link.label}</a>)}
+  </nav>
+</header>
+<script>
+  const navigation = document.querySelector<HTMLElement>('[data-site-navigation]');
+  const toggle = navigation?.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const label = navigation?.querySelector<HTMLElement>('[data-menu-label]');
+  const menu = navigation?.querySelector<HTMLElement>('#mobile-menu');
+  if (navigation && toggle && label && menu) {
+    const openLabel = label.textContent ?? 'Menu +';
+    const closeLabel = toggle.dataset.closeLabel ?? openLabel;
+    const close = () => { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); label.textContent = openLabel; };
+    toggle.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); label.textContent = open ? closeLabel : openLabel; });
+    navigation.addEventListener('click', event => { if (event.target instanceof Element && event.target.closest('a, [data-cart-toggle]')) close(); });
+    document.addEventListener('click', event => { if (event.target instanceof Node && !navigation.contains(event.target)) close(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !menu.hidden) { close(); toggle.focus(); } });
+    window.matchMedia('(min-width: 1081px)').addEventListener('change', event => { if (event.matches) close(); });
+  }
+</script>

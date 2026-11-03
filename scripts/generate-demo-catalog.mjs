@@ -42,8 +42,13 @@ for (const product of catalog.products) {
     assert(Number.isInteger(variant.quantity) && variant.quantity >= 0, `Invalid inventory: ${variant.sku}`);
     if (product.course) {
       assert(variant.quantity <= product.course.capacity, `Seats exceed capacity: ${variant.sku}`);
-      assert(Number.isInteger(variant.offsetDays) && variant.offsetDays > 0, `Invalid date offset: ${variant.sku}`);
-      assert(Number.isInteger(variant.localHour) && variant.localHour >= 6 && variant.localHour <= 22, `Invalid daytime session: ${variant.sku}`);
+      if (variant.startsAt || variant.endsAt) {
+        assert(Number.isFinite(Date.parse(variant.startsAt)) && Number.isFinite(Date.parse(variant.endsAt)), `Invalid fixed session: ${variant.sku}`);
+        assert(Date.parse(variant.endsAt) - Date.parse(variant.startsAt) === product.course.durationMinutes * 60_000, `Invalid session duration: ${variant.sku}`);
+      } else {
+        assert(Number.isInteger(variant.offsetDays) && variant.offsetDays > 0, `Invalid date offset: ${variant.sku}`);
+        assert(Number.isInteger(variant.localHour) && variant.localHour >= 6 && variant.localHour <= 22, `Invalid daytime session: ${variant.sku}`);
+      }
     }
   }
 }
@@ -68,7 +73,8 @@ for (const product of products) {
   const sessions = [];
   product.variants.forEach((variant, index) => {
     const dates = product.course
-      ? courseDates(values.date, variant.offsetDays, variant.localHour, product.course.durationMinutes)
+      ? variant.startsAt ? { startsAt: variant.startsAt, endsAt: variant.endsAt }
+        : courseDates(values.date, variant.offsetDays, variant.localHour, product.course.durationMinutes)
       : null;
     const option = dates ? courseDateLabel(dates.startsAt, lang) : variant.value[lang];
     assert(!options.has(option), `Duplicate option in ${product.handle}: ${option}`);

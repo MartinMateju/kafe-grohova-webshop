@@ -1,6 +1,7 @@
 ---
 import { safeScriptJson } from '../lib/safeScriptJson';
 import { isFutureCourseDate } from '../lib/courseAvailability';
+import { firstBookableCourseVariant } from '../lib/coursePresentation';
 import { isMockMode } from '../lib/shopify/config';
 import type { Product } from '../lib/shopify';
 import { formatDateTime, formatMoney, imageUrl } from '../lib/shopify';
@@ -24,7 +25,8 @@ function seatWord(n: number): string {
   return t('courses.seatsLeft');
 }
 
-const dates = product.variants
+const nextDate = firstBookableCourseVariant(product);
+const dates = (nextDate ? [nextDate] : [])
   .map((v) => ({
     id: v.id,
     title: v.title,
@@ -65,9 +67,9 @@ const labels = {
 };
 ---
 
-<div class="flex flex-col gap-6" data-course-booking>
+<div class="flex flex-col gap-6 border-t-2 border-brick pt-6" data-course-booking>
   <div class="flex flex-col gap-3">
-    <span class="label text-ink/60">{t('courses.pickDate')}</span>
+    <span class="section-kicker">{lang === 'cs' ? 'Nejbližší termín' : 'Next session'}</span>
 
     {
       dates.length === 0 && (
@@ -148,6 +150,9 @@ const labels = {
   }
   <p data-availability-error role="alert" class="text-[13px] text-brick" hidden></p>
   <button type="button" data-retry class="self-start text-brick underline" hidden>{labels.retry}</button>
+  <p class="text-sm leading-relaxed text-ink/65">{lang === 'cs'
+    ? 'Místo je potvrzené až po dokončení objednávky. Vložení do košíku jej nerezervuje.'
+    : 'Your place is confirmed after completing checkout. Adding it to the cart does not reserve a seat.'}</p>
 </div>
 
 <script
@@ -161,6 +166,7 @@ const labels = {
   import { addLine, isMockMode } from '../lib/cart';
   import { getProduct, formatMoney, formatDateTime } from '../lib/shopify';
   import { isFutureCourseDate } from '../lib/courseAvailability';
+  import { isComingSoonCourse, isLaunchCourseVariant } from '../lib/coursePresentation';
 
   const root = document.querySelector<HTMLElement>('[data-course-booking]');
   const dataEl = document.querySelector<HTMLScriptElement>('[data-course-booking-data]');
@@ -232,7 +238,7 @@ const labels = {
         dates = dates.map((previous: any) => {
           const current = product?.variants.find((variant) => variant.id === previous.id);
           return current ? {
-            id: current.id, title: current.title, available: current.availableForSale,
+            id: current.id, title: current.title, available: current.availableForSale && !isComingSoonCourse(product!) && isLaunchCourseVariant(product!, current) && currentCapacity !== 0,
             seats: typeof current.quantityAvailable === 'number' ? Math.min(current.quantityAvailable, capacity) : null, startsAt: current.startsAt,
             label: current.startsAt ? formatDateTime(current.startsAt, lang) || current.title : current.title,
             amount: current.price.amount, currencyCode: current.price.currencyCode,

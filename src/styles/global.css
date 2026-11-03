@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Kafe Grohova design tokens — lifted from the legacy Next.js app
+   Kafe Grohova — photo-derived brand manual, version 1
    --------------------------------------------------------------------------- */
 @theme {
-  --color-cream: #FDEDC3;
-  --color-brick: #ED3D26;
-  --color-brick-dark: #c62d1f;
-  --color-stone: #EAEAEA;
-  --color-ink: #000000;
+  --color-cream: #F3E8D9;
+  --color-brick: #9F4A34;
+  --color-brick-dark: #803B29;
+  --color-stone: #E3D6C4;
+  --color-ink: #29211D;
+  --color-cobalt: #202747;
+  --color-olive: #616645;
+  --color-honey: #C49A55;
 
   --font-display: 'Unient DIN CE', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -31,8 +34,7 @@
   }
 
   body {
-    font-family: var(--font-display);
-    overflow-x: hidden;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   :focus-visible {

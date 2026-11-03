@@ -44,7 +44,7 @@ after(async () => {
 });
 
 test('CSV is valid UTF-8 with unique SKUs and unpublished draft products', () => {
-  assert.equal(rows.length, 21);
+  assert.equal(rows.length, 20);
   assert.equal(new Set(rows.map(row => row['URL handle'])).size, 10);
   assert.equal(new Set(rows.map(row => row.SKU)).size, rows.length);
   assert(rows.every(row => row.SKU.startsWith('DEMO-')));
@@ -60,7 +60,7 @@ test('CSV is valid UTF-8 with unique SKUs and unpublished draft products', () =>
 test('course inventory represents seats and shipping is disabled', () => {
   const courses = mockCourses('cs');
   const courseRows = rows.filter(row => courses.some(course => course.handle === row['URL handle']));
-  assert.equal(courseRows.length, 8);
+  assert.equal(courseRows.length, 7);
   assert(courseRows.every(row => row['Requires shipping'] === 'false'));
   assert(courseRows.every(row => row['Inventory tracker'] === 'shopify'));
   assert(courseRows.every(row => row['Continue selling when out of stock'] === 'deny'));
@@ -99,7 +99,7 @@ test('courses-only export excludes merchandise from every output while preservin
   const courseRows = parseCSV(await readFile(join(output, 'products.csv'), 'utf8'));
   const courseHandles = mockCourses('cs').map(course => course.handle).sort();
   assert.equal(courseHandles.length, 3);
-  assert.equal(courseRows.length, 8);
+  assert.equal(courseRows.length, 7);
   assert(!courseRows.some(row => row['URL handle'] === 'espresso-zaklady'));
   assert.deepEqual([...new Set(courseRows.map(row => row['URL handle']))].sort(), courseHandles);
   assert(courseRows.every(row => row['Requires shipping'] === 'false'));
@@ -266,4 +266,27 @@ test('gift-card cart verification chooses a native denomination and empties its 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Test cart created/);
   assert.match(result.stdout, /Test cart emptied/);
+});
+
+test('confirmed launch course and dedicated demo voucher use the same 2100 CZK value', async () => {
+  for (const lang of ['cs', 'en'] as const) {
+    const latte = mockCourses(lang).find(course => course.handle === 'latte-art')!;
+    assert.equal(latte.course?.durationMinutes, 150);
+    assert.equal(latte.variants.length, 1);
+    assert.equal(latte.variants[0].startsAt, '2026-11-25T16:00:00.000Z');
+    assert.equal(latte.variants[0].endsAt, '2026-11-25T18:30:00.000Z');
+    assert.deepEqual(latte.variants[0].price, { amount: '2100.00', currencyCode: 'CZK' });
+    const voucher = mockMerch(lang).find(product => product.handle === 'poukaz-latte-art')!;
+    assert.equal(voucher.isGiftCard, true);
+    assert(voucher.tags.includes('course-voucher:latte-art'));
+    assert.equal(voucher.variants.length, 1);
+    assert.deepEqual(voucher.variants[0].price, latte.variants[0].price);
+  }
+  const exported = rows.filter(row => row['URL handle'] === 'latte-art');
+  assert.equal(exported.length, 1);
+  assert.equal(exported[0].Price, '2100.00');
+  assert(!rows.some(row => row['URL handle'] === 'poukaz-latte-art'), 'Native gift cards are never created by CSV import');
+  const metadata = JSON.parse(await readFile(join(scratch, 'course-metafields.json'), 'utf8'));
+  const latte = metadata.courses.find((course: any) => course.handle === 'latte-art');
+  assert(JSON.stringify(latte).includes('2026-11-25T16:00:00.000Z'), 'Explicit confirmed dates must not roll with the export date');
 });

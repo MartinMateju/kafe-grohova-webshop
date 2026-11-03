@@ -129,6 +129,7 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
 <script>
   import { addLine, isMockMode } from '../lib/cart';
   import { getProduct, formatMoney } from '../lib/shopify';
+  import { isLatteArtGiftCard, isLatteArtGiftVariant } from '../lib/coursePresentation';
 
   const root = document.querySelector<HTMLElement>('[data-add-to-cart]');
   const dataEl = document.querySelector<HTMLScriptElement>('[data-add-to-cart-data]');
@@ -190,7 +191,7 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
           const current = product?.variants.find((variant) => variant.id === previous.id);
           return current ? {
             id: current.id, title: current.title,
-            available: current.availableForSale && (product?.isGiftCard || current.quantityAvailable === null || current.quantityAvailable > 0),
+            available: current.availableForSale && (!isLatteArtGiftCard(product!) || isLatteArtGiftVariant(current)) && (product?.isGiftCard || current.quantityAvailable === null || current.quantityAvailable > 0),
             quantityAvailable: product?.isGiftCard ? null : current.quantityAvailable, amount: current.price.amount,
             currencyCode: current.price.currencyCode, priceLabel: formatMoney(current.price, lang),
           } : { ...previous, available: false };

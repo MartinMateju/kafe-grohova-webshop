@@ -2,139 +2,39 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { localizedPaths } from '../../../i18n/paths';
 import CourseBooking from '../../../components/CourseBooking.astro';
-import {
-  localePath,
-  useTranslations,
-  type Lang,
-} from '../../../i18n/utils';
-import {
-  getCourses,
-  formatDuration,
-  formatMoney,
-  imageUrl,
-} from '../../../lib/shopify';
-
-export async function getStaticPaths() {
-  return localizedPaths(getCourses, 'courses');
-}
-
+import { localePath, type Lang } from '../../../i18n/utils';
+import { getCourses, getGiftCards, GIFT_CARDS_ENABLED, formatDuration, formatMoney, imageUrl } from '../../../lib/shopify';
+import { firstBookableCourseVariant, isComingSoonCourse, isLatteArtCourse, resolveLatteArtGiftCard } from '../../../lib/coursePresentation';
+export async function getStaticPaths() { return localizedPaths(getCourses, 'courses'); }
 const lang = Astro.params.lang as Lang;
-const t = useTranslations(lang);
+const cs = lang === 'cs';
 const { item: course, alternatePaths } = Astro.props;
-
-const hero = imageUrl(course.featuredImage?.url, 1600);
-const price = formatMoney(course.priceRange.minVariantPrice, lang);
-const duration = formatDuration(course.course?.durationMinutes ?? null, lang);
-const others = (await getCourses(lang)).filter((c) => c.handle !== course.handle);
-
+const syllabus = course.course?.syllabus ?? [];
+const pending = isComingSoonCourse(course);
+const latte = isLatteArtCourse(course);
+const next = firstBookableCourseVariant(course);
+const gift = resolveLatteArtGiftCard(await getGiftCards(lang));
+const title = latte ? (cs ? 'Latte art pro začátečníky.' : 'Latte art for beginners.') : course.title;
+const hero = latte ? '/photos/latte-pour.webp' : pending ? '/photos/coffee-bags.webp' : imageUrl(course.featuredImage?.url, 1600);
 const facts = [
-  duration ? { label: t('courses.duration'), value: duration } : null,
-  course.course?.capacity
-    ? { label: t('courses.capacity'), value: `max ${course.course.capacity}` }
-    : null,
-  course.course?.level ? { label: t('courses.level'), value: course.course.level } : null,
-  { label: t('common.price'), value: price },
-].filter(Boolean) as Array<{ label: string; value: string }>;
+  course.course?.durationMinutes ? { label: cs ? 'Společný čas' : 'Time together', value: formatDuration(course.course.durationMinutes, lang) } : null,
+  course.course?.capacity ? { label: cs ? 'Malá skupina' : 'Small group', value: (cs ? 'Max. ' : 'Up to ') + course.course.capacity } : null,
+  course.course?.level ? { label: cs ? 'Pro koho' : 'Who it is for', value: course.course.level } : null,
+  next ? { label: cs ? 'Cena za osobu' : 'Per person', value: formatMoney(next.price, lang) } : null,
+].filter(Boolean) as Array<{label:string;value:string}>;
 ---
-
-<BaseLayout
-  alternatePaths={alternatePaths}
-  title={course.title}
-  description={course.description.slice(0, 160)}
-  image={hero}
->
-  <div class="flex flex-col gap-12 pt-5 lg:pt-15">
-    <a
-      href={localePath(lang, '/courses')}
-      class="text-[14px] text-ink/60 transition-colors hover:text-brick"
-    >
-      &lt; {t('courses.back')}
-    </a>
-
-    {
-      hero && (
-        <div class="w-full overflow-hidden">
-          <img
-            src={hero}
-            alt={course.featuredImage?.altText ?? course.title}
-            class="h-[20rem] w-full object-cover object-center md:h-[32rem]"
-          />
-        </div>
-      )
-    }
-
-    <div class="flex w-full flex-col gap-10 lg:flex-row lg:gap-16">
-      {/* ── Left: description ───────────────────────────────── */}
-      <div class="flex w-full flex-col gap-8 lg:w-3/5">
-        <h1 class="text-[32px] leading-none md:text-[52px]">{course.title}</h1>
-
-        <dl class="grid grid-cols-2 gap-4 border-y border-ink/15 py-5 md:grid-cols-4">
-          {
-            facts.map((fact) => (
-              <div class="flex flex-col gap-1">
-                <dt class="label text-ink/50">{fact.label}</dt>
-                <dd class="text-[16px]">{fact.value}</dd>
-              </div>
-            ))
-          }
-        </dl>
-
-        {
-          course.descriptionHtml && (
-            <div
-              class="rte text-[16px] leading-relaxed lg:text-[20px]"
-              set:html={course.descriptionHtml}
-            />
-          )
-        }
-
-        {
-          course.course?.syllabus?.length ? (
-            <section class="flex flex-col gap-4">
-              <h2 class="label text-ink/60">{t('courses.whatYouLearn')}</h2>
-              <ul class="flex flex-col gap-2">
-                {course.course.syllabus.map((item) => (
-                  <li class="flex gap-3 text-[16px] lg:text-[18px]">
-                    <span class="text-brick">—</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null
-        }
-      </div>
-
-      {/* ── Right: booking ──────────────────────────────────── */}
-      <aside class="w-full lg:w-2/5">
-        <div class="lg:sticky lg:top-6">
-          <CourseBooking product={course} lang={lang} />
-        </div>
-      </aside>
-    </div>
-
-    {/* ── Other courses ──────────────────────────────────────── */}
-    {
-      others.length > 0 && (
-        <section class="mb-12 flex flex-col gap-4 border-t border-ink/15 pt-10">
-          <h2 class="label text-ink/60">{t('courses.allCourses')}</h2>
-          <ul class="grid gap-3 md:grid-cols-3">
-            {others.map((other) => (
-              <li>
-                <a
-                  href={localePath(lang, `/courses/${other.handle}`)}
-                  class="flex h-full flex-col justify-between gap-3 border border-ink/25 p-5 transition-colors hover:border-brick hover:text-brick"
-                >
-                  <span class="text-[18px] lg:text-[22px]">{other.title}</span>
-                  <span class="text-[14px] text-ink/60">
-                    {t('courses.from')} {formatMoney(other.priceRange.minVariantPrice, lang)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
+<BaseLayout alternatePaths={alternatePaths} title={title} description={pending ? (cs ? 'Kurz připravujeme. Termíny a rezervace zveřejníme později.' : 'This course is coming soon. Dates and booking will follow.') : course.description.slice(0,160)} image={hero}>
+  <div class="brand-page course-detail">
+    <a class="back-link" href={localePath(lang, '/courses')}>← {cs ? 'Všechny kurzy' : 'All courses'}</a>
+    <div class="detail-hero"><div class="detail-heading"><p class="section-kicker">{pending ? (cs ? 'Připravujeme' : 'Coming soon') : (cs ? 'Kafe Grohova / Za barem' : 'Kafe Grohova / Behind the bar')}</p><h1 class="page-heading">{title}</h1><p class="editorial-intro">{pending ? (cs ? 'Ještě ladíme poslední detaily. Až bude vše připravené, najdete zde termín i možnost rezervace.' : 'We are putting the finishing touches on this course. Dates and booking will appear here when it is ready.') : latte ? (cs ? 'Mléko, konvička a chvíle soustředění. Vyzkoušejte si, jak se z kávy stává malé srdce.' : 'Milk, a pitcher and a moment of focus. Discover how a cup of coffee becomes a little heart.') : course.description}</p></div><img class="detail-photo" src={hero} alt={latte ? (cs ? 'Nalévání latte art do šálku.' : 'Pouring latte art into a cup.') : course.featuredImage?.altText ?? course.title} width="960" height="1440" fetchpriority="high" /></div>
+    {pending ? <section data-coming-soon class="pending-panel"><p class="section-kicker">{cs ? 'Brzy u nás' : 'Coming to Grohova'}</p><h2>{cs ? 'Na dobré věci' : 'Good things'}<br />{cs ? 'si počkáme.' : 'take a little time.'}</h2><p>{cs ? 'Chcete vědět víc? Napište nám. Tento kurz zatím nelze rezervovat.' : 'Curious to know more? Get in touch. This course cannot be booked yet.'}</p><a href={localePath(lang, '/contact')}>{cs ? 'Napište nám' : 'Get in touch'} ↗</a></section> : <>
+    <dl class="detail-facts">{facts.map(fact => <div><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl>
+    <div class="detail-body"><div><p class="section-kicker">{cs ? 'Od základů, vlastním tempem' : 'From the basics, at your pace'}</p><h2>{cs ? 'Co si společně' : 'What we will'}<br />{cs ? 'vyzkoušíme.' : 'explore together.'}</h2>{course.descriptionHtml && <div class="rte detail-description" set:html={course.descriptionHtml} />}{syllabus.length > 0 && <ul class="course-syllabus">{syllabus.map((item:string,index:number) => <li><span aria-hidden="true">{String(index+1).padStart(2,'0')}</span><p>{item}</p></li>)}</ul>}</div><aside class="detail-booking"><p class="section-kicker">{cs ? 'Vaše místo za barem' : 'Your place behind the bar'}</p><h2>{cs ? 'Přidáte se?' : 'Join us?'}</h2><CourseBooking product={course} lang={lang} /></aside></div>
+    {latte && GIFT_CARDS_ENABLED && <section class="detail-gift"><img src="/photos/latte-on-table.webp" width="960" height="1440" loading="lazy" alt={cs ? 'Šálek kávy na stole.' : 'A cup of coffee on the table.'} /><div><p class="section-kicker">{cs ? 'Něco pro vaše blízké' : 'For someone close to you'}</p><h2>{cs ? 'A co první srdce' : 'Give them their'}<br />{cs ? 'darovat?' : 'first heart.'}</h2><p>{cs ? 'Dárkový poukaz na tento kurz stojí 2 100 Kč za osobu. Termín si obdarovaný vybere později z dostupné nabídky.' : 'A gift voucher for this course is CZK 2,100 per person. The recipient chooses a date later from the available sessions.'}</p><a href={localePath(lang, '/gift-cards/' + (gift?.handle ?? 'poukaz-latte-art'))}>{cs ? 'Prohlédnout poukaz' : 'Explore the voucher'} ↗</a></div></section>}
+    </>}
   </div>
 </BaseLayout>
+<style>
+.back-link{display:inline-block;margin-bottom:32px;font-size:13px;border-bottom:1px solid #29211d40;padding-bottom:7px}.detail-hero{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(30px,6vw,90px);align-items:center}.detail-heading .page-heading{font-size:clamp(44px,5.7vw,85px);line-height:1.02;margin-block:25px}.detail-heading .editorial-intro{max-width:450px}.detail-photo{width:100%;height:600px;object-fit:cover}.detail-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:25px;padding:30px 0;margin:50px 0 70px;border-block:1px solid #29211d40}.detail-facts dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}.detail-facts dd{font-size:23px}.detail-body{display:grid;grid-template-columns:1.15fr 1fr;gap:clamp(30px,7vw,110px)}.detail-body h2,.detail-gift h2,.pending-panel h2{font:800 clamp(30px,3.6vw,52px)/1.08 Arial,sans-serif;letter-spacing:-.045em;margin:22px 0 30px}.detail-description{font:16px/1.7 Arial,sans-serif}.course-syllabus{list-style:none;padding:0;margin:30px 0}.course-syllabus li{display:flex;gap:22px;border-top:1px solid #29211d25;padding:17px 0}.course-syllabus span{color:#9f4a34;font-size:12px;min-width:20px}.course-syllabus p{font:15px/1.6 Arial,sans-serif}.detail-booking{align-self:start;background:#e9ddcb;padding:30px}.detail-gift{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin:90px 0 20px;padding-top:50px;border-top:1px solid #29211d40}.detail-gift img{height:390px;width:100%;object-fit:cover}.detail-gift p:not(.section-kicker),.pending-panel>p:not(.section-kicker){font:17px/1.6 Arial;max-width:430px}.detail-gift a,.pending-panel a{display:inline-block;border-bottom:1px solid currentColor;padding:17px 0 7px}.pending-panel{border-top:1px solid #29211d40;padding:50px 0;margin-top:50px}
+@media(max-width:700px){.detail-hero,.detail-body,.detail-gift{grid-template-columns:1fr;gap:30px}.detail-photo{height:450px}.detail-facts{grid-template-columns:1fr 1fr;margin:35px 0 45px}.detail-heading .page-heading{font-size:45px}.detail-booking{padding:25px 20px}.detail-gift{margin-top:50px}.detail-gift img{height:330px}}
+</style>

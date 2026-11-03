@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/brand.css';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import CartDrawer from '../components/CartDrawer.astro';
@@ -26,8 +27,8 @@ const pageTitle = title ? `${title} — ${siteName}` : siteName;
 const pageDescription =
   description ??
   (lang === 'cs'
-    ? 'Espresso bar a baristické kurzy na Grohové v Brně. Latte art, cupping a příprava filtrované kávy v malých skupinách.'
-    : 'Espresso bar and barista courses on Grohova in Brno. Latte art, cupping and filter coffee in small groups.');
+    ? 'Espresso bar, ruční keramika a latte art pro začátečníky. Kafe Grohova, malé místo s vlastním rytmem v Brně.'
+    : 'Espresso bar, handmade ceramics and beginner latte art. Kafe Grohova, a small place with its own rhythm in Brno.');
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 const csHref = new URL(alternatePaths?.cs ?? switchLocalePath(Astro.url, 'cs'), canonical);
@@ -36,12 +37,13 @@ const ogLocale = lang === 'cs' ? 'cs_CZ' : 'en_US';
 const ogLocaleAlt = lang === 'cs' ? 'en_US' : 'cs_CZ';
 
 const siteOrigin = String(Astro.site ?? Astro.url.origin);
+const socialImage = new URL(image?.trim() || '/photos/grohova-street.webp', siteOrigin).href;
 const localBusiness = {
   '@context': 'https://schema.org',
   '@type': 'CafeOrCoffeeShop',
   '@id': `${siteOrigin}#business`,
   name: siteName,
-  image: new URL('/expressobar.webp', siteOrigin).href,
+  image: new URL('/photos/grohova-street.webp', siteOrigin).href,
   url: siteOrigin,
   address: {
     '@type': 'PostalAddress',
@@ -93,21 +95,21 @@ const localBusiness = {
     <meta property="og:url" content={canonical.href} />
     <meta property="og:locale" content={ogLocale} />
     <meta property="og:locale:alternate" content={ogLocaleAlt} />
-    {image && <meta property="og:image" content={image} />}
+    <meta property="og:image" content={socialImage} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#FDEDC3" />
+    <meta name="theme-color" content="#F3E8D9" />
     <script type="application/ld+json" is:inline set:html={safeScriptJson(localBusiness)} />
   </head>
 
-  <body class:list={['antialiased bg-cream text-ink min-h-screen w-full', { 'p-3': !fullBleed }]}>
+  <body class="brand-site antialiased bg-cream text-ink min-h-screen w-full">
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-cream focus:p-3">{t('common.skip')}</a>
     {isMockMode && (
-      <div class="mb-3 flex items-center justify-between gap-3 border border-ink/20 px-3 py-2 text-[12px] leading-snug" data-mock-banner>
+      <div class="demo-notice flex items-center justify-between gap-3" data-mock-banner>
         <p><strong class="text-brick">DEMO</strong> — {t('cart.mockNotice')}</p>
         <button type="button" class="shrink-0 px-2 py-1" onclick="this.closest('[data-mock-banner]').remove()" aria-label={lang === 'cs' ? 'Zavřít oznámení' : 'Dismiss notice'}>✕</button>
       </div>
     )}
-    <div class:list={['relative', fullBleed ? 'homepage-shell' : 'container']}>
+    <div class:list={['site-shell relative', { 'homepage-shell': fullBleed }]}>
       <slot name="navigation">
         <Navbar alternatePaths={alternatePaths} />
       </slot>
