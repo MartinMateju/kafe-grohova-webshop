@@ -4,8 +4,8 @@ import { GIFT_CARDS_ENABLED, MERCH_ENABLED } from '../lib/shopify/config';
 interface Props { lang: Lang; overlay?: boolean; alternatePaths?: Partial<Record<Lang, string>>; }
 const { lang, overlay = false, alternatePaths } = Astro.props;
 const copy = {
-  cs: { home: 'Kafe Grohova — domů', navigation: 'Hlavní navigace', mobile: 'Mobilní navigace', about: 'Naše místo', courses: 'Kurzy', shop: 'Obchod', visit: 'Najdete nás', gifts: 'Darovat kurz', blog: 'Zápisky', cart: 'Košík', menu: 'Menu +', close: 'Zavřít −', switch: 'Switch to English' },
-  en: { home: 'Kafe Grohova — home', navigation: 'Main navigation', mobile: 'Mobile navigation', about: 'Our place', courses: 'Courses', shop: 'Shop', visit: 'Find us', gifts: 'Gift a course', blog: 'Journal', cart: 'Cart', menu: 'Menu +', close: 'Close −', switch: 'Přepnout do češtiny' },
+  cs: { home: 'Kafe Grohova — domů', navigation: 'Hlavní navigace', mobile: 'Mobilní navigace', about: 'Naše místo', courses: 'Kurzy', shop: 'Obchod', visit: 'Najdete nás', gifts: 'Darovat kurz', blog: 'Blog', cart: 'Košík', menu: 'Menu +', close: 'Zavřít −', switch: 'Switch to English' },
+  en: { home: 'Kafe Grohova — home', navigation: 'Main navigation', mobile: 'Mobile navigation', about: 'Our place', courses: 'Courses', shop: 'Shop', visit: 'Find us', gifts: 'Gift a course', blog: 'Blog', cart: 'Cart', menu: 'Menu +', close: 'Close −', switch: 'Přepnout do češtiny' },
 }[lang];
 const other: Lang = lang === 'cs' ? 'en' : 'cs';
 const otherHref = alternatePaths?.[other] ?? switchLocalePath(Astro.url, other);
