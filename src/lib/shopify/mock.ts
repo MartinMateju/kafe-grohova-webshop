@@ -23,6 +23,7 @@ function products(lang: Lang, courses: boolean): Product[] {
         id: variant.id, title,
         availableForSale: variant.quantity > 0,
         quantityAvailable: variant.quantity,
+        requiresShipping: product.requiresShipping,
         price: money(variant.price), compareAtPrice: null,
         selectedOptions: [{ name: product.optionName[lang], value: title }],
         image: product.images[0] ?? null,

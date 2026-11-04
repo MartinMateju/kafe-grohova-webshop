@@ -740,11 +740,11 @@
         "en": "BEGINNER LATTE ART GIFT VOUCHER"
       },
       "descriptionHtml": {
-        "cs": "<p>Dárkový poukaz v hodnotě 2 100 Kč na osobu pro kurz Latte art pro začátečníky. Obdarovaný si termín vybere později podle vypsané nabídky. Poukaz sám o sobě nerezervuje místo.</p><p>V této ukázkové verzi je pokladna vypnutá a nevzniká platný dárkový kód.</p>",
-        "en": "<p>A CZK 2,100 gift voucher per person for beginner latte art. The recipient chooses a date later from the available sessions. The voucher does not reserve a seat.</p><p>Checkout is disabled in this demo and no redeemable gift code is issued.</p>"
+        "cs": "<p>Dárkový poukaz na kurz Latte art pro začátečníky pro jednu osobu v hodnotě 2 100 Kč. Zadejte jméno obdarovaného a případné věnování. Poukaz s fakturou vám pošleme e-mailem do 2 hodin po dokončení objednávky. Termín domluvíte se studiem; samotný poukaz nerezervuje místo.</p><p>V této ukázkové verzi je objednávání vypnuté a nevzniká platný poukaz.</p>",
+        "en": "<p>A beginner latte art voucher for one person, worth CZK 2,100. Enter the recipient’s name and an optional dedication. We will email your voucher and invoice within 2 hours after you complete the order. Arrange a date with the studio; the voucher itself does not reserve a seat.</p><p>Ordering is disabled in this demo and no valid voucher is issued.</p>"
       },
-      "productType": "Gift Card",
-      "isGiftCard": true,
+      "productType": "Gift Voucher",
+      "isGiftCard": false,
       "tags": [
         "gift",
         "course-voucher:latte-art",

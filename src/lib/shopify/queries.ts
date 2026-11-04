@@ -12,6 +12,7 @@ export const VARIANT_FRAGMENT = /* GraphQL */ `
     id
     title
     availableForSale
+    requiresShipping
     quantityAvailable
     price {
       amount
@@ -232,6 +233,7 @@ export const CART_FRAGMENT = /* GraphQL */ `
       nodes {
         id
         quantity
+        attributes { key value }
         cost {
           totalAmount {
             amount

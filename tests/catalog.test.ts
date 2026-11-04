@@ -151,7 +151,7 @@ function verifyCourses(options: {
   capacity: number | null;
   quantity: number;
   cart?: boolean;
-  giftCards?: 'native' | 'ordinary' | 'missing' | 'unavailable';
+  giftCards?: 'native' | 'ordinary' | 'missing' | 'unavailable' | 'manual' | 'manual-physical';
   giftCardPrice?: string;
 }) {
   const script = `
@@ -179,12 +179,13 @@ function verifyCourses(options: {
         }]) } } });
       }
       if (query.includes('query AllProducts') && options.giftCards) {
-        const giftPrice = { amount: options.giftCardPrice ?? '1000.00', currencyCode: 'CZK' };
+        const manual = options.giftCards.startsWith('manual');
+        const giftPrice = { amount: options.giftCardPrice ?? (manual ? '2100.00' : '1000.00'), currencyCode: 'CZK' };
         return Response.json({ data: { products: connection(options.giftCards === 'missing' ? [] : [{
-          id: 'gift', handle: 'darkovy-poukaz', title: 'Gift card', productType: 'Gift Card', tags: ['gift-card'],
-          isGiftCard: options.giftCards !== 'ordinary',
+          id: 'gift', handle: manual ? 'poukaz-latte-art' : 'darkovy-poukaz', title: 'Gift card', productType: manual ? 'Gift Voucher' : 'Gift Card', tags: manual ? ['course-voucher:latte-art'] : ['gift-card'],
+          isGiftCard: !manual && options.giftCards !== 'ordinary',
           variants: connection([{ id: 'gift-value', title: '1000 CZK',
-            availableForSale: options.giftCards !== 'unavailable', quantityAvailable: null, price: giftPrice }]),
+            requiresShipping: options.giftCards === 'manual-physical', availableForSale: options.giftCards !== 'unavailable', quantityAvailable: null, price: giftPrice }]),
           priceRange: { minVariantPrice: giftPrice, maxVariantPrice: giftPrice }
         }]) } });
       }
@@ -192,6 +193,8 @@ function verifyCourses(options: {
       if (query.includes('mutation CartCreate') && options.cart) {
         assert.equal(variables.lines[0].merchandiseId, options.giftCards ? 'gift-value' : 'future',
           'Prefer an enabled native gift card; otherwise probe a future course with stock');
+        if (options.giftCards === 'manual') assert.deepEqual(variables.lines[0].attributes,
+          [{ key: 'Obdarovaný', value: 'Verification only — no order' }]);
         return Response.json({ data: { cartCreate: { userErrors: [], warnings: [], cart: {
           id: 'test-cart', checkoutUrl: 'https://checkout.example.test/', lines: connection([{ id: 'test-line' }])
         } } } });
@@ -248,6 +251,21 @@ test('live verifier accepts native gift cards without tracked inventory while ph
   assert.match(result.stdout, /Read-only verification passed/);
 });
 
+test('live verifier recognizes only designated nonphysical 2100 CZK manual vouchers and supplies probe attributes', () => {
+  const result = verifyCourses({ capacity: 2, quantity: 2, giftCards: 'manual', cart: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /0 native gift cards, 1 manual vouchers/);
+  assert.match(result.stdout, /Test cart emptied/);
+  for (const options of [
+    { giftCards: 'manual-physical' as const },
+    { giftCards: 'manual' as const, giftCardPrice: '2000.00' },
+  ]) {
+    const invalid = verifyCourses({ capacity: 2, quantity: 2, ...options });
+    assert.equal(invalid.status, 1);
+    assert.match(invalid.stderr, /nonphysical CZK 2100 variant/);
+  }
+});
+
 test('live verifier rejects ordinary voucher products, missing gifts and unavailable or invalid denominations', () => {
   for (const [options, message] of [
     [{ giftCards: 'ordinary' }, /no native Shopify gift card products/],
@@ -277,15 +295,16 @@ test('confirmed launch course and dedicated demo voucher use the same 2100 CZK v
     assert.equal(latte.variants[0].endsAt, '2026-11-25T18:30:00.000Z');
     assert.deepEqual(latte.variants[0].price, { amount: '2100.00', currencyCode: 'CZK' });
     const voucher = mockMerch(lang).find(product => product.handle === 'poukaz-latte-art')!;
-    assert.equal(voucher.isGiftCard, true);
+    assert.equal(voucher.isGiftCard, false);
     assert(voucher.tags.includes('course-voucher:latte-art'));
     assert.equal(voucher.variants.length, 1);
+    assert.equal(voucher.variants[0].requiresShipping, false);
     assert.deepEqual(voucher.variants[0].price, latte.variants[0].price);
   }
   const exported = rows.filter(row => row['URL handle'] === 'latte-art');
   assert.equal(exported.length, 1);
   assert.equal(exported[0].Price, '2100.00');
-  assert(!rows.some(row => row['URL handle'] === 'poukaz-latte-art'), 'Native gift cards are never created by CSV import');
+  assert(!rows.some(row => row['URL handle'] === 'poukaz-latte-art'), 'The manually configured voucher is excluded from the course/merchandise export');
   const metadata = JSON.parse(await readFile(join(scratch, 'course-metafields.json'), 'utf8'));
   const latte = metadata.courses.find((course: any) => course.handle === 'latte-art');
   assert(JSON.stringify(latte).includes('2026-11-25T16:00:00.000Z'), 'Explicit confirmed dates must not roll with the export date');

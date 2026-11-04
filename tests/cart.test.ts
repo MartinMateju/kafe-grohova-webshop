@@ -7,6 +7,7 @@ import { CART_CREATE, CART_LINES_ADD, CART_LINES_REMOVE, CART_LINES_UPDATE, CART
 import { isFutureCourseDate } from '../src/lib/courseAvailability';
 import { safeScriptJson } from '../src/lib/safeScriptJson';
 import { mockMerch } from '../src/lib/shopify/mock';
+import { createVoucherAttributes, normalizeVoucherAttributes } from '../src/lib/voucherPersonalization';
 
 const snapshot: LineSnapshot = {
   merchandiseId: 'variant-1', productTitle: 'Coffee', variantTitle: '250 g',
@@ -770,4 +771,156 @@ test('saved demo latte carts refresh their date and expire with the fixed launch
     assert.equal(cart.getState().cart?.totalQuantity, expected);
     if (expected) assert.equal(cart.getState().cart?.lines[0].courseStartsAt, product.variants[0].startsAt);
   }
+});
+
+function manualVoucher(): Product {
+  const gift = nativeGift();
+  return { ...gift, handle: 'poukaz-latte-art', title: 'Manual latte-art voucher',
+    isGiftCard: false, productType: 'Gift Voucher', tags: ['course-voucher:latte-art'], course: null,
+    variants: [{ ...gift.variants[0], id: 'manual-voucher-variant', requiresShipping: false,
+      quantityAvailable: 0, price: { amount: '2100.00', currencyCode: 'CZK' } }],
+  };
+}
+
+function manualSnapshot(recipient: string, dedication = ''): LineSnapshot {
+  const product = manualVoucher();
+  return { ...giftSnapshot(), productHandle: product.handle, merchandiseId: product.variants[0].id,
+    attributes: createVoucherAttributes(recipient, dedication) };
+}
+
+function manualCart(lines: { id: string; quantity: number; attributes?: unknown }[]): any {
+  const product = manualVoucher();
+  const raw = rawCart();
+  return { ...raw, totalQuantity: lines.reduce((total, line) => total + line.quantity, 0),
+    lines: { pageInfo: { hasNextPage: false }, nodes: lines.map(line => ({
+      ...raw.lines.nodes[0], ...line,
+      merchandise: { id: product.variants[0].id, title: '2100 CZK',
+        product: { title: product.title, handle: product.handle, productType: product.productType,
+          tags: product.tags, isGiftCard: false } },
+      cost: { amountPerQuantity: { amount: '2100.00', currencyCode: 'CZK' },
+        totalAmount: { amount: String(2100 * line.quantity), currencyCode: 'CZK' } },
+    })) },
+  };
+}
+
+test('manual voucher attributes trim values, reject missing or oversized names, and allow only order fields', () => {
+  assert.deepEqual(createVoucherAttributes('  Žaneta  ', '  Pro radost\n♥  '), [
+    { key: 'Obdarovaný', value: 'Žaneta' }, { key: 'Věnování', value: 'Pro radost\n♥' },
+  ]);
+  assert.deepEqual(normalizeVoucherAttributes([
+    { key: 'discount', value: '100%' }, { key: 'Obdarovaný', value: 'Eva' },
+  ]), [{ key: 'Obdarovaný', value: 'Eva' }]);
+  for (const recipient of ['', '   ', 'a'.repeat(101), 'Eva\nAdmin']) {
+    assert.throws(() => createVoucherAttributes(recipient), /recipient/);
+  }
+  assert.throws(() => createVoucherAttributes('Eva', 'a'.repeat(501)), /dedication/);
+  assert.throws(() => normalizeVoucherAttributes([
+    { key: 'Obdarovaný', value: 'Eva' }, { key: 'Obdarovaný', value: 'Jana' },
+  ]), /invalid/);
+});
+
+test('manual demo vouchers preserve distinct recipients through reload, quantity changes and removal', async () => {
+  const product = manualVoucher();
+  const storage = memoryStorage();
+  const options = { mock: true, merchEnabled: false, giftCardsEnabled: true,
+    storage, demoProducts: () => [product] };
+  const cart = createCartStore(options);
+  assert.equal(await cart.addLine(manualSnapshot('Eva', 'Všechno nejlepší!')), true);
+  assert.equal(await cart.addLine(manualSnapshot('Jana', '<b>Pro tebe</b>')), true);
+  assert.equal(await cart.addLine(manualSnapshot('Eva', 'Všechno nejlepší!')), true);
+  assert.equal(cart.getState().cart?.lines.length, 2);
+  assert.deepEqual(cart.getState().cart?.lines.map(line => line.quantity), [2, 1]);
+  assert(cart.getState().cart?.lines.every(line => line.isManualVoucher && !line.isGiftCard && !('courseStartsAt' in line)));
+  const restored = createCartStore(options);
+  assert.equal(await restored.initCart(), true);
+  assert.deepEqual(restored.getState().cart?.lines, cart.getState().cart?.lines);
+  const [eva, jana] = restored.getState().cart!.lines;
+  assert.notEqual(eva.id, jana.id);
+  assert.equal(await restored.updateLine(jana.id, 3), true);
+  assert.equal(await restored.removeLine(eva.id), true);
+  assert.equal(restored.getState().cart!.lines[0].id, jana.id);
+  assert.deepEqual(restored.getState().cart!.lines[0].attributes, manualSnapshot('Jana', '<b>Pro tebe</b>').attributes);
+  assert.equal(restored.getState().cart?.subtotal.amount, '6300.00');
+});
+
+test('manual live vouchers send personalization on create and add, keep recipients separate, and retain attributes on checkout', async () => {
+  const product = manualVoucher();
+  let rows: { id: string; quantity: number; attributes: any }[] = [];
+  let destination = '';
+  const calls: string[] = [];
+  const request = (async (query: string, variables: any) => {
+    calls.push(query);
+    if (query === CART_CREATE || query === CART_LINES_ADD) {
+      const input = variables.lines[0];
+      assert.equal(input.merchandiseId, product.variants[0].id);
+      rows.push({ id: `manual-${rows.length}`, quantity: input.quantity, attributes: input.attributes });
+      const key = query === CART_CREATE ? 'cartCreate' : 'cartLinesAdd';
+      return { [key]: { cart: manualCart(rows), userErrors: [] } };
+    }
+    assert.equal(query, CART_QUERY);
+    return { cart: manualCart(rows) };
+  }) as typeof storefront;
+  const cart = createCartStore({ mock: false, merchEnabled: false, giftCardsEnabled: true,
+    storage: memoryStorage(), lookupProduct: async () => product, request,
+    navigate: url => { destination = url; } });
+  assert.equal(await cart.addLine(manualSnapshot('Eva', 'Od Martina')), true);
+  assert.equal(await cart.addLine(manualSnapshot('Jana')), true);
+  assert.deepEqual(rows.map(row => row.attributes), [manualSnapshot('Eva', 'Od Martina').attributes, manualSnapshot('Jana').attributes]);
+  assert.equal(cart.getState().cart?.lines.length, 2);
+  assert(cart.getState().cart?.lines.every(line => line.isManualVoucher && !line.isGiftCard));
+  assert.equal(await cart.checkout(), true);
+  assert.equal(destination, rawCart().checkoutUrl);
+  assert.deepEqual(calls, [CART_CREATE, CART_LINES_ADD, CART_QUERY]);
+});
+
+test('manual vouchers reject missing recipient and physical or changed offers before Shopify writes', async () => {
+  for (const mock of [true, false]) {
+    const product = manualVoucher();
+    let writes = 0;
+    const cart = createCartStore({ mock, merchEnabled: false, giftCardsEnabled: true, storage: null,
+      demoProducts: () => [product], lookupProduct: async () => product,
+      request: (async () => { writes++; throw new Error('Unexpected Shopify write'); }) as typeof storefront });
+    const { attributes: _, ...missing } = manualSnapshot('Eva');
+    assert.equal(await cart.addLine(missing), false);
+    assert.match(cart.getState().error!, /recipient/);
+    product.variants[0].requiresShipping = true;
+    assert.equal(await cart.addLine(manualSnapshot('Eva')), false);
+    assert.match(cart.getState().error!, /not currently offered/);
+    product.variants[0].requiresShipping = false;
+    product.variants[0].price.amount = '2200';
+    assert.equal(await cart.addLine(manualSnapshot('Eva')), false);
+    assert.match(cart.getState().error!, /not currently offered/);
+    assert.equal(writes, 0);
+  }
+});
+
+test('restored manual vouchers keep their identity but cannot checkout without valid recipient details', async () => {
+  const product = manualVoucher();
+  const row = { id: 'saved-voucher', quantity: 1, attributes: [] as any[] };
+  let navigated = false;
+  const cart = createCartStore({ mock: false, merchEnabled: false, giftCardsEnabled: true,
+    storage: memoryStorage({ kafe_cart_id: 'cart-1' }), lookupProduct: async () => product,
+    request: (async (query: string) => { assert.equal(query, CART_QUERY); return { cart: manualCart([row]) }; }) as typeof storefront,
+    navigate: () => { navigated = true; } });
+  assert.equal(await cart.initCart(), true);
+  assert.equal(cart.getState().cart?.lines[0].isManualVoucher, true);
+  assert.equal(await cart.checkout(), false);
+  assert.match(cart.getState().error!, /recipient/);
+  assert.equal(navigated, false);
+  row.attributes = createVoucherAttributes('Eva');
+  assert.equal(await cart.checkout(), true);
+  assert.equal(navigated, true);
+});
+
+test('disabled manual vouchers are removed from restored live carts even with merchandise enabled', async () => {
+  const cart = createCartStore({ mock: false, merchEnabled: true, giftCardsEnabled: false,
+    storage: memoryStorage({ kafe_cart_id: 'cart-1' }),
+    request: (async (query: string, variables: any) => {
+      if (query === CART_QUERY) return { cart: manualCart([{ id: 'disabled', quantity: 1, attributes: createVoucherAttributes('Eva') }]) };
+      assert.equal(query, CART_LINES_REMOVE);
+      assert.deepEqual(variables.lineIds, ['disabled']);
+      return { cartLinesRemove: { cart: manualCart([]), userErrors: [] } };
+    }) as typeof storefront });
+  assert.equal(await cart.initCart(), true);
+  assert.equal(cart.getState().cart?.totalQuantity, 0);
 });

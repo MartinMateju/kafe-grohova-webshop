@@ -4,7 +4,7 @@ import { localizedPaths } from '../../../i18n/paths';
 import CourseBooking from '../../../components/CourseBooking.astro';
 import { localePath, type Lang } from '../../../i18n/utils';
 import { getCourses, getGiftCards, GIFT_CARDS_ENABLED, formatDuration, formatMoney, imageUrl } from '../../../lib/shopify';
-import { firstBookableCourseVariant, isComingSoonCourse, isLatteArtCourse, resolveLatteArtGiftCard } from '../../../lib/coursePresentation';
+import { firstBookableCourseVariant, isComingSoonCourse, isLatteArtCourse, resolveLatteArtGiftCard, isManualLatteArtGiftCard } from '../../../lib/coursePresentation';
 export async function getStaticPaths() { return localizedPaths(getCourses, 'courses'); }
 const lang = Astro.params.lang as Lang;
 const cs = lang === 'cs';
@@ -13,7 +13,7 @@ const syllabus = course.course?.syllabus ?? [];
 const pending = isComingSoonCourse(course);
 const latte = isLatteArtCourse(course);
 const next = firstBookableCourseVariant(course);
-const gift = resolveLatteArtGiftCard(await getGiftCards(lang));
+const gift = resolveLatteArtGiftCard((await getGiftCards(lang)).filter(isManualLatteArtGiftCard));
 const title = latte ? (cs ? 'Latte art pro začátečníky.' : 'Latte art for beginners.') : course.title;
 const hero = latte ? '/photos/latte-pour.webp' : pending ? '/photos/coffee-bags.webp' : imageUrl(course.featuredImage?.url, 1600);
 const facts = [

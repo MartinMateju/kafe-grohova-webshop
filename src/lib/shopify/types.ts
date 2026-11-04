@@ -19,6 +19,8 @@ export interface Variant {
   id: string;
   title: string;
   availableForSale: boolean;
+  /** Shopify's shipping classification; required for a manual digital voucher. */
+  requiresShipping?: boolean;
   /** null when the store has not granted unauthenticated_read_product_inventory */
   quantityAvailable: number | null;
   price: Money;
@@ -86,6 +88,11 @@ export interface Article {
   tags: string[];
 }
 
+export interface CartLineAttribute {
+  key: string;
+  value: string;
+}
+
 export interface CartLine {
   id: string;
   quantity: number;
@@ -94,6 +101,9 @@ export interface CartLine {
   variantTitle: string;
   productHandle: string;
   isGiftCard: boolean;
+  /** Explicit studio-issued voucher, distinct from Shopify's native gift card. */
+  isManualVoucher?: boolean;
+  attributes?: CartLineAttribute[];
   /** Present for course lines; null means required scheduling data is missing. */
   courseStartsAt?: string | null;
   image: ShopImage | null;

@@ -347,7 +347,7 @@ test('normalization trusts the native boolean and excludes course markers from n
   assert.equal(cart.lines[1].isGiftCard, false);
 });
 
-test('demo gifts retain native identity, the three original values and the dedicated course voucher', async () => {
+test('demo gifts preserve native denominations and distinguish the manually issued course voucher', async () => {
   for (const lang of ['cs', 'en']) {
     const gifts = await demoShop.getGiftCards(lang);
     assert.equal(gifts.length, 2);
@@ -360,8 +360,28 @@ test('demo gifts retain native identity, the three original values and the dedic
     ]);
     assert.equal((await demoShop.getProduct(gifts[0].handle, lang)).isGiftCard, true);
     const courseGift = gifts.find(item => item.handle === 'poukaz-latte-art');
-    assert.equal(courseGift.isGiftCard, true);
+    assert.equal(courseGift.isGiftCard, false);
+    assert(courseGift.tags.includes('course-voucher:latte-art'));
+    assert(courseGift.variants.every(variant => variant.requiresShipping === false));
     assert.deepEqual(courseGift.variants.map(item => item.price), [{ amount: '2100.00', currencyCode: 'CZK' }]);
     assert(!(await demoShop.getMerch(lang)).some(item => item.isGiftCard));
   }
+});
+
+test('manual voucher normalization preserves order personalization without claiming native gift identity', () => {
+  const rawProduct = { ...product('poukaz-latte-art'), isGiftCard: false,
+    tags: ['course-voucher:latte-art'], productType: 'Course', courseDuration: { value: '150' } };
+  rawProduct.variants.nodes[0].requiresShipping = false;
+  assert.equal(normalizeProduct(rawProduct).variants[0].requiresShipping, false);
+  const cart = normalizeCart({ lines: connection([{ id: 'manual-line', quantity: 1,
+    attributes: [{ key: 'Obdarovaný', value: 'Eva <3' }, { key: 'Věnování', value: 'Pro radost\nOd nás' },
+      { key: '_private', value: 'not displayed' }],
+    merchandise: { id: 'manual-variant', startsAt: { value: '2000-01-01T00:00:00Z' }, product: rawProduct },
+  }]) });
+  assert.equal(cart.lines[0].isGiftCard, false);
+  assert.equal(cart.lines[0].isManualVoucher, true);
+  assert.equal('courseStartsAt' in cart.lines[0], false);
+  assert.deepEqual(cart.lines[0].attributes, [
+    { key: 'Obdarovaný', value: 'Eva <3' }, { key: 'Věnování', value: 'Pro radost\nOd nás' },
+  ]);
 });
