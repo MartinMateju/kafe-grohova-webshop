@@ -19,20 +19,20 @@ export function isComingSoonCourseHandle(handle: string): boolean {
 }
 
 export function isComingSoonCourse(product: Identity): boolean {
-  return !product.isGiftCard && (isComingSoonCourseHandle(product.handle) ||
+  return !product.isGiftCard && !isManualLatteArtGiftCard(product) && (isComingSoonCourseHandle(product.handle) ||
     product.tags.some(tag => PREPARING.has(tag.toLowerCase()) ||
       ['coming-soon', 'course-coming-soon'].includes(tag.toLowerCase())));
 }
 
 export function isLatteArtCourse(product: Identity): boolean {
   const tags = product.tags.map(tag => tag.toLowerCase());
-  return !product.isGiftCard && (product.handle === 'latte-art' || tags.includes('latte-art') ||
+  return !product.isGiftCard && !isManualLatteArtGiftCard(product) && (product.handle === 'latte-art' || tags.includes('latte-art') ||
     (tags.includes('milk') && tags.includes('beginner')));
 }
 
 /** One actual, future date, with the original Shopify identity and price. */
 export function firstBookableCourseVariant(product: Product, now = Date.now()): Variant | null {
-  if (isComingSoonCourse(product) || product.isGiftCard) return null;
+  if (isComingSoonCourse(product) || product.isGiftCard || isManualLatteArtGiftCard(product)) return null;
   const capacity = product.course?.capacity;
   if (typeof capacity === 'number' && (!Number.isFinite(capacity) || capacity <= 0)) return null;
   const variant = product.variants.filter(item => isLaunchCourseVariant(product, item) && item.availableForSale &&
@@ -44,22 +44,29 @@ export function firstBookableCourseVariant(product: Product, now = Date.now()): 
     typeof capacity === 'number' ? Math.min(variant.quantityAvailable, Math.floor(capacity)) : variant.quantityAvailable };
 }
 
-/** A general monetary gift card must not silently become a course-specific product. */
+/** Manual vouchers require an explicit tag; an ordinary product name/handle is insufficient. */
+export function isManualLatteArtGiftCard(product: Identity): boolean {
+  return !product.isGiftCard && product.tags.some(tag => tag.toLowerCase() === 'course-voucher:latte-art');
+}
+
+/** Preserve native gift cards while supporting the studio's designated manual voucher. */
 export function isLatteArtGiftCard(product: Identity): boolean {
-  return product.isGiftCard && (product.handle === 'poukaz-latte-art' ||
-    product.tags.some(tag => tag.toLowerCase() === 'course-voucher:latte-art'));
+  return isManualLatteArtGiftCard(product) || (product.isGiftCard && (product.handle === 'poukaz-latte-art' ||
+    product.tags.some(tag => tag.toLowerCase() === 'course-voucher:latte-art')));
 }
 
 export function resolveLatteArtGiftCard(products: Product[]): Product | null {
-  for (const product of products) {
+  const ordered = [...products.filter(isManualLatteArtGiftCard), ...products.filter(product => !isManualLatteArtGiftCard(product))];
+  for (const product of ordered) {
     if (!isLatteArtGiftCard(product)) continue;
-    const variants = product.variants.filter(variant => isLatteArtGiftVariant(variant));
+    const variants = product.variants.filter(variant => isLatteArtGiftVariant(variant, product));
     if (!variants.some(variant => variant.availableForSale)) continue;
     return { ...product, variants, priceRange: { minVariantPrice: variants[0].price, maxVariantPrice: variants[0].price } };
   }
   return null;
 }
 
-export function isLatteArtGiftVariant(variant: Variant): boolean {
-  return variant.price.currencyCode === 'CZK' && Number(variant.price.amount) === LATTE_ART_PRICE_CZK;
+export function isLatteArtGiftVariant(variant: Variant, product?: Identity): boolean {
+  return variant.price.currencyCode === 'CZK' && Number(variant.price.amount) === LATTE_ART_PRICE_CZK &&
+    (!product || !isManualLatteArtGiftCard(product) || variant.requiresShipping === false);
 }

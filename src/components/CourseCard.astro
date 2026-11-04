@@ -23,7 +23,7 @@ const image = latte ? '/photos/latte-pour.webp' : imageUrl(product.featuredImage
       {product.course?.capacity && <div><dt>{cs ? 'Malá skupina' : 'Small group'}</dt><dd data-course-capacity>{cs ? 'Max. ' : 'Up to '}{product.course.capacity}{cs ? ' účastníci' : ' people'}</dd></div>}
       {next && <div><dt>{cs ? 'Cena za osobu' : 'Per person'}</dt><dd>{formatMoney(next.price, lang)}</dd></div>}
     </dl>}
-    <a href={href} class="course-text-link">{pending ? (cs ? 'O připravovaném kurzu' : 'About the upcoming course') : (cs ? 'Prohlédnout kurz' : 'Explore the course')} <span aria-hidden="true">↗</span></a>
+    <a href={href} class="course-text-link">{pending ? (cs ? 'O připravovaném kurzu' : 'About the upcoming course') : (cs ? 'Ověřit dostupná místa' : 'Check available seats')} <span aria-hidden="true">↗</span></a>
   </div>
 </article>
 <style>

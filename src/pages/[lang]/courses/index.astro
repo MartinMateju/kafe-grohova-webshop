@@ -3,14 +3,14 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import CourseCard from '../../../components/CourseCard.astro';
 import { allLangs, localePath, type Lang } from '../../../i18n/utils';
 import { getCourses, getGiftCards, GIFT_CARDS_ENABLED, formatDateTime, formatMoney, isMockMode } from '../../../lib/shopify';
-import { firstBookableCourseVariant, isLatteArtCourse, resolveLatteArtGiftCard } from '../../../lib/coursePresentation';
+import { firstBookableCourseVariant, isLatteArtCourse, resolveLatteArtGiftCard, isManualLatteArtGiftCard } from '../../../lib/coursePresentation';
 export function getStaticPaths() { return allLangs.map(lang => ({ params: { lang } })); }
 const lang = Astro.params.lang as Lang;
 const cs = lang === 'cs';
 const courses = await getCourses(lang);
 const latte = courses.find(isLatteArtCourse);
 const next = latte ? firstBookableCourseVariant(latte) : null;
-const gift = resolveLatteArtGiftCard(await getGiftCards(lang));
+const gift = resolveLatteArtGiftCard((await getGiftCards(lang)).filter(isManualLatteArtGiftCard));
 const cupping = courses.find(course => course.handle === 'cupping' || course.tags.includes('cupping'));
 ---
 <BaseLayout title={cs ? 'Baristické kurzy' : 'Barista courses'} description={cs ? 'Latte art pro začátečníky v Kafe Grohova. Malá skupina a čas na vlastní první srdce.' : 'Beginner latte art at Kafe Grohova. A small group and time for your first heart.'}>

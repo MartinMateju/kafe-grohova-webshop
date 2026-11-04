@@ -20,6 +20,7 @@ import {
 import type { Article, Product } from './types';
 import { shopifyLanguage, type Lang } from '../../i18n/utils';
 import { isFutureCourseDate } from '../courseAvailability';
+import { isManualLatteArtGiftCard } from '../coursePresentation';
 
 export * from './types';
 export { isMockMode, MERCH_ENABLED, GIFT_CARDS_ENABLED } from './config';
@@ -101,7 +102,7 @@ export async function getCourses(lang: Lang): Promise<Product[]> {
 /** Merchandise products. Falls back to all products if the collection is absent. */
 export async function getMerch(lang: Lang): Promise<Product[]> {
   if (!MERCH_ENABLED) return [];
-  if (isMockMode) return mockMerch(lang).filter((product) => !product.isGiftCard && !isCourse(product));
+  if (isMockMode) return mockMerch(lang).filter((product) => !product.isGiftCard && !isManualLatteArtGiftCard(product) && !isCourse(product));
 
   const nodes = await readConnection(
     COLLECTION_QUERY,
@@ -116,7 +117,7 @@ export async function getMerch(lang: Lang): Promise<Product[]> {
   // An intentionally empty collection is not the same as a missing collection.
   if (nodes) {
     const products = await Promise.all(nodes.map((raw) => completeProduct(raw, lang)));
-    return products.filter((product) => !product.isGiftCard && !isCourse(product));
+    return products.filter((product) => !product.isGiftCard && !isManualLatteArtGiftCard(product) && !isCourse(product));
   }
 
   const all = await readConnection(
@@ -126,25 +127,27 @@ export async function getMerch(lang: Lang): Promise<Product[]> {
   );
   const allNodes = await Promise.all((all ?? []).map((raw) => completeProduct(raw, lang)));
   // Keep courses out of the merch grid even when no collections are set up.
-  return allNodes.filter((product) => !product.isGiftCard && !isCourse(product));
+  return allNodes.filter((product) => !product.isGiftCard && !isManualLatteArtGiftCard(product) && !isCourse(product));
 }
 
-/** Native Shopify gift cards have independent visibility from physical merchandise. */
+/** Native gift cards and explicitly tagged manual vouchers are independent of merchandise. */
 export async function getGiftCards(lang: Lang): Promise<Product[]> {
   if (!GIFT_CARDS_ENABLED) return [];
-  if (isMockMode) return [...mockMerch(lang), ...mockCourses(lang)].filter((product) => product.isGiftCard);
+  if (isMockMode) return [...mockMerch(lang), ...mockCourses(lang)].filter((product) => product.isGiftCard || isManualLatteArtGiftCard(product));
   // Storefront product search has no documented native gift-card filter.
   const nodes = await readConnection(
     ALL_PRODUCTS_QUERY,
     { first: 20, language: shopifyLanguage(lang) },
     (data) => data.products,
   );
-  return Promise.all((nodes ?? []).filter((raw) => raw.isGiftCard === true)
+  return Promise.all((nodes ?? []).filter((raw) => raw.isGiftCard === true || isManualLatteArtGiftCard({
+    handle: raw.handle ?? '', isGiftCard: false, tags: raw.tags ?? [],
+  }))
     .map((raw) => completeProduct(raw, lang)));
 }
 
 function productEnabled(product: Product): boolean {
-  return product.isGiftCard ? GIFT_CARDS_ENABLED : isCourse(product) || MERCH_ENABLED;
+  return product.isGiftCard || isManualLatteArtGiftCard(product) ? GIFT_CARDS_ENABLED : isCourse(product) || MERCH_ENABLED;
 }
 
 export async function getProduct(
@@ -208,7 +211,7 @@ export async function getArticle(
 
 /** A product counts as a course when it is typed, tagged or metafielded as one. */
 export function isCourse(product: Product): boolean {
-  if (product.isGiftCard) return false;
+  if (product.isGiftCard || isManualLatteArtGiftCard(product)) return false;
   return (
     product.course !== null ||
     product.productType.toLowerCase() === 'course' ||

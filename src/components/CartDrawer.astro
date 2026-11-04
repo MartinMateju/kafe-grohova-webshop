@@ -184,6 +184,8 @@ const strings = {
         body.innerHTML = cart.lines.map((line) => {
           const variant = line.variantTitle && line.variantTitle !== 'Default Title'
             ? `<p class="text-[13px] text-ink/60">${escapeHtml(line.variantTitle)}</p>` : '';
+          const personalization = (line.attributes ?? []).map(attribute =>
+            `<p class="whitespace-pre-wrap break-words text-[12px] text-ink/70"><span class="font-medium">${escapeHtml(attribute.key)}:</span> ${escapeHtml(attribute.value)}</p>`).join('');
           const source = line.image ? imageSource(line.image.url) : '';
           const image = source
             ? `<img src="${source}" alt="" class="h-24 w-20 object-cover" loading="lazy" />`
@@ -192,7 +194,7 @@ const strings = {
           return `<div class="flex gap-4 border-b border-ink/10 py-4" data-line="${escapeHtml(line.id)}">
             ${image}
             <div class="flex min-w-0 flex-1 flex-col justify-between">
-              <div><p class="truncate">${escapeHtml(line.productTitle)}</p>${variant}</div>
+              <div><p class="truncate">${escapeHtml(line.productTitle)}</p>${variant}${personalization}</div>
               <div class="flex items-center justify-between">
                 <div class="flex items-center border border-ink/30">
                   <button type="button" class="px-2 py-1 hover:text-brick disabled:opacity-40" data-qty-down aria-label="${escapeHtml(strings.decrease)}" ${disabled}>−</button>

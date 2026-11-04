@@ -1,5 +1,7 @@
 import { loadEnv } from 'vite';
 import { isFutureCourseDate } from '../src/lib/courseAvailability';
+import { isManualLatteArtGiftCard, isLatteArtGiftVariant } from '../src/lib/coursePresentation';
+import { createVoucherAttributes } from '../src/lib/voucherPersonalization';
 
 // Same public configuration as the production build. Never print access tokens.
 for (const [key, value] of Object.entries(loadEnv('production', process.cwd(), 'PUBLIC_'))) {
@@ -36,9 +38,15 @@ async function main() {
   if (!courses.length) throw new Error('Publish course products to the Headless channel and check the course collection handle. The course catalog is empty.');
   if (config.MERCH_ENABLED && !merch.length) throw new Error('Merchandise is enabled but its catalog is empty. Publish merchandise to the Headless channel and check the collection handle, or set PUBLIC_MERCH_ENABLED=false.');
   if (config.GIFT_CARDS_ENABLED && !giftCards.length) {
-    throw new Error('Gift cards are enabled but no native Shopify gift card products are available. Create a gift card product in Shopify Admin, publish it to the Headless channel, or set PUBLIC_GIFT_CARDS_ENABLED=false. An ordinary product named voucher does not issue a redeemable code.');
+    throw new Error('Gift cards are enabled but no native Shopify gift card products or explicitly tagged manual vouchers are available. Publish the course-voucher:latte-art product to Headless, create a native gift card, or set PUBLIC_GIFT_CARDS_ENABLED=false. An ordinary product name alone does not qualify.');
   }
   for (const giftCard of giftCards) {
+    if (isManualLatteArtGiftCard(giftCard)) {
+      if (!giftCard.variants.some(variant => variant.availableForSale && isLatteArtGiftVariant(variant, giftCard))) {
+        throw new Error(`Manual voucher "${giftCard.handle}" needs an available, nonphysical CZK 2100 variant.`);
+      }
+      continue;
+    }
     if (!giftCard.isGiftCard || !giftCard.variants.length || giftCard.variants.some(variant =>
       !Number.isFinite(Number(variant.price.amount)) || Number(variant.price.amount) <= 0 || variant.price.currencyCode !== 'CZK',
     )) {
@@ -85,19 +93,25 @@ async function main() {
   if (!courseVariants.some(variant => variant.availableForSale && variant.quantityAvailable !== null && variant.quantityAvailable > 0 && isFutureCourseDate(variant.startsAt))) {
     console.warn('No future course session has available seats. Course booking cannot be tested until a future session has stock.');
   }
-  console.log(`Catalog OK: ${merch.length} merchandise products, ${giftCards.length} native gift cards, ${courses.length} courses, ${articles.length} articles.`);
+  console.log(`Catalog OK: ${merch.length} merchandise products, ${giftCards.filter(product => product.isGiftCard).length} native gift cards, ${giftCards.filter(isManualLatteArtGiftCard).length} manual vouchers, ${courses.length} courses, ${articles.length} articles.`);
   if (!config.MERCH_ENABLED) console.log('Physical merchandise is hidden; course and gift-card availability are checked independently.');
-  if (giftCards.length) console.log('Gift-card issuance, fulfillment email and redemption need a separate Shopify order test. A sample PDF is not a redeemable gift card.');
+  if (giftCards.some(product => product.isGiftCard)) console.log('Gift-card issuance, fulfillment email and redemption need a separate Shopify order test. A sample PDF is not a redeemable gift card.');
+  if (giftCards.some(isManualLatteArtGiftCard)) console.log('Manual vouchers require recipient details in the order; the studio emails the voucher and invoice within 2 hours. Order confirmation and manual delivery need a separate walkthrough.');
   if (!process.argv.includes('--cart')) {
     console.log('Read-only verification passed. Use --cart to create and empty a test cart (no order or payment).');
     return;
   }
-  const variant = giftCardVariants.find(item => item.availableForSale)
+  const giftProduct = giftCards.find(product => product.variants.some(item => item.availableForSale &&
+    (!isManualLatteArtGiftCard(product) || isLatteArtGiftVariant(item, product))));
+  const variant = giftProduct?.variants.find(item => item.availableForSale &&
+    (!isManualLatteArtGiftCard(giftProduct) || isLatteArtGiftVariant(item, giftProduct)))
     ?? merch.flatMap(product => product.variants).find(item => item.availableForSale)
     ?? courseVariants.find(item => item.availableForSale && item.quantityAvailable !== null &&
       item.quantityAvailable > 0 && isFutureCourseDate(item.startsAt));
   if (!variant) throw new Error('No available gift-card or merchandise variant, or future course session with stock for the cart check.');
-  const data = await storefront<any>(CART_CREATE, { lines: [{ merchandiseId: variant.id, quantity: 1 }], language: 'CS' });
+  const data = await storefront<any>(CART_CREATE, { lines: [{ merchandiseId: variant.id, quantity: 1,
+    ...(giftProduct && isManualLatteArtGiftCard(giftProduct) ? { attributes: createVoucherAttributes('Verification only — no order') } : {}),
+  }], language: 'CS' });
   const payload = data.cartCreate;
   if (payload?.userErrors?.length) throw new Error(payload.userErrors.map((item: any) => item.message).join('; '));
   const cart = payload?.cart;

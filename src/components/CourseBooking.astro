@@ -1,7 +1,7 @@
 ---
 import { safeScriptJson } from '../lib/safeScriptJson';
 import { isFutureCourseDate } from '../lib/courseAvailability';
-import { firstBookableCourseVariant } from '../lib/coursePresentation';
+import { firstBookableCourseVariant, isComingSoonCourse, isLaunchCourseVariant } from '../lib/coursePresentation';
 import { isMockMode } from '../lib/shopify/config';
 import type { Product } from '../lib/shopify';
 import { formatDateTime, formatMoney, imageUrl } from '../lib/shopify';
@@ -25,12 +25,17 @@ function seatWord(n: number): string {
   return t('courses.seatsLeft');
 }
 
-const nextDate = firstBookableCourseVariant(product);
+// Retain the actual scheduled variant when sold out so a cancelled order can
+// release a seat without requiring a new static build to recreate the controls.
+const nextDate = firstBookableCourseVariant(product) ?? (!isComingSoonCourse(product)
+  ? product.variants.filter(v => isLaunchCourseVariant(product, v) && isFutureCourseDate(v.startsAt))
+    .sort((a, b) => Date.parse(a.startsAt!) - Date.parse(b.startsAt!))[0]
+  : undefined);
 const dates = (nextDate ? [nextDate] : [])
   .map((v) => ({
     id: v.id,
     title: v.title,
-    available: v.availableForSale && isFutureCourseDate(v.startsAt) && (v.quantityAvailable === null || v.quantityAvailable > 0),
+    available: v.availableForSale && product.course?.capacity !== 0 && isFutureCourseDate(v.startsAt) && (v.quantityAvailable === null || v.quantityAvailable > 0),
     seats: typeof v.quantityAvailable === 'number' ? Math.min(v.quantityAvailable, capacity) : null,
     startsAt: v.startsAt,
     label: v.startsAt ? formatDateTime(v.startsAt, lang) : v.title,
@@ -92,10 +97,10 @@ const labels = {
               disabled={!isMockMode || !date.available}
               aria-pressed={date.id === firstAvailable?.id ? 'true' : 'false'}
               class:list={[
-                'flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors',
+                'flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors disabled:cursor-not-allowed hover:bg-ink/5 aria-pressed:bg-ink aria-pressed:text-cream',
                 date.available
-                  ? 'hover:bg-ink/5 aria-pressed:bg-ink aria-pressed:text-cream'
-                  : 'cursor-not-allowed text-ink/35',
+                  ? ''
+                  : 'text-ink/35',
               ]}
             >
               <span class="flex flex-col gap-0.5">
@@ -151,8 +156,8 @@ const labels = {
   <p data-availability-error role="alert" class="text-[13px] text-brick" hidden></p>
   <button type="button" data-retry class="self-start text-brick underline" hidden>{labels.retry}</button>
   <p class="text-sm leading-relaxed text-ink/65">{lang === 'cs'
-    ? 'Místo je potvrzené až po dokončení objednávky. Vložení do košíku jej nerezervuje.'
-    : 'Your place is confirmed after completing checkout. Adding it to the cart does not reserve a seat.'}</p>
+    ? 'Dokončením objednávky si rezervujete místo a e-mailem dostanete potvrzení. Nyní nic neplatíte; fakturu a platební údaje vám pošleme zvlášť. Vložení do košíku místo nerezervuje.'
+    : 'Complete your order to reserve your seat and receive an email confirmation. No payment is taken now; we will send your invoice and payment details separately. Adding a course to the cart does not reserve a seat.'}</p>
 </div>
 
 <script
@@ -186,6 +191,7 @@ const labels = {
     let selected = dates.find(bookable) ?? null;
     let ready = isMockMode;
     let busy = false;
+    let refreshing = false;
 
     const clampSeats = () => {
       if (!seatsInput) return 1;
@@ -226,7 +232,8 @@ const labels = {
     };
 
     const refreshAvailability = async () => {
-      if (isMockMode) return;
+      if (isMockMode || refreshing || busy) return;
+      refreshing = true;
       ready = false;
       errorEl.hidden = true;
       retryBtn.hidden = true;
@@ -252,6 +259,8 @@ const labels = {
         errorEl.textContent = labels.availabilityError;
         errorEl.hidden = false;
         retryBtn.hidden = false;
+      } finally {
+        refreshing = false;
       }
       syncUI();
     };
@@ -295,9 +304,17 @@ const labels = {
 
     syncUI();
     void refreshAvailability();
-    window.setInterval(() => { if (!busy) syncUI(); }, 30_000);
+    window.setInterval(() => {
+      if (busy || document.visibilityState !== 'visible') return;
+      syncUI();
+      void refreshAvailability();
+    }, 30_000);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !busy) syncUI();
+      if (document.visibilityState === 'visible' && !busy) {
+        syncUI();
+        void refreshAvailability();
+      }
     });
+    window.addEventListener('pageshow', () => { void refreshAvailability(); });
   }
 </script>

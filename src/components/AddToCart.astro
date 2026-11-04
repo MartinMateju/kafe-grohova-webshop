@@ -4,6 +4,8 @@ import { isMockMode } from '../lib/shopify/config';
 import type { Product } from '../lib/shopify';
 import { formatMoney, imageUrl } from '../lib/shopify';
 import { useTranslations, type Lang } from '../i18n/utils';
+import { isManualLatteArtGiftCard } from '../lib/coursePresentation';
+import { VOUCHER_RECIPIENT_MAX_LENGTH, VOUCHER_DEDICATION_MAX_LENGTH } from '../lib/voucherPersonalization';
 
 interface Props {
   product: Product;
@@ -12,6 +14,7 @@ interface Props {
 
 const { product, lang } = Astro.props;
 const t = useTranslations(lang);
+const manualVoucher = isManualLatteArtGiftCard(product);
 
 const hasRealOptions =
   product.options.length > 0 &&
@@ -21,8 +24,8 @@ const variants = product.variants.map((v) => ({
   id: v.id,
   title: v.title,
   available: v.availableForSale,
-  // Native gift cards are digital value, with no tracked seat/item inventory.
-  quantityAvailable: product.isGiftCard ? null : v.quantityAvailable,
+  // Both voucher types are digital; the sale flag remains authoritative.
+  quantityAvailable: product.isGiftCard || manualVoucher ? null : v.quantityAvailable,
   amount: v.price.amount,
   currencyCode: v.price.currencyCode,
   priceLabel: formatMoney(v.price, lang),
@@ -43,12 +46,27 @@ const labels = {
   loading: t('common.loading'),
   availabilityError: t('product.availabilityError'),
   retry: t('product.retry'),
+  recipientRequired: lang === 'cs' ? 'Zadejte prosím jméno obdarovaného.' : 'Please enter the recipient’s name.',
+  personalizationError: lang === 'cs' ? 'Zkontrolujte prosím jméno obdarovaného a délku věnování.' : 'Please check the recipient’s name and dedication length.',
 };
 
 const firstAvailable = variants.find((v) => v.available) ?? variants[0];
 ---
 
 <div class="flex flex-col gap-5" data-add-to-cart>
+  {manualVoucher && <div class="flex flex-col gap-4" data-voucher-personalization>
+    <label class="flex flex-col gap-2 text-sm">
+      <span>{lang === 'cs' ? 'Jméno obdarovaného' : 'Recipient’s name'} <span aria-hidden="true">*</span></span>
+      <input type="text" data-voucher-recipient required maxlength={VOUCHER_RECIPIENT_MAX_LENGTH} autocomplete="off" class="w-full border border-ink/30 bg-transparent px-4 py-3" />
+    </label>
+    <label class="flex flex-col gap-2 text-sm">
+      <span>{lang === 'cs' ? 'Věnování (nepovinné)' : 'Dedication (optional)'}</span>
+      <textarea data-voucher-dedication rows="3" maxlength={VOUCHER_DEDICATION_MAX_LENGTH} class="w-full resize-y border border-ink/30 bg-transparent px-4 py-3"></textarea>
+    </label>
+    <p class="text-sm leading-relaxed text-ink/70">{lang === 'cs'
+      ? 'Pro každého obdarovaného přidejte samostatný poukaz. Poukaz a fakturu vám pošleme e-mailem do 2 hodin po dokončení objednávky.'
+      : 'Add a separate voucher for each recipient. We will email your voucher and invoice within 2 hours after you complete the order.'}</p>
+  </div>}
   {
     hasRealOptions && variants.length > 1 && (
       <div class="flex flex-col gap-2">
@@ -123,20 +141,22 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
   is:inline
   type="application/json"
   data-add-to-cart-data
-  set:html={safeScriptJson({ variants, snapshotBase, labels, lang })}
+  set:html={safeScriptJson({ variants, snapshotBase, labels, lang, manualVoucher })}
 />
 
 <script>
   import { addLine, isMockMode } from '../lib/cart';
   import { getProduct, formatMoney } from '../lib/shopify';
-  import { isLatteArtGiftCard, isLatteArtGiftVariant } from '../lib/coursePresentation';
+  import { isLatteArtGiftCard, isLatteArtGiftVariant, isManualLatteArtGiftCard } from '../lib/coursePresentation';
+  import { createVoucherAttributes } from '../lib/voucherPersonalization';
+  import type { CartLineAttribute } from '../lib/shopify/types';
 
   const root = document.querySelector<HTMLElement>('[data-add-to-cart]');
   const dataEl = document.querySelector<HTMLScriptElement>('[data-add-to-cart-data]');
 
   if (root && dataEl) {
     const data = JSON.parse(dataEl.textContent!);
-    const { snapshotBase, labels, lang } = data;
+    const { snapshotBase, labels, lang, manualVoucher } = data;
     let variants = data.variants;
     const qtyInput = root.querySelector<HTMLInputElement>('[data-qty]')!;
     const addBtn = root.querySelector<HTMLButtonElement>('[data-add]')!;
@@ -144,6 +164,8 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
     const errorEl = root.querySelector<HTMLElement>('[data-availability-error]')!;
     const retryBtn = root.querySelector<HTMLButtonElement>('[data-retry]')!;
     const variantBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-variant]'));
+    const recipientInput = root.querySelector<HTMLInputElement>('[data-voucher-recipient]');
+    const dedicationInput = root.querySelector<HTMLTextAreaElement>('[data-voucher-dedication]');
     let selected = variants.find((v: any) => v.available) ?? variants[0] ?? null;
     let ready = isMockMode;
     let busy = false;
@@ -168,6 +190,8 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
       addBtn.disabled = busy || !available;
       addBtn.textContent = busy ? labels.adding : !ready ? labels.loading : available ? labels.add : labels.soldOut;
       qtyInput.disabled = busy || !available;
+      if (recipientInput) recipientInput.disabled = busy;
+      if (dedicationInput) dedicationInput.disabled = busy;
       root.querySelectorAll<HTMLButtonElement>('[data-qty-up], [data-qty-down]').forEach((button) => {
         button.disabled = busy || !available;
       });
@@ -191,8 +215,8 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
           const current = product?.variants.find((variant) => variant.id === previous.id);
           return current ? {
             id: current.id, title: current.title,
-            available: current.availableForSale && (!isLatteArtGiftCard(product!) || isLatteArtGiftVariant(current)) && (product?.isGiftCard || current.quantityAvailable === null || current.quantityAvailable > 0),
-            quantityAvailable: product?.isGiftCard ? null : current.quantityAvailable, amount: current.price.amount,
+            available: current.availableForSale && (!isLatteArtGiftCard(product!) || isLatteArtGiftVariant(current, product!)) && (product?.isGiftCard || isManualLatteArtGiftCard(product!) || current.quantityAvailable === null || current.quantityAvailable > 0),
+            quantityAvailable: product?.isGiftCard || isManualLatteArtGiftCard(product!) ? null : current.quantityAvailable, amount: current.price.amount,
             currencyCode: current.price.currencyCode, priceLabel: formatMoney(current.price, lang),
           } : { ...previous, available: false };
         });
@@ -222,15 +246,30 @@ const firstAvailable = variants.find((v) => v.available) ?? variants[0];
       qtyInput.value = String(Math.max(1, clampQty() - 1));
     });
     qtyInput.addEventListener('change', clampQty);
+    recipientInput?.addEventListener('input', () => { recipientInput.setCustomValidity(''); });
 
     addBtn.addEventListener('click', async () => {
       if (busy || !ready || !selected?.available) return;
+      let attributes: CartLineAttribute[] | undefined;
+      if (manualVoucher) {
+        recipientInput!.setCustomValidity(recipientInput!.value.trim() ? '' : labels.recipientRequired);
+        if (!recipientInput!.reportValidity() || !dedicationInput!.reportValidity()) return;
+        try {
+          attributes = createVoucherAttributes(recipientInput!.value, dedicationInput!.value);
+        } catch {
+          errorEl.textContent = labels.personalizationError;
+          errorEl.hidden = false;
+          return;
+        }
+      }
+      errorEl.hidden = true;
       busy = true;
       syncUI();
       const success = await addLine({
         ...snapshotBase, merchandiseId: selected.id, variantTitle: selected.title,
         amount: selected.amount, currencyCode: selected.currencyCode,
         quantityAvailable: selected.quantityAvailable,
+        ...(attributes ? { attributes } : {}),
       }, clampQty());
       if (success) {
         busy = false;

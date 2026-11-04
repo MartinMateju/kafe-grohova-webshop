@@ -3,7 +3,7 @@ import test from 'node:test';
 import { mockCourses, mockMerch } from '../src/lib/shopify/mock';
 import {
   firstBookableCourseVariant, isComingSoonCourse, isComingSoonCourseHandle,
-  isLatteArtGiftCard, resolveLatteArtGiftCard, LATTE_ART_START,
+  isLatteArtGiftCard, isManualLatteArtGiftCard, isLatteArtCourse, resolveLatteArtGiftCard, LATTE_ART_START,
 } from '../src/lib/coursePresentation';
 import type { Product } from '../src/lib/shopify/types';
 
@@ -82,15 +82,33 @@ test('an unrelated course selects just its earliest actual bookable date', () =>
   assert.equal(firstBookableCourseVariant(product, beforeLaunch)?.id, 'earliest');
 });
 
-test('only explicitly linked native Shopify gifts qualify for the course voucher', () => {
+test('manual vouchers require an explicit tag and remain separate from native cards and courses', () => {
   const gift = courseGift();
+  assert.equal(gift.isGiftCard, false);
+  assert.equal(isManualLatteArtGiftCard(gift), true);
   assert.equal(isLatteArtGiftCard(gift), true);
-  assert.equal(isLatteArtGiftCard({ ...gift, isGiftCard: false }), false);
-  assert.equal(resolveLatteArtGiftCard([{ ...gift, isGiftCard: false }]), null);
+  const untagged = { ...gift, tags: ['gift'] };
+  assert.equal(isLatteArtGiftCard(untagged), false, 'An ordinary product handle alone must not enable voucher checkout');
+  assert.equal(resolveLatteArtGiftCard([untagged]), null);
   const generic = mockMerch('cs').find(product => product.handle === 'darkovy-poukaz')!;
   assert.equal(resolveLatteArtGiftCard([generic]), null);
   assert.equal(isLatteArtGiftCard({ ...gift, handle: 'custom-live-handle' }), true);
-  assert.equal(isComingSoonCourse({ ...gift, tags: ['sensory', 'coming-soon'] }), false);
+  const tagged = { ...gift, tags: [...gift.tags, 'latte-art', 'sensory', 'coming-soon'] };
+  assert.equal(isComingSoonCourse(tagged), false);
+  assert.equal(isLatteArtCourse(tagged), false);
+  assert.equal(firstBookableCourseVariant(tagged, beforeLaunch), null);
+  assert.equal(resolveLatteArtGiftCard([{ ...gift, isGiftCard: true }])?.isGiftCard, true, 'Existing explicit native gift cards retain their identity');
+});
+
+test('manual course vouchers reject physical or unknown shipping variants', () => {
+  for (const requiresShipping of [true, undefined]) {
+    const gift = courseGift();
+    gift.variants[0].requiresShipping = requiresShipping;
+    assert.equal(resolveLatteArtGiftCard([gift]), null);
+  }
+  const gift = courseGift();
+  gift.variants[0].quantityAvailable = 0;
+  assert(resolveLatteArtGiftCard([gift]), 'Untracked digital vouchers use availableForSale rather than seat inventory');
 });
 
 test('course voucher filters actual CZK2100 variants without relabeling another denomination', () => {

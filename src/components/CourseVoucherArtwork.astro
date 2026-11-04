@@ -4,8 +4,8 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const cs = lang === 'cs';
 ---
-<figure class="course-voucher-art" aria-label={cs ? 'Ukázka dárkového poukazu na Latte art pro začátečníky, 2 100 Kč za osobu. Bez platného kódu.' : 'Design preview of the beginner latte art voucher, CZK 2,100 per person. No redeemable code.'}>
-  <div class="voucher-paper"><img class="voucher-wordmark" src="/brand/logo-black.svg" width="465" height="182" alt="Kafe Grohova" /><span class="voucher-label">{cs ? 'Dárkový poukaz' : 'Gift voucher'}</span><strong>Latte<br />art.</strong><span class="voucher-for">{cs ? 'Pro začátečníky.' : 'For beginners.'}</span><div class="voucher-value"><span>2 100 Kč</span><span>{cs ? 'na osobu' : 'per person'}</span></div><small>{cs ? 'UKÁZKA / BEZ PLATNÉHO KÓDU' : 'PREVIEW / NO REDEEMABLE CODE'}</small></div>
+<figure class="course-voucher-art" aria-label={cs ? 'Ukázka dárkového poukazu na Latte art pro začátečníky, 2 100 Kč za osobu. Není platným poukazem.' : 'Design preview of the beginner latte art voucher, CZK 2,100 per person. Not a valid voucher.'}>
+  <div class="voucher-paper"><img class="voucher-wordmark" src="/brand/logo-black.svg" width="465" height="182" alt="Kafe Grohova" /><span class="voucher-label">{cs ? 'Dárkový poukaz' : 'Gift voucher'}</span><strong>Latte<br />art.</strong><span class="voucher-for">{cs ? 'Pro začátečníky.' : 'For beginners.'}</span><div class="voucher-value"><span>2 100 Kč</span><span>{cs ? 'na osobu' : 'per person'}</span></div><small>{cs ? 'UKÁZKA / NEPLATNÝ POUKAZ' : 'PREVIEW / NOT A VALID VOUCHER'}</small></div>
   <img class="voucher-photo" src="/photos/latte-on-table.webp" width="960" height="1440" alt="" loading="lazy" />
 </figure>
 <style>

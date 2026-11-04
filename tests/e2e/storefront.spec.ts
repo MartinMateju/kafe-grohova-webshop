@@ -194,7 +194,7 @@ test('the generic monetary gift card retains its sample PDF in both languages', 
   }
 });
 
-test('the dedicated latte-art voucher shows an honest preview and adds its own 2100 CZK variant', async ({ page }) => {
+test('the manual latte-art voucher requires a recipient and keeps the dedication with its 2100 CZK cart line', async ({ page }) => {
   for (const lang of ['cs', 'en']) {
     await page.goto(`/${lang}/gift-cards/`);
     const card = page.locator(`[data-gift-card="${courseGift.handle}"]`);
@@ -205,14 +205,21 @@ test('the dedicated latte-art voucher shows an honest preview and adds its own 2
     await expect(page).toHaveURL(new RegExp(`/${lang}/gift-cards/${courseGift.handle}/?$`));
     const preview = page.locator('figure.course-voucher-art');
     await expect(preview).toBeVisible();
-    await expect(preview).toContainText(lang === 'cs' ? 'UKÁZKA / BEZ PLATNÉHO KÓDU' : 'PREVIEW / NO REDEEMABLE CODE');
+    await expect(preview).toContainText(lang === 'cs' ? 'UKÁZKA / NEPLATNÝ POUKAZ' : 'PREVIEW / NOT A VALID VOUCHER');
     await expect(page.locator('[data-product-price]')).toContainText(/2[\s,]100/);
     await expect(page.locator('[data-date], [data-book]')).toHaveCount(0);
     await expect(page.locator('[data-gift-demo]')).toContainText(lang === 'cs' ? 'vypnuté' : 'disabled');
     await page.locator('[data-add]').click();
+    await expect(page.locator('[data-voucher-recipient]')).toBeFocused();
+    await expect(page.locator('[data-cart-body] [data-line]')).toHaveCount(0);
+    await page.locator('[data-voucher-recipient]').fill('Jana Nováková');
+    await page.locator('[data-voucher-dedication]').fill('Všechno nejlepší, Jani!');
+    await page.locator('[data-add]').click();
     const rows = page.locator('[data-cart-body] [data-line]');
     await expect(rows).toHaveCount(1);
     await expect(rows).toContainText(courseGift.title[lang]);
+    await expect(rows).toContainText('Jana Nováková');
+    await expect(rows).toContainText('Všechno nejlepší, Jani!');
     await expect(rows.locator('[data-line-quantity]')).toHaveText('1');
     await expect(page.locator('[data-cart-subtotal]')).toContainText(/2[\s,]100/);
     await expect(page.locator('[data-cart-checkout]')).toBeDisabled();

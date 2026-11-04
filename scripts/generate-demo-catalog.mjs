@@ -66,7 +66,7 @@ const courses = [];
 const imageManifest = [];
 const lang = values.lang;
 const products = catalog.products.filter(product =>
-  product.productType !== 'Gift Card' && (!values['courses-only'] || Boolean(product.course)),
+  product.productType !== 'Gift Card' && !product.tags.includes('course-voucher:latte-art') && (!values['courses-only'] || Boolean(product.course)),
 );
 for (const product of products) {
   const options = new Set();

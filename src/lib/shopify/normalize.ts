@@ -7,6 +7,8 @@ import type {
   ShopImage,
   Variant,
 } from './types';
+import { isManualLatteArtGiftCard } from '../coursePresentation';
+import { VOUCHER_RECIPIENT_KEY, VOUCHER_DEDICATION_KEY } from '../voucherPersonalization';
 
 type Raw = Record<string, any>;
 
@@ -52,6 +54,7 @@ export function normalizeVariant(raw: Raw): Variant {
     id: raw.id,
     title: raw.title,
     availableForSale: Boolean(raw.availableForSale),
+    ...(typeof raw.requiresShipping === 'boolean' ? { requiresShipping: raw.requiresShipping } : {}),
     quantityAvailable:
       typeof raw.quantityAvailable === 'number' ? raw.quantityAvailable : null,
     price: raw.price,
@@ -124,7 +127,13 @@ export function normalizeCart(raw: Raw): Cart {
     const product = variant?.product;
     const courseStartsAt = metafieldValue(variant?.startsAt);
     const isGiftCard = product?.isGiftCard === true;
-    const isCourse = !isGiftCard && (product?.productType?.toLowerCase() === 'course' ||
+    const isManualVoucher = isManualLatteArtGiftCard({
+      handle: product?.handle ?? '', tags: Array.isArray(product?.tags) ? product.tags : [], isGiftCard,
+    });
+    const attributes = Array.isArray(line.attributes) ? line.attributes.filter((attribute: Raw) =>
+      attribute && [VOUCHER_RECIPIENT_KEY, VOUCHER_DEDICATION_KEY].includes(attribute.key) &&
+      typeof attribute.value === 'string').map(({ key, value }: Raw) => ({ key, value })) : [];
+    const isCourse = !isGiftCard && !isManualVoucher && (product?.productType?.toLowerCase() === 'course' ||
       product?.tags?.some((tag: string) => tag.toLowerCase() === 'course') ||
       courseStartsAt !== null || metafieldValue(product?.courseDuration) !== null);
     return {
@@ -135,6 +144,8 @@ export function normalizeCart(raw: Raw): Cart {
       variantTitle: line.merchandise?.title ?? '',
       productHandle: line.merchandise?.product?.handle ?? '',
       isGiftCard,
+      ...(isManualVoucher ? { isManualVoucher: true } : {}),
+      ...(attributes.length ? { attributes } : {}),
       ...(isCourse ? { courseStartsAt } : {}),
       image: image(line.merchandise?.image),
       unitPrice: line.cost?.amountPerQuantity,
