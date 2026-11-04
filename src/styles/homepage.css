@@ -74,11 +74,11 @@ a.object-item:hover img { transform:scale(1.025); }
 .artist-list > span { white-space:nowrap; }
 .home-gift { display:grid; grid-template-columns:1fr 1fr; gap:70px; padding:95px var(--kg-gutter); align-items:center; }
 .gift-copy h2 { margin:36px 0 34px; }
-.gift-title { font-size: clamp(76px,8.1vw,130px); line-height: 1; }
-.gift-title-lead { display: block; margin-bottom: .7em; font-size: .17em; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
-.gift-title em { display: block; letter-spacing: -.055em; }
-.gift-title em > span { display: block; }
-.gift-title em > span:last-child { margin: .01em 0 0 15%; font-size: 1.08em; }
+.gift-title { font-size: clamp(76px,8.1vw,130px); line-height: 1.06; }
+.gift-title-lead { display: block; font-size: .8em; font-weight: 700; letter-spacing: -.055em; white-space: nowrap; }
+.gift-title-reply { display: flex; align-items: baseline; gap: .13em; margin: .08em 0 0 6%; }
+.gift-title-bridge { font-size: .25em; font-weight: 500; letter-spacing: -.025em; white-space: nowrap; }
+.home-editorial .gift-title-reply em { display: block; font-size: 1.06em; font-weight: 500; line-height: 1.1; letter-spacing: -.055em; }
 .gift-copy > p:not(.section-kicker) { max-width:39ch; }
 .gift-price { display:block; margin-top:25px; font-size:20px; font-weight:600; letter-spacing:-.03em; }
 .gift-visual { position:relative; padding:20px 0 25px 45px; }

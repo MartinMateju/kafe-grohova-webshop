@@ -76,7 +76,14 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
     </section>
 
     {GIFT_CARDS_ENABLED && <section class="home-gift" aria-labelledby="gift-title">
-      <div class="gift-copy"><p class="section-kicker">05 / {c('Pro někoho vašeho', 'For someone you love')}</p><h2 id="gift-title" class="gift-title"><span class="gift-title-lead">{c('Darujte', 'Give them')}</span><em><span>{c('první', 'a first')}</span>{' '}<span>{c('srdce.', 'heart.')}</span></em></h2><p>{c('Dárkový poukaz na latte art pro začátečníky. Dvě a půl hodiny nových zkušeností, kávy a vlastních malých úspěchů.', 'A gift voucher for beginner latte art. Two and a half hours of new skills, coffee, and little victories.')}</p><span class="gift-price">{c('2 100 Kč / osoba', 'CZK 2,100 / person')}</span><a class="gift-tile home-text-link" href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')} ↗</a></div>
+      <div class="gift-copy">
+        <p class="section-kicker">05 / {c('Pro někoho vašeho', 'For someone you love')}</p>
+        <h2 id="gift-title" class="gift-title">
+          <span class="gift-title-lead">{c('Darujte', 'Give them')}</span>{' '}
+          <span class="gift-title-reply"><span class="gift-title-bridge">{c('první', 'a first')}</span>{' '}<em>{c('srdce.', 'heart.')}</em></span>
+        </h2>
+        <p>{c('Dárkový poukaz na latte art pro začátečníky. Dvě a půl hodiny nových zkušeností, kávy a vlastních malých úspěchů.', 'A gift voucher for beginner latte art. Two and a half hours of new skills, coffee, and little victories.')}</p><span class="gift-price">{c('2 100 Kč / osoba', 'CZK 2,100 / person')}</span><a class="gift-tile home-text-link" href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')} ↗</a>
+      </div>
       <div class="gift-visual"><img src="/photos/latte-on-table.webp" width="960" height="1440" alt={c('Latte art v keramickém šálku na stole.', 'Latte art in a ceramic cup on a table.')} loading="lazy" /><div class="gift-paper" aria-hidden="true"><img src="/brand/logo-black.svg" width="120" height="47" alt="" /><span class="section-kicker">Gift a little Grohova</span><strong>LATTE<br /><em>ART.</em></strong><span class="section-kicker">2 100 Kč · 1 {c('osoba', 'person')}</span></div></div>
     </section>}
   </div>
