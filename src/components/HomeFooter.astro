@@ -12,8 +12,8 @@ const map = 'https://www.google.com/maps/search/?api=1&query=Kafe+Grohova+Grohov
   <div class="footer-grid">
     <a href={localePath(lang)} aria-label={c('Kafe Grohova — domů', 'Kafe Grohova — home')}><img class="footer-logo" src="/brand/logo-white.svg" width="160" height="63" alt="Kafe Grohova" loading="lazy" /></a>
     <div><p class="section-kicker">{c('Tady jsme doma', 'Our place')}</p><p>Grohova 102/3<br />602 00 Brno</p><a href={map} target="_blank" rel="noopener noreferrer">{c('Najít cestu', 'Get directions')} ↗</a></div>
-    <div><p class="section-kicker">{c('Stavte se', 'Come over')}</p><p>{c('Pondělí–pátek', 'Monday–Friday')}<br />07:00–17:00</p><a href="https://instagram.com/kafegrohova" target="_blank" rel="noopener noreferrer">Instagram ↗</a></div>
-    <div><p class="section-kicker">{c('Ještě něco', 'A little more')}</p><a href={localePath(lang, '/courses')}>{c('Baristické kurzy', 'Barista courses')}</a>{GIFT_CARDS_ENABLED && <a href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')}</a>}<a href={localePath(lang, '/blog')}>{c('Zápisky z Grohovy', 'Grohova journal')}</a><a href={localePath(lang, '/contact')}>{c('Kontakt', 'Contact')}</a></div>
+    <div><p class="section-kicker">{c('Stavte se', 'Come over')}</p><p>{c('Pondělí–pátek', 'Monday–Friday')}<br />07:00–17:00</p><p>{c('Sobota–neděle', 'Saturday–Sunday')}<br />10:00–15:00</p><a href="https://instagram.com/kafegrohova" target="_blank" rel="noopener noreferrer">Instagram ↗</a></div>
+    <div><p class="section-kicker">{c('Ještě něco', 'A little more')}</p><a href={localePath(lang, '/courses')}>{c('Baristické kurzy', 'Barista courses')}</a>{GIFT_CARDS_ENABLED && <a href={localePath(lang, '/gift-cards')}>{c('Darovat kurz', 'Gift a course')}</a>}<a href={localePath(lang, '/blog')}>Blog</a><a href={localePath(lang, '/contact')}>{c('Kontakt', 'Contact')}</a></div>
   </div>
   <div class="footer-bottom"><span>© {new Date().getFullYear()} Kafe Grohova</span><span lang="en">Coffee. Ceramics. Brno.</span><a href="#main">{c('Zpátky nahoru', 'Back to top')} ↑</a></div>
 </footer>
