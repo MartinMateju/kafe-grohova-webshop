@@ -8,7 +8,9 @@ export function getStaticPaths() {
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
 const email = 'ahoj@kafegrohova.cz';
-const hours = lang === 'cs' ? 'pondělí—pátek  7:00—17:00' : 'Monday—Friday  7:00—17:00';
+const hours = lang === 'cs'
+  ? ['Pondělí–pátek  07:00–17:00', 'Sobota–neděle  10:00–15:00']
+  : ['Monday–Friday  07:00–17:00', 'Saturday–Sunday  10:00–15:00'];
 const mapsUrl = 'https://maps.google.com/?q=Grohova+102/3,+602+00+Brno';
 const copy = lang === 'cs' ? {
   title: 'Stavte se.', second: 'Nebo napište.',
@@ -45,7 +47,7 @@ const copy = lang === 'cs' ? {
       </div>
       <div>
         <h2 class="section-kicker">{t('contact.openingHours')}</h2>
-        <p>{hours}</p>
+        {hours.map((line) => <p>{line}</p>)}
       </div>
       <div>
         <h2 class="section-kicker">E-mail</h2>
