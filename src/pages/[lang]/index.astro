@@ -36,8 +36,8 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
       <div class="home-section-label section-kicker"><span>01 / Kafe Grohova</span><span>{c('Místo s vlastním rytmem', 'A place with its own rhythm')}</span></div>
       <div class="intro-grid">
         <h2 id="intro-title" class="intro-title">
-          <span class="intro-lead"><span>{c('Kafe', 'Coffee')}</span>{' '}<span class="intro-aside">{c('do ruky.', 'in hand.')}</span></span>
-          <em>{c('Město pod kůží.', 'City at heart.')}</em>
+          <span class="intro-lead">{c('Mimo dav.', 'Offbeat.')}</span>{' '}
+          <span class="intro-reply"><span>{c('V centru', 'Right in')}</span>{' '}<em>{c('dění.', 'the mix.')}</em></span>
         </h2>
         <div class="intro-copy"><p>{c('Ranní espresso. Známá tvář za barem. Hrnek, který není jako ostatní. Jsme Kafe Grohova — malý espresso bar a store v Brně, kde mají dobré věci svoje místo.', 'Morning espresso. A familiar face behind the bar. A cup like no other. We are Kafe Grohova — a small espresso bar and store in Brno, with a place for the good things.')}</p><a class="home-text-link" href={localePath(lang, '/contact')}>{c('Potkáme se na Grohově', 'Meet us on Grohova')} ↗</a></div>
       </div>
@@ -59,7 +59,13 @@ const artists = ['The Cure', 'Smashing Pumpkins', 'R.E.M.', 'Blur', 'The Stone R
 
     <section class="home-objects" id="shop" aria-labelledby="objects-title">
       <div class="home-section-label section-kicker"><span>03 / Espresso bar & store</span><span>{c('Káva. Keramika. Každodennost.', 'Coffee. Ceramics. Everyday life.')}</span></div>
-      <div class="objects-heading"><h2 id="objects-title" class="objects-title"><span>{c('Dobrý věci.', 'Good things.')}</span><em>{c('Na každý den.', 'For every day.')}</em></h2><p>{c('Máme rádi věci, na kterých je vidět lidská ruka. Šálky s charakterem. Kávu, ke které se vracíte. Prohlédněte si je naživo u nás na Grohově.', 'We like things with a human touch. Cups with character. Coffee you come back to. Come and see them in person on Grohova.')}</p></div>
+      <div class="objects-heading">
+        <h2 id="objects-title" class="objects-title">
+          <span class="objects-anchor"><span>{c('DOBRÝ', 'GOOD')}</span>{' '}<span>{c('VĚCI.', 'THINGS.')}</span></span>{' '}
+          <em class="objects-reply"><span>{c('Žádný', 'No')}</span>{' '}<span>drama.</span></em>
+        </h2>
+        <p>{c('Máme rádi věci, na kterých je vidět lidská ruka. Šálky s charakterem. Kávu, ke které se vracíte. Prohlédněte si je naživo u nás na Grohově.', 'We like things with a human touch. Cups with character. Coffee you come back to. Come and see them in person on Grohova.')}</p>
+      </div>
       <div class="object-grid">{categories.map(item => <Category data-home-category={item.key} class="object-item" href={MERCH_ENABLED ? localePath(lang, '/store') : undefined}><div class="object-image"><img src={item.src} width={item.width} height={item.height} alt={item.alt} loading="lazy" /></div><p class="section-kicker">{item.label}</p><h3>{item.title}</h3></Category>)}</div>
     </section>
 
