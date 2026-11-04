@@ -15,12 +15,12 @@
 .home-intro,.home-objects { padding: 80px var(--kg-gutter) 96px; }
 .home-section-label { display: flex; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid currentColor; }
 .intro-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 70px; align-items: end; margin-top: 65px; }
-/* Poster-like compositions: a bold anchor, a quieter aside, an italic reply. */
+/* Each heading has a natural reading order and its own poster composition. */
 .intro-title,.objects-title,.gift-title { min-width: 0; font-weight: 700; letter-spacing: -.065em; }
-.intro-title { font-size: clamp(84px,10vw,160px); line-height: .95; }
-.intro-lead { display: flex; align-items: baseline; gap: .16em; }
-.intro-aside { font-size: .18em; font-weight: 500; letter-spacing: -.02em; white-space: nowrap; }
-.intro-title > em { display: block; margin: .16em 0 0 8%; font-size: .48em; letter-spacing: -.055em; line-height: 1.15; }
+.intro-title { font-size: clamp(70px,8.6vw,138px); line-height: 1.04; }
+.intro-lead { display: block; font-weight: 800; letter-spacing: -.07em; word-spacing: .035em; white-space: nowrap; }
+.home-editorial .intro-reply { display: block; margin: .06em 0 0 7%; font-size: .95em; font-weight: 500; line-height: 1.15; letter-spacing: -.055em; white-space: nowrap; }
+.home-editorial .intro-reply:lang(en) { font-size: .56em; }
 .intro-copy { max-width: 44ch; padding-bottom: 5px; }
 .intro-copy p,.objects-heading > p,.gift-copy > p:not(.section-kicker) { font-size: 17px; line-height: 1.65; }
 .home-text-link { display: inline-block; margin-top: 28px; padding-bottom: 8px; border-bottom: 1px solid currentColor; font-size: 13px; }
@@ -48,9 +48,13 @@
 .home-button { margin-top:27px; width:100%; display:flex; justify-content:space-between; gap:20px; padding:17px 20px; background:var(--kg-paper); color:var(--kg-ink); font-size:13px; }
 .home-objects { --kg-italic-color: var(--kg-olive); }
 .objects-heading { display:grid; grid-template-columns: 1.5fr 1fr; gap:65px; margin:55px 0; align-items:end; }
-.objects-title { font-size: clamp(60px,7.4vw,118px); line-height: 1.02; }
-.objects-title > span { display: block; }
-.objects-title > em { display: block; width: fit-content; margin: .18em 0 0 auto; font-size: .57em; line-height: 1.15; letter-spacing: -.045em; }
+.objects-title { display: flex; align-items: flex-end; gap: .2em; font-size: clamp(64px,7.8vw,124px); line-height: 1.02; }
+.objects-anchor { display: block; font-weight: 800; letter-spacing: -.06em; }
+.objects-anchor > span { display: block; }
+.home-editorial .objects-reply { display: block; padding-bottom: .06em; font-size: .47em; font-weight: 500; line-height: 1.02; letter-spacing: -.055em; }
+.objects-reply > span { display: block; }
+.objects-reply > span:last-child { margin-left: .2em; }
+.objects-title:lang(en) { font-size: clamp(58px,6.9vw,110px); }
 .objects-heading > p { max-width:39ch; }
 .object-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
 .object-item { min-width:0; }
@@ -70,11 +74,11 @@ a.object-item:hover img { transform:scale(1.025); }
 .artist-list > span { white-space:nowrap; }
 .home-gift { display:grid; grid-template-columns:1fr 1fr; gap:70px; padding:95px var(--kg-gutter); align-items:center; }
 .gift-copy h2 { margin:36px 0 34px; }
-.gift-title { font-size: clamp(76px,8.1vw,130px); line-height: 1; }
-.gift-title-lead { display: block; margin-bottom: .7em; font-size: .17em; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
-.gift-title em { display: block; letter-spacing: -.055em; }
-.gift-title em > span { display: block; }
-.gift-title em > span:last-child { margin: .01em 0 0 15%; font-size: 1.08em; }
+.gift-title { font-size: clamp(76px,8.1vw,130px); line-height: 1.06; }
+.gift-title-lead { display: block; font-size: .8em; font-weight: 700; letter-spacing: -.055em; white-space: nowrap; }
+.gift-title-reply { display: flex; align-items: baseline; gap: .13em; margin: .08em 0 0 6%; }
+.gift-title-bridge { font-size: .25em; font-weight: 500; letter-spacing: -.025em; white-space: nowrap; }
+.home-editorial .gift-title-reply em { display: block; font-size: 1.06em; font-weight: 500; line-height: 1.1; letter-spacing: -.055em; }
 .gift-copy > p:not(.section-kicker) { max-width:39ch; }
 .gift-price { display:block; margin-top:25px; font-size:20px; font-weight:600; letter-spacing:-.03em; }
 .gift-visual { position:relative; padding:20px 0 25px 45px; }
@@ -87,9 +91,10 @@ a.object-item:hover img { transform:scale(1.025); }
 @media(max-width:1000px) { .hero { padding-top:128px; } .intro-grid { gap:35px; } .home-course { grid-template-columns:.9fr 1fr; } .course-photo { min-height:690px; } .course-copy { padding:40px 28px; } .course-copy h2 { font-size:clamp(62px,8.5vw,88px); } .objects-heading { gap:35px; } .objects-heading > p { max-width:32ch; } .home-gift { gap:35px; } .life-photos { gap:20px; } }
 @media(min-width:601px) and (max-width:900px) {
  .intro-grid,.objects-heading { grid-template-columns: 1fr; gap: 32px; }
- .intro-title { font-size: 15vw; max-width: 660px; }
+ .intro-title { font-size: 13vw; max-width: 660px; }
  .intro-copy,.objects-heading > p { max-width: 48ch; margin-left: auto; }
- .objects-title { max-width: 640px; font-size: 11vw; }
+ .objects-title { max-width: 640px; font-size: 12vw; }
+ .objects-title:lang(en) { font-size: 10.6vw; }
  .gift-title { font-size: 9.8vw; }
 }
 @media(max-width:600px) {
@@ -101,8 +106,8 @@ a.object-item:hover img { transform:scale(1.025); }
  .home-intro,.home-objects { padding-top:45px; padding-bottom:55px; }
  .home-section-label { font-size:9px; } .home-section-label > span:last-child { text-align:right; }
  .intro-grid { grid-template-columns:1fr; gap:28px; margin-top:35px; }
- .intro-title { font-size:23vw; } .intro-title > em { margin-left:5%; font-size:.5em; } .intro-copy { max-width:100%; }
- .objects-title { font-size:15.8vw; } .objects-title > em { font-size:.6em; }
+ .intro-title { font-size:20vw; } .home-editorial .intro-reply { margin-left:4%; font-size:.88em; } .home-editorial .intro-reply:lang(en) { font-size:.56em; } .intro-copy { max-width:100%; }
+ .objects-title { font-size:17.5vw; gap:.18em; } .objects-title:lang(en) { font-size:16.2vw; }
  .gift-title { font-size:23vw; }
  .intro-copy p,.objects-heading > p,.gift-copy > p:not(.section-kicker) { font-size:15px; }
  .life-photos { grid-template-columns:1fr 1fr; gap:25px 16px; margin-top:40px; }

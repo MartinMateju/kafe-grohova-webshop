@@ -35,7 +35,7 @@ npm run preview             # serve the static production output locally
 
 Italic text always uses a contrasting brand color: terracotta on paper by default, olive in the objects section, and honey on dark blue or ink. The course panel uses olive italic text on a small paper highlight because the other palette colors do not have enough contrast directly on terracotta. The shared rule covers `em`, `i`, and `.italic`, including Shopify rich text; use `--kg-italic-color` and `--kg-italic-background` when adding a different surface.
 
-Homepage headings use distinct poster compositions within that system: an oversized introductory word with a small baseline phrase, three progressively aligned course steps, a right-aligned italic reply in the objects section, and a staggered two-line gift title. Keep each as one semantic heading, preserve visible accents and descenders, and adapt both Czech and English at mobile and tablet widths. Only the course highlight rotates; its text stays level.
+Homepage headings use distinct poster compositions within that system: the bold “Nejdem” lead with a terracotta italic “s davem.”, three progressively aligned course steps, the stacked uppercase “DOBRÝ VĚCI.” paired with an olive “Žádný drama.” aside, and a bold “Darujte” gift lead above a small “první” and oversized terracotta italic “srdce.”. Keep each as one semantic heading, preserve visible accents and descenders, and adapt both Czech and English at mobile and tablet widths. Only the course highlight rotates; its text stays level.
 
 ## Dedicated Shopify connection
 
