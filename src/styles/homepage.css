@@ -20,6 +20,7 @@
 .intro-title { font-size: clamp(64px,7.2vw,115px); line-height: 1.04; }
 .intro-lead { display: block; font-weight: 800; letter-spacing: -.07em; word-spacing: .035em; white-space: nowrap; }
 .home-editorial .intro-reply { display: block; margin: .14em 0 0 6%; font-size: .9em; font-weight: 500; line-height: 1.15; letter-spacing: -.055em; white-space: nowrap; }
+.home-editorial .intro-reply:lang(en) { font-size: .64em; }
 .intro-copy { max-width: 44ch; padding-bottom: 5px; }
 .intro-copy p,.objects-heading > p,.gift-copy > p:not(.section-kicker) { font-size: 17px; line-height: 1.65; }
 .home-text-link { display: inline-block; margin-top: 28px; padding-bottom: 8px; border-bottom: 1px solid currentColor; font-size: 13px; }
@@ -50,7 +51,7 @@
 .objects-title { display: flex; align-items: flex-end; gap: .2em; font-size: clamp(64px,7.8vw,124px); line-height: 1.02; }
 .objects-anchor { display: block; font-weight: 800; letter-spacing: -.06em; }
 .objects-anchor > span { display: block; }
-.home-editorial .objects-reply { display: block; padding-bottom: .06em; font-size: .47em; font-weight: 500; line-height: 1.02; letter-spacing: -.055em; }
+.home-editorial .objects-reply { display: block; padding-bottom: .06em; font-size: .47em; font-weight: 500; line-height: 1.12; letter-spacing: -.055em; }
 .objects-reply > span { display: block; }
 .objects-reply > span:last-child { margin-left: .2em; }
 .objects-title:lang(en) { font-size: clamp(58px,6.9vw,110px); }
@@ -105,7 +106,7 @@ a.object-item:hover img { transform:scale(1.025); }
  .home-intro,.home-objects { padding-top:45px; padding-bottom:55px; }
  .home-section-label { font-size:9px; } .home-section-label > span:last-child { text-align:right; }
  .intro-grid { grid-template-columns:1fr; gap:28px; margin-top:35px; }
- .intro-title { font-size:15.4vw; } .intro-title:lang(en) { font-size:14.5vw; } .home-editorial .intro-reply { margin-left:4%; } .intro-copy { max-width:100%; }
+ .intro-title { font-size:14.2vw; } .intro-title:lang(en) { font-size:13.2vw; } .home-editorial .intro-reply { margin-left:4%; } .intro-copy { max-width:100%; }
  .objects-title { font-size:17.5vw; gap:.18em; } .objects-title:lang(en) { font-size:16.2vw; }
  .gift-title { font-size:23vw; }
  .intro-copy p,.objects-heading > p,.gift-copy > p:not(.section-kicker) { font-size:15px; }
