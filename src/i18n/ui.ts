@@ -99,7 +99,7 @@ export const ui = {
     'cart.increase': 'Zvýšit množství',
     'cart.shippingNote': 'Doprava a daně se spočítají u pokladny.',
     'cart.courseNote': 'Místo na kurzu rezervujeme po dokončení objednávky. Fakturu a platební údaje pošleme e-mailem.',
-    'cart.digitalNote': 'Nyní nic neplatíte. Dokončená objednávka rezervuje místo na kurzu; fakturu pošleme e-mailem. Poukaz na latte art s fakturou posíláme do 2 hodin od objednání.',
+    'cart.digitalNote': 'Nyní nic neplatíte. Objednávka kurzu rezervuje místo na kurzu; fakturu pošleme e-mailem. Poukaz na latte art s fakturou posíláme do 2 hodin od objednání.',
     'cart.close': 'Zavřít košík',
     'cart.mockNotice':
       'Demo režim — termíny a ceny jsou ukázkové. Pokladna je vypnutá.',
@@ -223,7 +223,7 @@ export const ui = {
     'cart.increase': 'Increase quantity',
     'cart.shippingNote': 'Shipping and taxes are calculated at checkout.',
     'cart.courseNote': 'Your course seat is reserved after completing the order. We will email your invoice and payment details.',
-    'cart.digitalNote': 'No payment is taken now. Completing the order reserves your course seat; we will email the invoice. Latte art vouchers and invoices are emailed within 2 hours of ordering.',
+    'cart.digitalNote': 'No payment is taken now. A course order reserves your course seat; we will email the invoice. Latte art vouchers and invoices are emailed within 2 hours of ordering.',
     'cart.close': 'Close cart',
     'cart.mockNotice': 'Demo mode — dates and prices are examples. Checkout is disabled.',
 
