@@ -52,6 +52,7 @@
 .objects-anchor { display: block; font-weight: 800; letter-spacing: -.06em; }
 .objects-anchor > span { display: block; }
 .home-editorial .objects-reply { display: block; padding-bottom: .06em; font-size: .47em; font-weight: 500; line-height: 1.12; letter-spacing: -.055em; }
+.home-editorial .objects-reply:lang(en) { font-size: .38em; white-space: nowrap; }
 .objects-reply > span { display: block; }
 .objects-reply > span:last-child { margin-left: .2em; }
 .objects-title:lang(en) { font-size: clamp(58px,6.9vw,110px); }
