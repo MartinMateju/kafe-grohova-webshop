@@ -10,8 +10,8 @@
         "en": "LATTE ART FOR BEGINNERS"
       },
       "descriptionHtml": {
-        "cs": "<p>Ukázkový tříhodinový kurz latte art pro začátečníky, maximálně pro dva účastníky. Od základů si vyzkoušíte práci s mlékem, napěňování a nalévání jednoduchého srdce. Předchozí zkušenosti nejsou potřeba.</p>",
-        "en": "<p>A sample three-hour beginner latte art class for a maximum of two participants. Start with milk handling, steaming and pouring a simple heart. No previous experience is required.</p>"
+        "cs": "<p>Latte art pro začátečníky: 25. listopadu 2026 od 17:00 do 19:30, maximálně pro dva účastníky. Vyzkoušíte práci s mlékem, napěňování a nalévání jednoduchého srdce. Cena je 2 100 Kč za osobu.</p>",
+        "en": "<p>Beginner latte art: 25 November 2026, 17:00–19:30, for a maximum of two participants. Practise milk handling, steaming and pouring a simple heart. CZK 2,100 per person.</p>"
       },
       "productType": "Course",
       "tags": [
@@ -35,7 +35,7 @@
         "en": "Date"
       },
       "course": {
-        "durationMinutes": 180,
+        "durationMinutes": 150,
         "capacity": 2,
         "level": {
           "cs": "Začátečník",
@@ -62,20 +62,13 @@
         {
           "id": "gid://shopify/ProductVariant/mock-m1",
           "sku": "DEMO-LATTE-ART-1",
-          "price": 1800,
+          "price": 2100,
           "quantity": 2,
           "value": null,
-          "offsetDays": 10,
-          "localHour": 17
-        },
-        {
-          "id": "gid://shopify/ProductVariant/mock-m2",
-          "sku": "DEMO-LATTE-ART-2",
-          "price": 1800,
-          "quantity": 2,
-          "value": null,
-          "offsetDays": 24,
-          "localHour": 17
+          "offsetDays": null,
+          "localHour": null,
+          "startsAt": "2026-11-25T16:00:00.000Z",
+          "endsAt": "2026-11-25T18:30:00.000Z"
         }
       ]
     },
@@ -733,6 +726,54 @@
           "value": {
             "cs": "3000 Kč",
             "en": "3000 Kč"
+          },
+          "offsetDays": null,
+          "localHour": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/mock-latte-voucher",
+      "handle": "poukaz-latte-art",
+      "title": {
+        "cs": "POUKAZ NA LATTE ART PRO ZAČÁTEČNÍKY",
+        "en": "BEGINNER LATTE ART GIFT VOUCHER"
+      },
+      "descriptionHtml": {
+        "cs": "<p>Dárkový poukaz v hodnotě 2 100 Kč na osobu pro kurz Latte art pro začátečníky. Obdarovaný si termín vybere později podle vypsané nabídky. Poukaz sám o sobě nerezervuje místo.</p><p>V této ukázkové verzi je pokladna vypnutá a nevzniká platný dárkový kód.</p>",
+        "en": "<p>A CZK 2,100 gift voucher per person for beginner latte art. The recipient chooses a date later from the available sessions. The voucher does not reserve a seat.</p><p>Checkout is disabled in this demo and no redeemable gift code is issued.</p>"
+      },
+      "productType": "Gift Card",
+      "isGiftCard": true,
+      "tags": [
+        "gift",
+        "course-voucher:latte-art",
+        "demo"
+      ],
+      "images": [
+        {
+          "url": "/gift-card-preview.png",
+          "altText": "Kafe Grohova sample gift voucher - not redeemable",
+          "width": null,
+          "height": null
+        }
+      ],
+      "requiresShipping": false,
+      "weightGrams": 0,
+      "optionName": {
+        "cs": "Hodnota",
+        "en": "Amount"
+      },
+      "course": null,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/mock-latte-voucher-2100",
+          "sku": "DEMO-LATTE-VOUCHER-2100",
+          "price": 2100,
+          "quantity": 99,
+          "value": {
+            "cs": "2 100 Kč / osoba",
+            "en": "CZK 2,100 / person"
           },
           "offsetDays": null,
           "localHour": null

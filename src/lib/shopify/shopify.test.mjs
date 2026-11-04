@@ -347,10 +347,10 @@ test('normalization trusts the native boolean and excludes course markers from n
   assert.equal(cart.lines[1].isGiftCard, false);
 });
 
-test('demo gift cards retain native identity and all three Czech-koruna denominations', async () => {
+test('demo gifts retain native identity, the three original values and the dedicated course voucher', async () => {
   for (const lang of ['cs', 'en']) {
     const gifts = await demoShop.getGiftCards(lang);
-    assert.equal(gifts.length, 1);
+    assert.equal(gifts.length, 2);
     assert.equal(gifts[0].isGiftCard, true);
     assert.equal(gifts[0].handle, 'darkovy-poukaz');
     assert.deepEqual(gifts[0].variants.map(item => item.price), [
@@ -359,6 +359,9 @@ test('demo gift cards retain native identity and all three Czech-koruna denomina
       { amount: '3000.00', currencyCode: 'CZK' },
     ]);
     assert.equal((await demoShop.getProduct(gifts[0].handle, lang)).isGiftCard, true);
+    const courseGift = gifts.find(item => item.handle === 'poukaz-latte-art');
+    assert.equal(courseGift.isGiftCard, true);
+    assert.deepEqual(courseGift.variants.map(item => item.price), [{ amount: '2100.00', currencyCode: 'CZK' }]);
     assert(!(await demoShop.getMerch(lang)).some(item => item.isGiftCard));
   }
 });

@@ -648,3 +648,126 @@ test('native live gift cards remain disabled when merchandise is re-enabled and 
   assert.match(soldOut.getState().error!, /sold out/);
   assert.equal(requests, 0);
 });
+
+test('coming-soon courses reject direct adds in demo and live modes without Shopify writes', async () => {
+  for (const identity of [{ handle: 'cupping', tags: ['course'] }, { handle: 'new-session', tags: ['course', 'sensory'] }]) {
+    const product = { ...currentCourse(), ...identity };
+    for (const mock of [false, true]) {
+      let writes = 0;
+      const cart = createCartStore({ mock, storage: null, demoProducts: () => [product],
+        lookupProduct: async () => product,
+        request: (async () => { writes++; throw new Error('Unexpected mutation'); }) as typeof storefront });
+      assert.equal(await cart.addLine({ ...courseSnapshot, productHandle: product.handle }), false);
+      assert.match(cart.getState().error!, /coming soon/);
+      assert.equal(writes, 0);
+    }
+  }
+});
+
+test('coming-soon course lines are removed from restored demo and live carts', async () => {
+  const product = { ...currentCourse(), handle: 'cupping' };
+  const demo = createCartStore({ mock: true, demoProducts: () => [product],
+    storage: memoryStorage({ kafe_cart_mock: JSON.stringify([{ ...courseSnapshot, productHandle: 'cupping', quantity: 1 }]) }) });
+  assert.equal(await demo.initCart(), true);
+  assert.equal(demo.getState().cart?.totalQuantity, 0);
+  for (const failCleanup of [false, true]) {
+    const raw = courseCart();
+    raw.lines.nodes[0].merchandise.product.tags.push('sensory');
+    let navigated = false;
+    const requests: string[] = [];
+    const cart = createCartStore({ mock: false, merchEnabled: true,
+      storage: memoryStorage({ kafe_cart_id: 'cart-1' }), navigate: () => { navigated = true; },
+      request: (async (query: string, variables: any) => {
+        requests.push(query);
+        if (query === CART_QUERY) return { cart: raw };
+        assert.equal(query, CART_LINES_REMOVE);
+        assert.deepEqual(variables.lineIds, ['course-line']);
+        return { cartLinesRemove: failCleanup ? { cart: null, userErrors: [{ message: 'Temporary failure' }] }
+          : { cart: rawCart('cart-1', 0), userErrors: [] } };
+      }) as typeof storefront });
+    assert.equal(await cart.initCart(), !failCleanup);
+    assert.deepEqual(requests, [CART_QUERY, CART_LINES_REMOVE]);
+    assert.equal(cart.getState().cart?.totalQuantity ?? 0, 0);
+    assert.equal(await cart.checkout(), false);
+    assert.equal(navigated, false);
+  }
+});
+
+test('coming-soon course tags do not remove physical products or native gift cards', async () => {
+  const raw: any = rawCart();
+  raw.lines.nodes[0].merchandise.product.tags = ['coming-soon'];
+  const gift = giftCart().lines.nodes[0];
+  gift.merchandise.product.tags.push('sensory', 'coming-soon');
+  raw.lines.nodes.push(gift);
+  let requests = 0;
+  const cart = createCartStore({ mock: false, merchEnabled: true, giftCardsEnabled: true,
+    storage: memoryStorage({ kafe_cart_id: 'cart-1' }),
+    request: (async (query: string) => { requests++; assert.equal(query, CART_QUERY); return { cart: raw }; }) as typeof storefront });
+  assert.equal(await cart.initCart(), true);
+  assert.equal(cart.getState().cart?.lines.length, 2);
+  assert.equal(requests, 1);
+});
+
+function launchLatte(): Product {
+  return { ...currentCourse(2, 2), handle: 'latte-art',
+    course: { ...currentCourse().course!, durationMinutes: 150, capacity: 2 },
+    variants: [{ ...currentCourse().variants[0], startsAt: '2026-11-25T16:00:00.000Z',
+      endsAt: '2026-11-25T18:30:00.000Z', price: { amount: '2100.00', currencyCode: 'CZK' } }] };
+}
+
+test('latte cart rejects unoffered dates and real price changes instead of rewriting Shopify data', async () => {
+  const product = launchLatte();
+  const offered: LineSnapshot = { ...courseSnapshot, productHandle: 'latte-art', startsAt: product.variants[0].startsAt };
+  for (const mock of [true, false]) {
+    for (const patch of [{ startsAt: '2026-12-25T16:00:00Z' }, { endsAt: '2026-11-25T19:00:00Z' },
+      { price: { amount: '1800', currencyCode: 'CZK' } }, { price: { amount: '2100', currencyCode: 'EUR' } }]) {
+      const changed = { ...product, variants: [{ ...product.variants[0], ...patch }] };
+      let writes = 0;
+      const cart = createCartStore({ mock, now: () => Date.parse('2026-11-01T12:00:00Z'), storage: null,
+        demoProducts: () => [changed], lookupProduct: async () => changed,
+        request: (async () => { writes++; throw new Error('Unexpected mutation'); }) as typeof storefront });
+      assert.equal(await cart.addLine(offered), false);
+      assert.match(cart.getState().error!, /not currently offered/);
+      assert.equal(writes, 0);
+    }
+  }
+  const demo = createCartStore({ mock: true, now: () => Date.parse('2026-11-01T12:00:00Z'), storage: null,
+    demoProducts: () => [product] });
+  assert.equal(await demo.addLine({ ...offered, amount: '1', quantityAvailable: 99 }, 2), true);
+  assert.equal(demo.getState().cart?.subtotal.amount, '4200.00');
+  assert.equal(await demo.addLine(offered), false);
+  assert.equal(await demo.checkout(), false);
+});
+
+test('live checkout revalidates the linked native voucher denomination before redirecting', async () => {
+  const product = { ...nativeGift(), handle: 'poukaz-latte-art',
+    variants: [{ ...nativeGift().variants[0], price: { amount: '2100.00', currencyCode: 'CZK' } }] };
+  const raw = giftCart();
+  raw.lines.nodes[0].merchandise.product.handle = product.handle;
+  raw.lines.nodes[0].cost.amountPerQuantity.amount = '2100.00';
+  let destination = '';
+  const cart = createCartStore({ mock: false, giftCardsEnabled: true,
+    storage: memoryStorage({ kafe_cart_id: 'cart-1' }), lookupProduct: async () => product,
+    request: (async () => ({ cart: raw })) as typeof storefront,
+    navigate: url => { destination = url; } });
+  assert.equal(await cart.initCart(), true);
+  product.variants[0].price.amount = '2200.00';
+  assert.equal(await cart.checkout(), false);
+  assert.equal(destination, '');
+  assert.match(cart.getState().error!, /not currently offered/);
+  product.variants[0].price.amount = '2100.00';
+  assert.equal(await cart.checkout(), true);
+  assert.equal(destination, raw.checkoutUrl);
+});
+
+test('saved demo latte carts refresh their date and expire with the fixed launch session', async () => {
+  const product = launchLatte();
+  const saved = { ...courseSnapshot, productHandle: product.handle, startsAt: '2099-01-01T12:00:00Z', quantity: 1 };
+  for (const [now, expected] of [['2026-11-01T12:00:00Z', 1], ['2026-11-26T12:00:00Z', 0]] as const) {
+    const cart = createCartStore({ mock: true, now: () => Date.parse(now), demoProducts: () => [product],
+      storage: memoryStorage({ kafe_cart_mock: JSON.stringify([saved]) }) });
+    assert.equal(await cart.initCart(), true);
+    assert.equal(cart.getState().cart?.totalQuantity, expected);
+    if (expected) assert.equal(cart.getState().cart?.lines[0].courseStartsAt, product.variants[0].startsAt);
+  }
+});

@@ -6,6 +6,7 @@ import { isMockMode, MERCH_ENABLED, GIFT_CARDS_ENABLED } from './shopify/config'
 import { getProduct, isCourse, isRetiredCourse } from './shopify';
 import { mockCourses, mockMerch } from './shopify/mock';
 import { isFutureCourseDate } from './courseAvailability';
+import { isComingSoonCourse, isComingSoonCourseHandle, isLaunchCourseVariant, isLatteArtCourse, isLatteArtGiftCard, isLatteArtGiftVariant } from './coursePresentation';
 import type { Cart, CartLine, Product } from './shopify/types';
 
 const CART_ID_KEY = 'kafe_cart_id';
@@ -124,10 +125,15 @@ export function createCartStore(options: CartOptions = {}) {
       item.variants.some((variant) => variant.id === snapshot.merchandiseId));
     if (!product) throw new Error('This item is no longer available. Please choose a current course or gift card.');
     const course = isCourse(product);
+    if (course && isComingSoonCourse(product)) throw new Error('This course is coming soon and cannot be booked yet.');
     if (product.isGiftCard ? !giftCardsEnabled : !course && !merchEnabled) {
       throw new Error(product.isGiftCard ? 'Gift cards are temporarily unavailable.' : 'Merchandise is temporarily unavailable. Please choose a course or gift card.');
     }
     const variant = product.variants.find((item) => item.id === snapshot.merchandiseId)!;
+    if ((course && !isLaunchCourseVariant(product, variant)) ||
+      (isLatteArtGiftCard(product) && !isLatteArtGiftVariant(variant))) {
+      throw new Error('This session or voucher is not currently offered. Please choose the current offer.');
+    }
     const capacity = course ? product.course?.capacity : null;
     const stock = !variant.availableForSale ? 0 : product.isGiftCard ? 99
       : stockLimit({ ...snapshot, quantityAvailable: variant.quantityAvailable });
@@ -136,10 +142,11 @@ export function createCartStore(options: CartOptions = {}) {
     const { startsAt: selectedDate, ...withoutDate } = snapshot;
     return {
       ...withoutDate, productTitle: product.title, amount: variant.price.amount,
-      variantTitle: course ? snapshot.variantTitle : variant.title,
+      variantTitle: course && !isLatteArtCourse(product) ? snapshot.variantTitle : variant.title,
       currencyCode: variant.price.currencyCode, quantityAvailable: limit, isGiftCard: product.isGiftCard,
-      // Preserve course dates; neither gift cards nor physical goods carry a course marker.
-      ...(course ? { startsAt: selectedDate ?? null } : {}),
+      // The fixed launch date comes from the catalog, including restored older carts.
+      // Neither gift cards nor physical goods carry a course marker.
+      ...(course ? { startsAt: isLatteArtCourse(product) ? variant.startsAt : selectedDate ?? null } : {}),
     };
   }
 
@@ -231,7 +238,17 @@ export function createCartStore(options: CartOptions = {}) {
     if (!payload?.cart) throw new Error('Your cart is unavailable. Please refresh and try again.');
     let cart = normalizeCart(payload.cart);
     let removedUnavailable = false;
+    const pendingIds = (raw: Record<string, any>) => {
+      const courseIds = new Set(normalizeCart(raw).lines.filter(line => 'courseStartsAt' in line).map(line => line.id));
+      return new Set<string>((raw.lines?.nodes ?? []).filter((line: any) => {
+        const product = line.merchandise?.product;
+        return courseIds.has(line.id) && product && isComingSoonCourse({ handle: product.handle ?? '',
+          tags: Array.isArray(product.tags) ? product.tags : [], isGiftCard: product.isGiftCard === true });
+      }).map((line: any) => line.id));
+    };
+    let preparing = pendingIds(payload.cart);
     const unavailable = (line: CartLine) => isRetiredCourse(line.productHandle) ||
+      preparing.has(line.id) || ('courseStartsAt' in line && isComingSoonCourseHandle(line.productHandle)) ||
       (line.isGiftCard ? !giftCardsEnabled : !merchEnabled && !('courseStartsAt' in line));
     const hidden = cart.lines.filter(unavailable);
     if (hidden.length) {
@@ -246,6 +263,7 @@ export function createCartStore(options: CartOptions = {}) {
         const removalError = result?.userErrors?.[0]?.message;
         if (removalError || !result?.cart) throw new Error(removalError || 'Shopify did not return the updated cart.');
         cart = normalizeCart(result.cart);
+        preparing = pendingIds(result.cart);
         if (cart.lines.some(unavailable)) {
           throw new Error('Shopify still returned unavailable items in the cart.');
         }
@@ -285,10 +303,15 @@ export function createCartStore(options: CartOptions = {}) {
     const variant = product?.variants.find((item) => item.id === merchandiseId);
     if (!product || !variant || isRetiredCourse(product.handle)) throw new Error('This item is no longer available. Please remove it and choose another item.');
     const course = isCourse(product);
+    if (course && isComingSoonCourse(product)) throw new Error('This course is coming soon and cannot be booked yet.');
     if (product.isGiftCard ? !giftCardsEnabled : !course && !merchEnabled) {
       throw new Error(product.isGiftCard ? 'Gift cards are temporarily unavailable.' : 'Merchandise is temporarily unavailable. Please choose a course or gift card.');
     }
     if (!variant.availableForSale) throw new Error('This item is currently sold out.');
+    if ((course && !isLaunchCourseVariant(product, variant)) ||
+      (isLatteArtGiftCard(product) && !isLatteArtGiftVariant(variant))) {
+      throw new Error('This session or voucher is not currently offered. Please choose the current offer.');
+    }
     const stock = product.isGiftCard ? 99 : stockLimit({ merchandiseId, productHandle, productTitle: '', variantTitle: '', amount: '0', currencyCode: '', quantityAvailable: variant.quantityAvailable });
     if (!course) return { limit: stock, course: false };
     if (!isFutureCourseDate(variant.startsAt, now())) {

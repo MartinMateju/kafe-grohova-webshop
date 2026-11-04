@@ -12,7 +12,7 @@
           "namespace": "course",
           "key": "duration_minutes",
           "type": "number_integer",
-          "value": "180"
+          "value": "150"
         },
         {
           "namespace": "course",
@@ -36,39 +36,20 @@
       "variants": [
         {
           "sku": "DEMO-LATTE-ART-1",
-          "optionValue": "20. října 2026 v 17:00",
+          "optionValue": "25. listopadu 2026 v 17:00",
           "inventory": 2,
           "metafields": [
             {
               "namespace": "course",
               "key": "starts_at",
               "type": "date_time",
-              "value": "2026-10-20T15:00:00.000Z"
+              "value": "2026-11-25T16:00:00.000Z"
             },
             {
               "namespace": "course",
               "key": "ends_at",
               "type": "date_time",
-              "value": "2026-10-20T18:00:00.000Z"
-            }
-          ]
-        },
-        {
-          "sku": "DEMO-LATTE-ART-2",
-          "optionValue": "3. listopadu 2026 v 17:00",
-          "inventory": 2,
-          "metafields": [
-            {
-              "namespace": "course",
-              "key": "starts_at",
-              "type": "date_time",
-              "value": "2026-11-03T16:00:00.000Z"
-            },
-            {
-              "namespace": "course",
-              "key": "ends_at",
-              "type": "date_time",
-              "value": "2026-11-03T19:00:00.000Z"
+              "value": "2026-11-25T18:30:00.000Z"
             }
           ]
         }

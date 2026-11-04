@@ -5,141 +5,124 @@ import { allLangs, useTranslations, type Lang } from '../../i18n/utils';
 export function getStaticPaths() {
   return allLangs.map((lang) => ({ params: { lang } }));
 }
-
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-
 const email = 'ahoj@kafegrohova.cz';
 const hours = lang === 'cs' ? 'pondělí—pátek  7:00—17:00' : 'Monday—Friday  7:00—17:00';
 const mapsUrl = 'https://maps.google.com/?q=Grohova+102/3,+602+00+Brno';
+const copy = lang === 'cs' ? {
+  title: 'Stavte se.', second: 'Nebo napište.',
+  intro: 'Na kafe nás najdete na Grohové. S dotazem ke kurzům nebo čemukoliv dalšímu se ozvěte e-mailem.',
+  directions: 'Ukázat cestu', question: 'Máte otázku?',
+  social: 'Co se děje na Grohové', photo: 'Kávový kout v Kafe Grohova',
+} : {
+  title: 'Come by.', second: 'Or say hello.',
+  intro: 'Find us on Grohova for a coffee. For questions about courses or anything else, drop us an email.',
+  directions: 'Get directions', question: 'A question for us?',
+  social: 'Life on Grohova', photo: 'A coffee corner at Kafe Grohova',
+};
 ---
 
-<BaseLayout title={t('contact.title')}>
-  <div class="flex flex-col gap-16 py-10 lg:py-20">
-    <header class="flex flex-col items-center gap-6 text-center">
-      <span class="label inline-block border border-brick/50 px-4 py-1 text-brick">
-        {t('contact.getInTouch')}
-      </span>
-      <h1 class="text-[40px] leading-none md:text-[72px] lg:text-[80px]">
-        {t('contact.lead')}
-        <em class="not-italic text-brick">{t('contact.leadEm')}</em>
-      </h1>
-      <p class="max-w-md text-[16px] leading-relaxed text-ink/60">
-        {t('contact.sub')}
-      </p>
+<BaseLayout title={t('contact.title')} description={copy.intro}>
+  <div class="brand-page contact-page">
+    <header class="contact-hero">
+      <div class="contact-intro">
+        <p class="section-kicker">{t('contact.title')} / BRNO</p>
+        <h1 class="page-heading">{copy.title}<br /><span>{copy.second}</span></h1>
+        <p class="editorial-intro">{copy.intro}</p>
+        <a class="text-link" href={mapsUrl} target="_blank" rel="noopener noreferrer">{copy.directions} <span aria-hidden="true">↗</span></a>
+      </div>
+      <figure class="contact-photo">
+        <img src="/photos/coffee-corner.webp" alt={copy.photo} width="960" height="1440" fetchpriority="high" />
+        <figcaption>GROHOVA 102/3 · BRNO</figcaption>
+      </figure>
     </header>
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-12 md:flex-row md:gap-16">
-      {/* ── Form ────────────────────────────────────────────── */}
-      <form
-        class="flex w-full flex-col gap-7 border border-ink/10 p-6 md:w-3/5 md:p-10"
-        data-contact-form
-        data-email={email}
-      >
-        <p class="text-[14px] text-ink/60">{t('contact.note')}</p>
-        <label class="flex flex-col gap-2">
-          <span class="label text-ink/50">{t('contact.email')} *</span>
-          <input
-            type="email"
-            name="email"
-            autocomplete="email"
-            required
-            placeholder="vy@example.com"
-            class="border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
-          />
+    <section class="visit-details" aria-label={t('contact.findUs')}>
+      <div>
+        <h2 class="section-kicker">{t('contact.address')}</h2>
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Grohova 102/3<br />602 00 Brno <span aria-hidden="true">↗</span></a>
+      </div>
+      <div>
+        <h2 class="section-kicker">{t('contact.openingHours')}</h2>
+        <p>{hours}</p>
+      </div>
+      <div>
+        <h2 class="section-kicker">E-mail</h2>
+        <a href={`mailto:${email}`}>{email}</a>
+      </div>
+    </section>
+
+    <section class="contact-message" aria-labelledby="message-heading">
+      <div class="message-intro">
+        <p class="section-kicker">{t('contact.getInTouch')}</p>
+        <h2 id="message-heading">{copy.question}</h2>
+        <p class="editorial-intro">{t('contact.sub')}</p>
+        <div class="social-link">
+          <p class="section-kicker">{copy.social}</p>
+          <a class="text-link" href="https://instagram.com/kafegrohova" target="_blank" rel="noopener noreferrer">@kafegrohova <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <form data-contact-form data-email={email} aria-describedby="contact-note">
+        <p id="contact-note" class="form-note">{t('contact.note')}</p>
+        <label>
+          <span class="section-kicker">{t('contact.email')} *</span>
+          <input type="email" name="email" autocomplete="email" required placeholder={lang === 'cs' ? 'vy@example.com' : 'you@example.com'} />
         </label>
-
-        <label class="flex flex-col gap-2">
-          <span class="label text-ink/50">{t('contact.subject')} *</span>
-          <input
-            type="text"
-            name="subject"
-            required
-            class="border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
-          />
+        <label>
+          <span class="section-kicker">{t('contact.subject')} *</span>
+          <input type="text" name="subject" required />
         </label>
-
-        <label class="flex flex-col gap-2">
-          <span class="label text-ink/50">{t('contact.message')} *</span>
-          <textarea
-            name="message"
-            required
-            rows="5"
-            class="resize-y border-0 border-b border-ink/20 bg-transparent py-2 text-[16px] outline-none transition-colors focus:border-brick"
-          ></textarea>
+        <label>
+          <span class="section-kicker">{t('contact.message')} *</span>
+          <textarea name="message" required rows="5"></textarea>
         </label>
-
-        <button
-          type="submit"
-          class="self-start border border-ink px-8 py-3 text-[13px] tracking-widest transition-colors hover:bg-ink hover:text-cream"
-        >
-          {t('contact.send')}
-        </button>
-
-        <p data-contact-sent hidden role="status" class="text-[14px] text-brick">
-          {t('contact.sent')}
-        </p>
+        <button type="submit">{t('contact.send')} <span aria-hidden="true">↗</span></button>
+        <p data-contact-sent hidden role="status" class="form-note">{t('contact.sent')}</p>
       </form>
-
-      {/* ── Details ─────────────────────────────────────────── */}
-      <aside class="flex w-full flex-col gap-8 md:w-2/5">
-        <div class="flex flex-col gap-2">
-          <h2 class="label text-ink/50">{t('contact.address')}</h2>
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" class="text-[18px] hover:text-brick">
-            Grohova 102/3<br />602 00 Brno
-          </a>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="label text-ink/50">{t('contact.openingHours')}</h2>
-          <p class="text-[18px]">{hours}</p>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="label text-ink/50">E-mail</h2>
-          <a href={`mailto:${email}`} class="text-[18px] hover:text-brick">{email}</a>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="label text-ink/50">Instagram</h2>
-          <a
-            href="https://instagram.com/kafegrohova"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-[18px] hover:text-brick"
-          >
-            @kafegrohova
-          </a>
-        </div>
-      </aside>
-    </div>
-
-    <section class="w-full overflow-hidden">
-      <img
-        src="/images/OLD03342.webp"
-        alt=""
-        loading="lazy"
-        class="h-[20rem] w-full object-cover object-center lg:h-[32rem]"
-      />
     </section>
   </div>
 </BaseLayout>
 
+<style>
+  .contact-page { padding-block: clamp(2.5rem, 6vw, 6rem); }
+  .contact-hero { display: grid; grid-template-columns: 1.1fr .9fr; align-items: center; gap: clamp(2rem, 6vw, 7rem); }
+  .contact-intro { min-width: 0; }
+  .contact-intro h1 { margin-block: 1.5rem 2rem; font-size: clamp(3rem, 6.6vw, 6.5rem); }
+  .contact-intro h1 span { color: var(--color-brick); }
+  .contact-intro .editorial-intro { max-width: 32rem; margin-bottom: 2rem; }
+  .text-link { display: inline-flex; align-items: baseline; justify-content: space-between; gap: 1.5rem; border-bottom: 1px solid currentColor; padding-bottom: .4rem; font-size: 1rem; }
+  .text-link:hover, .visit-details a:hover { color: var(--color-brick); }
+  .contact-photo { margin: 0; min-width: 0; }
+  .contact-photo img { display: block; width: 100%; aspect-ratio: 4 / 5; height: auto; object-fit: cover; }
+  .contact-photo figcaption { padding-top: .75rem; font-family: var(--font-display); font-size: .75rem; letter-spacing: .1em; }
+  .visit-details { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; margin-block: clamp(3rem, 7vw, 7rem); padding-block: 2rem; border-block: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent); }
+  .visit-details h2 { margin-bottom: 1rem; }
+  .visit-details a, .visit-details p { font-size: clamp(1.05rem, 1.6vw, 1.4rem); line-height: 1.6; overflow-wrap: anywhere; }
+  .contact-message { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(2.5rem, 7vw, 8rem); }
+  .message-intro h2 { font-family: var(--font-sans); font-weight: 700; letter-spacing: -.055em; font-size: clamp(2.5rem, 4vw, 4rem); line-height: 1.05; margin-block: 1rem 1.5rem; }
+  .social-link { margin-top: 3rem; }
+  .social-link .section-kicker { margin-bottom: 1rem; }
+  form { display: flex; flex-direction: column; gap: 1.8rem; min-width: 0; }
+  .form-note { font-size: .9rem; line-height: 1.65; max-width: 38rem; }
+  label { display: flex; flex-direction: column; gap: .8rem; }
+  input, textarea { width: 100%; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 45%, transparent); border-radius: 0; background: transparent; padding: .7rem 0; font: inherit; font-size: 1rem; color: var(--color-ink); }
+  textarea { resize: vertical; min-height: 8rem; }
+  input:focus, textarea:focus { border-color: var(--color-brick); }
+  button[type='submit'] { align-self: flex-start; display: inline-flex; gap: 2rem; justify-content: space-between; border: 1px solid var(--color-brick); background: var(--color-brick); color: var(--color-cream); padding: 1rem 1.5rem; font-family: var(--font-display); font-size: .8rem; letter-spacing: .08em; cursor: pointer; }
+  button[type='submit']:hover { background: var(--color-ink); border-color: var(--color-ink); }
+  @media (max-width: 760px) { .contact-hero, .contact-message { grid-template-columns: 1fr; } .contact-intro h1 { font-size: clamp(2.75rem, 11.5vw, 5rem); } .contact-photo img { aspect-ratio: 4 / 3; object-position: center 38%; } .visit-details { grid-template-columns: 1fr; gap: 1.8rem; } .social-link { margin-top: 2rem; } }
+</style>
+
 <script>
-  /**
-   * Static build, so there is no server to POST to. The form composes a
-   * mailto: draft — swap this for a Formspree/Basin endpoint (or a Shopify
-   * customer-form app) when you want submissions in an inbox automatically.
-   */
+  // This static form opens a draft; the visitor sends it from their email app.
   const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
     const data = new FormData(form);
     const to = form.dataset.email ?? '';
     const subject = encodeURIComponent(String(data.get('subject') ?? ''));
-    const body = encodeURIComponent(
-      `${String(data.get('message') ?? '')}\n\n— ${String(data.get('email') ?? '')}`,
-    );
+    const body = encodeURIComponent(`${String(data.get('message') ?? '')}\n\n— ${String(data.get('email') ?? '')}`);
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
     const sent = form.querySelector<HTMLElement>('[data-contact-sent]');
     if (sent) sent.hidden = false;

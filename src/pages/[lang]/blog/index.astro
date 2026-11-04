@@ -1,100 +1,98 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import {
-  allLangs,
-  localePath,
-  useTranslations,
-  type Lang,
-} from '../../../i18n/utils';
+import { allLangs, localePath, useTranslations, type Lang } from '../../../i18n/utils';
 import { getArticles, formatDate, imageUrl } from '../../../lib/shopify';
 
 export function getStaticPaths() {
   return allLangs.map((lang) => ({ params: { lang } }));
 }
-
 const lang = Astro.params.lang as Lang;
 const t = useTranslations(lang);
-
 const articles = await getArticles(lang);
 const [lead, ...rest] = articles;
+const copy = lang === 'cs' ? {
+  title: 'Zápisky od baru.', intro: 'O kávě, její přípravě a věcech, které nás baví. Na chvíli čtení, třeba k jednomu šálku.',
+  latest: 'K přečtení', more: 'Další zápisky', question: 'A co zajímá vás?',
+} : {
+  title: 'Notes from the bar.', intro: 'Coffee, how to make it, and the things we enjoy. A little reading to go with your cup.',
+  latest: 'A little reading', more: 'More notes', question: 'What are you curious about?',
+};
 ---
 
-<BaseLayout title={t('blog.title')}>
-  <div class="w-full">
-    <h1 class="sr-only">{t('blog.title')}</h1>
+<BaseLayout title={t('blog.title')} description={copy.intro}>
+  <div class="brand-page journal-page">
+    <header class="journal-heading">
+      <p class="section-kicker">KAFE GROHOVA / {t('blog.title')}</p>
+      <h1 class="page-heading">{copy.title}</h1>
+      <p class="editorial-intro">{copy.intro}</p>
+    </header>
 
-    {/* ── Subscribe block + lead article ─────────────────────── */}
-    <section class="flex w-full flex-col gap-2.5 py-5 md:flex-row lg:py-10">
-      <div class="flex h-[420px] w-full flex-col items-center justify-center gap-4 bg-brick px-6 text-center md:h-[600px] md:w-1/2">
-        <p class="md:text-[24px]">
-          {t('blog.news')}<br />{t('blog.subscribeText')}
-        </p>
-        <a
-          href={localePath(lang, '/contact')}
-          class="text-[28px] text-cream underline-offset-4 hover:underline"
-        >
-          {t('blog.subscribe')}
+    {lead ? (
+      <article class="lead-story" data-blog-lead>
+        <a href={localePath(lang, `/blog/${lead.handle}`)} class="lead-image" tabindex="-1" aria-hidden="true">
+          <img src={imageUrl(lead.image?.url, 1400) || '/photos/coffee-friends.webp'} alt="" width="1400" height="1050" />
         </a>
-      </div>
+        <div class="lead-copy">
+          <p class="section-kicker">{copy.latest}</p>
+          <time datetime={lead.publishedAt ?? undefined}>{formatDate(lead.publishedAt, lang)}</time>
+          <h2><a href={localePath(lang, `/blog/${lead.handle}`)}>{lead.title}</a></h2>
+          {lead.excerpt && <p>{lead.excerpt}</p>}
+          <a class="read-link" href={localePath(lang, `/blog/${lead.handle}`)}>{t('blog.readMore')} <span aria-hidden="true">↗</span></a>
+        </div>
+      </article>
+    ) : <p class="journal-empty">{t('blog.empty')}</p>}
 
-      <div class="w-full md:w-1/2 md:text-[20px] lg:mr-20">
-        {
-          lead ? (
-            <a href={localePath(lang, `/blog/${lead.handle}`)} class="group flex flex-col gap-4">
-              <span class="text-[22px] group-hover:text-brick md:text-[26px]">{lead.title}</span>
-              <span class="text-[13px] text-ink/50">{formatDate(lead.publishedAt, lang)}</span>
-              <div class="rte mt-2 text-justify text-[16px] md:text-[18px]" set:html={lead.excerptHtml || lead.contentHtml} />
-              <span class="text-brick">{t('blog.readMore')} →</span>
-            </a>
-          ) : (
-            <p class="text-ink/60">{t('blog.empty')}</p>
-          )
-        }
-      </div>
-    </section>
-
-    {/* ── Article grid ───────────────────────────────────────── */}
-    {
-      rest.length > 0 && (
-        <section class="mt-7 flex w-full flex-col gap-6">
-          <div class="grid w-full grid-cols-2 gap-3 md:grid-cols-4">
-            {rest.map((article) => (
-              <a
-                href={localePath(lang, `/blog/${article.handle}`)}
-                class="group flex flex-col gap-1 md:text-[20px]"
-              >
-                <div class="h-[220px] w-full overflow-hidden bg-stone/40 md:h-[300px]">
-                  {article.image ? (
-                    <img
-                      src={imageUrl(article.image.url, 800)}
-                      alt={article.image.altText ?? article.title}
-                      loading="lazy"
-                      class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div class="h-full w-full bg-stone" />
-                  )}
-                </div>
-                <div class="mt-4 flex w-full justify-between gap-3">
-                  <p class="truncate group-hover:text-brick">{article.title}</p>
-                  <p class="whitespace-nowrap text-[13px] text-ink/50">
-                    {formatDate(article.publishedAt, lang)}
-                  </p>
-                </div>
+    {rest.length > 0 && (
+      <section class="journal-more" aria-labelledby="more-notes">
+        <div class="section-rule"><h2 class="section-kicker" id="more-notes">{copy.more}</h2><span aria-hidden="true">({String(rest.length).padStart(2, '0')})</span></div>
+        <div class="story-grid">
+          {rest.map((article) => (
+            <article class="story" data-blog-story>
+              <a class="story-image" href={localePath(lang, `/blog/${article.handle}`)} tabindex="-1" aria-hidden="true">
+                <img src={imageUrl(article.image?.url, 900) || '/photos/coffee-friends.webp'} alt="" loading="lazy" width="900" height="1100" />
               </a>
-            ))}
-          </div>
-        </section>
-      )
-    }
+              <time datetime={article.publishedAt ?? undefined}>{formatDate(article.publishedAt, lang)}</time>
+              <h3><a href={localePath(lang, `/blog/${article.handle}`)}>{article.title}</a></h3>
+              {article.excerpt && <p>{article.excerpt}</p>}
+              <a class="read-link" href={localePath(lang, `/blog/${article.handle}`)}>{t('blog.readMore')} <span aria-hidden="true">↗</span></a>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
 
-    <section class="my-12 w-full overflow-hidden">
-      <img
-        src="/images/OLD03389.webp"
-        alt=""
-        loading="lazy"
-        class="h-[24rem] w-full object-cover object-center lg:h-[44rem]"
-      />
+    <section class="journal-contact">
+      <div><p class="section-kicker">{t('blog.subscribeText')}</p><h2>{copy.question}</h2></div>
+      <a class="read-link" href={localePath(lang, '/contact')}>{t('blog.subscribe')} <span aria-hidden="true">↗</span></a>
     </section>
   </div>
 </BaseLayout>
+
+<style>
+  .journal-page { padding-block: clamp(2.5rem, 6vw, 6rem); }
+  .journal-heading { max-width: 68rem; margin-bottom: clamp(2.5rem, 5vw, 5rem); }
+  .journal-heading h1 { margin-block: 1.5rem; }
+  .journal-heading .editorial-intro { max-width: 37rem; }
+  .lead-story { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(2rem, 5vw, 6rem); align-items: center; }
+  .lead-image { display: block; min-width: 0; }
+  .lead-image img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+  .lead-copy { min-width: 0; padding-block: 1rem; }
+  time { display: block; margin-top: 1rem; font-family: var(--font-display); font-size: .8rem; color: color-mix(in srgb, var(--color-ink) 70%, transparent); }
+  .lead-copy h2 { font-family: var(--font-sans); font-size: clamp(2rem, 3.8vw, 3.8rem); font-weight: 700; letter-spacing: -.045em; line-height: 1.05; margin-block: 1.25rem; overflow-wrap: anywhere; }
+  .lead-copy > p:not(.section-kicker), .story > p { font-size: 1rem; line-height: 1.75; }
+  h2 a:hover, h3 a:hover, .read-link:hover { color: var(--color-brick); }
+  .read-link { display: inline-flex; align-items: baseline; gap: 2rem; border-bottom: 1px solid currentColor; padding-bottom: .35rem; margin-top: 1.5rem; font-size: .95rem; }
+  .journal-more { margin-top: clamp(3.5rem, 7vw, 7rem); }
+  .section-rule { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent); padding-top: 1rem; margin-bottom: 2rem; }
+  .section-rule > span { font-family: var(--font-display); font-size: .8rem; }
+  .story-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1.5rem, 3vw, 3rem); }
+  .story { min-width: 0; }
+  .story-image { display: block; overflow: hidden; }
+  .story-image img { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover; }
+  .story h3 { margin-block: 1rem; font-family: var(--font-sans); font-size: clamp(1.4rem, 2.1vw, 2rem); line-height: 1.15; font-weight: 700; letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .journal-contact { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-top: clamp(3rem, 7vw, 7rem); border-block: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent); padding-block: 2rem; }
+  .journal-contact h2 { font-family: var(--font-sans); font-size: clamp(1.8rem, 3.5vw, 3rem); line-height: 1.1; font-weight: 700; letter-spacing: -.04em; margin-top: 1rem; }
+  .journal-contact .read-link { flex-shrink: 0; }
+  .journal-empty { padding-block: 3rem; border-block: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent); }
+  @media (max-width: 760px) { .lead-story { grid-template-columns: 1fr; gap: 1.5rem; } .story-grid { grid-template-columns: 1fr; gap: 2.5rem; } .story-image img { aspect-ratio: 4 / 3; } .journal-contact { align-items: flex-start; flex-direction: column; } .journal-contact .read-link { margin-top: 0; } }
+</style>

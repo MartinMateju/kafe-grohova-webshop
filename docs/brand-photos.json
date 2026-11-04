@@ -1,0 +1,366 @@
+{
+  "version": 1,
+  "createdDate": "2026-11-03",
+  "source": "User-provided 22_10_26 grohovka.zip",
+  "processing": "EXIF orientation normalization, proportional Lanczos downscaling, WebP compression, metadata removal. No crop, retouching, recoloring or generated imagery.",
+  "assets": [
+    {
+      "path": "/photos/grohova-street.webp",
+      "sourceFile": "DSCF7017.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1920,
+        1280
+      ],
+      "orientedSourceDimensions": [
+        1920,
+        1280
+      ],
+      "width": 1920,
+      "height": 1280,
+      "bytes": 309150,
+      "format": "webp",
+      "quality": 82,
+      "role": "desktop hero",
+      "exifRemoved": true,
+      "sha256": "5b947bd02c36191c3b997693fa5828e0d15b026e63384e3ce07fc04b35855592"
+    },
+    {
+      "path": "/photos/grohova-street-1280.webp",
+      "sourceFile": "DSCF7017.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1920,
+        1280
+      ],
+      "orientedSourceDimensions": [
+        1920,
+        1280
+      ],
+      "width": 1280,
+      "height": 853,
+      "bytes": 174248,
+      "format": "webp",
+      "quality": 82,
+      "role": "desktop hero responsive",
+      "exifRemoved": true,
+      "sha256": "cb8cab306fdfd5194873be3caca46cfa97744dce7ae3c1a5fa4477654d1f78d0"
+    },
+    {
+      "path": "/photos/grohova-friends.webp",
+      "sourceFile": "DSCF6650.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 1280,
+      "height": 1920,
+      "bytes": 147068,
+      "format": "webp",
+      "quality": 82,
+      "role": "mobile hero",
+      "exifRemoved": true,
+      "sha256": "b256212a04ffcde394655e6b9dc23c0b425508bf12999c9db4d490c838f3e825"
+    },
+    {
+      "path": "/photos/grohova-friends-640.webp",
+      "sourceFile": "DSCF6650.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 640,
+      "height": 960,
+      "bytes": 61474,
+      "format": "webp",
+      "quality": 82,
+      "role": "mobile hero responsive",
+      "exifRemoved": true,
+      "sha256": "fa681b6725ec1ceb9d8c30d6398afcab810b69093f4f0093afed101806ea7240"
+    },
+    {
+      "path": "/photos/latte-pour.webp",
+      "sourceFile": "DSCF6601.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 49322,
+      "format": "webp",
+      "quality": 80,
+      "role": "latte art pouring",
+      "exifRemoved": true,
+      "sha256": "1175d18dcfe71d9498ffe9c7630f5bf5dbf05911786a20714b0b10f88a071fda"
+    },
+    {
+      "path": "/photos/latte-on-table.webp",
+      "sourceFile": "DSCF6611.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 42078,
+      "format": "webp",
+      "quality": 80,
+      "role": "coffee and cafe table",
+      "exifRemoved": true,
+      "sha256": "2e4134827ff89f57f535e79301b34f28197e36a88c09a1dd8f32f6a9f2d75eda"
+    },
+    {
+      "path": "/photos/coffee-corner.webp",
+      "sourceFile": "DSCF6699.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 119166,
+      "format": "webp",
+      "quality": 80,
+      "role": "coffee corner portrait",
+      "exifRemoved": true,
+      "sha256": "b3bf7c7b10c04a863fcf461261a2ebadae693b14baccbef83a3162b76973d4e8"
+    },
+    {
+      "path": "/photos/ceramics-hands.webp",
+      "sourceFile": "DSCF6740.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1281,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1281,
+        1920
+      ],
+      "width": 960,
+      "height": 1439,
+      "bytes": 74336,
+      "format": "webp",
+      "quality": 80,
+      "role": "handmade ceramics held outside the cafe",
+      "exifRemoved": true,
+      "sha256": "77f70a6baf990adea4164e0e3fbf3bce6d913596d42a7ed3a0d607ae0b79a59d"
+    },
+    {
+      "path": "/photos/ceramics-shelf.webp",
+      "sourceFile": "DSCF6712.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 103974,
+      "format": "webp",
+      "quality": 80,
+      "role": "ceramic shelves",
+      "exifRemoved": true,
+      "sha256": "f29db83aef000559b71b795833e1e56e06e7fd3a8f2e5fd128bbdd39b03dcb07"
+    },
+    {
+      "path": "/photos/ceramics-stack.webp",
+      "sourceFile": "DSCF6726.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 44882,
+      "format": "webp",
+      "quality": 80,
+      "role": "stacked handmade cups",
+      "exifRemoved": true,
+      "sha256": "fae9fc0b64e7cd5081c4d65bb7779cc2ebc7735e730b735ec8da6474b9009acf"
+    },
+    {
+      "path": "/photos/espresso-pour.webp",
+      "sourceFile": "DSCF6808.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 131754,
+      "format": "webp",
+      "quality": 80,
+      "role": "espresso extraction into ceramic cups",
+      "exifRemoved": true,
+      "sha256": "04ade6d70066ca4052819b343caa12140133faf96d91b2fcda9e61c722341a65"
+    },
+    {
+      "path": "/photos/barista.webp",
+      "sourceFile": "DSCF6820.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1281,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1281,
+        1920
+      ],
+      "width": 960,
+      "height": 1439,
+      "bytes": 69688,
+      "format": "webp",
+      "quality": 80,
+      "role": "barista at work",
+      "exifRemoved": true,
+      "sha256": "64d822305ebc6d510b3516a95516c27ac988083ab623815624eb8229d2636a55"
+    },
+    {
+      "path": "/photos/coffee-friends.webp",
+      "sourceFile": "DSCF6904.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 122776,
+      "format": "webp",
+      "quality": 80,
+      "role": "friends sharing coffee",
+      "exifRemoved": true,
+      "sha256": "fc01d0c676819c5f084c46e5e5ef4d40b45b45ebb432191334487dbbb13c2680"
+    },
+    {
+      "path": "/photos/ceramics-workshop.webp",
+      "sourceFile": "DSCF7000.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 80266,
+      "format": "webp",
+      "quality": 80,
+      "role": "ceramics workshop",
+      "exifRemoved": true,
+      "sha256": "1684ee14d5d6e686f2cbb10c20377558325c4192d7c9302d6b82479ef5435d47"
+    },
+    {
+      "path": "/photos/street-window.webp",
+      "sourceFile": "DSCF6732.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 171236,
+      "format": "webp",
+      "quality": 80,
+      "role": "cafe window from the street",
+      "exifRemoved": true,
+      "sha256": "ebe8407e7abdc99e932866cc7c457585c8df9d1ed4d42eed13cdbae644877a79"
+    },
+    {
+      "path": "/photos/coffee-bags.webp",
+      "sourceFile": "DSCF6857.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 129722,
+      "format": "webp",
+      "quality": 80,
+      "role": "coffee bags at the cafe",
+      "exifRemoved": true,
+      "sha256": "ee2cae83c8a8f724c1f7361820d15b7217285b667e8a4a1131ed58c8c3cfb04c"
+    },
+    {
+      "path": "/photos/window-ceramics.webp",
+      "sourceFile": "DSCF7038.jpg_compressed.JPEG",
+      "sourceArchive": "22_10_26 grohovka.zip",
+      "sourceDimensions": [
+        1280,
+        1920
+      ],
+      "orientedSourceDimensions": [
+        1280,
+        1920
+      ],
+      "width": 960,
+      "height": 1440,
+      "bytes": 111048,
+      "format": "webp",
+      "quality": 80,
+      "role": "ceramics studio through the window",
+      "exifRemoved": true,
+      "sha256": "a66c16a3d2b96bb1cdb3e5315bf66fe3a5ffcc06c9ff9aec00ca2a9fbfe7358e"
+    }
+  ],
+  "totalBytes": 1942188
+}

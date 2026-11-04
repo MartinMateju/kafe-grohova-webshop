@@ -13,7 +13,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:4321. No Shopify account or credentials are required. The demo shows 3 courses, a gift card with 1,000 / 2,000 / 3,000 CZK values, and 4 articles in both languages. Cupping replaces the previous espresso course. Seven physical-product fixtures are retained but temporarily hidden. Course sessions roll into the future at build/start time and use Europe/Prague. Prices are CZK.
+Open http://localhost:4321. No Shopify account or credentials are required. The demo features one beginner latte-art session: **25 November 2026, 17:00–19:30 Europe/Prague, CZK 2,100 per person**, with the existing two-person capacity. Sensory skills and cupping are marked “Coming soon”; retained filtered-coffee detail pages also cannot be booked. The latte-art date is fixed, not rolled forward. A dedicated CZK 2,100 course voucher accompanies the existing monetary gift card (1,000 / 2,000 / 3,000 CZK). Four articles are available in both languages. Seven physical-product fixtures remain behind the merchandise flag.
+
+The visual system follows the Kafe Grohova brand manual: warm paper, terracotta, ink, cobalt, olive and honey; the original DIN wordmark; Switzer typography with true italic accents. Switzer is loaded through the official [Fontshare CSS API](https://www.fontshare.com/fonts/switzer), with system-font fallbacks and font-display swap. Font files are not redistributed in this repository. New photographs are mixed with the original archive. The homepage has separate landscape/portrait hero assets. Image provenance and sizes are recorded in [docs/brand-photos.json](docs/brand-photos.json). Musical references are artist names and original copy, not reproduced song lyrics.
 
 `PUBLIC_MERCH_ENABLED=false` is the default. It hides physical merchandise from store navigation, product cards, detail routes and restored carts, and sends the store landing page to courses. Set `PUBLIC_MERCH_ENABLED=true` in the relevant Vercel environments and rebuild to restore physical products when photos are ready. Gift cards are independently enabled by `PUBLIC_GIFT_CARDS_ENABLED=true` (the default), with their own `/cs/gift-cards/` and `/en/gift-cards/` pages. Set that flag to `false` and rebuild to hide them. No Shopify products are deleted by either setting.
 
@@ -28,6 +30,12 @@ npm run preview             # serve the static production output locally
 ```
 
 `dist/` is the deployable website. CI runs validation and the browser tests on pull requests.
+
+### Italic accents
+
+Italic text always uses a contrasting brand color: terracotta on paper by default, olive in the objects section, and honey on dark blue or ink. The course panel uses olive italic text on a small paper highlight because the other palette colors do not have enough contrast directly on terracotta. The shared rule covers `em`, `i`, and `.italic`, including Shopify rich text; use `--kg-italic-color` and `--kg-italic-background` when adding a different surface.
+
+Homepage headings use distinct poster compositions within that system: an oversized introductory word with a small baseline phrase, three progressively aligned course steps, a right-aligned italic reply in the objects section, and a staggered two-line gift title. Keep each as one semantic heading, preserve visible accents and descenders, and adapt both Czech and English at mobile and tablet widths. Only the course highlight rotates; its text stays level.
 
 ## Dedicated Shopify connection
 
@@ -79,13 +87,15 @@ npm run catalog:generate -- --courses-only
 node scripts/generate-demo-catalog.mjs --courses-only --date 2026-10-10 --lang cs
 ```
 
-`data/shopify/products.csv` contains **3 draft courses / 8 date variants**. Course metadata and image manifests are included beside it. All products are initially unpublished and carry a `demo` tag. Review in Kafe Grohova's dedicated store before activating any products. Prices, quantities, articles and descriptions are sample content. Omit `--courses-only` to export the retained full catalog later (10 products / 21 variants, excluding the native gift card).
+`data/shopify/products.csv` contains **3 draft courses / 7 date variants**. Course metadata and image manifests are included beside it. All products are initially unpublished and carry a `demo` tag. The latte-art fixture reflects the confirmed November offer; the other course fixtures are retained for reference and cannot be booked through this release. Review all imported data in Kafe Grohova's dedicated store before activation. Omit `--courses-only` to export the retained full catalog later (10 products / 20 variants, excluding both native gift-card fixtures).
 
 The local gift-card example is deliberately excluded from CSV: create a native Shopify gift-card product in Shopify Admin and publish it to Headless. It does not need the `merch` collection. Course variant metafields and translations also need setup; the sidecar JSON documents their values and is not an Admin import endpoint. Without a public image base, upload images from `public/` using the image manifest.
 
 ## Gift cards and the sample PDF
 
 The storefront lists only Shopify's native `isGiftCard` products as gift cards. A normal product named or tagged "Gift Card" does not qualify. Each denomination is a separate Shopify variant; the cart preserves its actual price. Physical products remain hidden, and course limits remain 2 / 4 / 4.
+
+The featured course voucher needs its **own published native gift-card product**, identified by handle `poukaz-latte-art` or tag `course-voucher:latte-art`, with a real **CZK 2,100** variant. The storefront does not relabel a generic monetary gift card or change Shopify prices. If the matching product is missing or unavailable, its editorial page remains visible with a contact link and no purchase button. The new course-voucher artwork is a design preview, not a redeemable code or an automatically generated PDF. Buying the voucher does not reserve a place on 25 November; the recipient books an available course separately using the native gift code.
 
 In the dedicated Shopify Admin, open **Products → Gift cards → Add a gift card product**, with the reviewed 1,000 / 2,000 / 3,000 CZK values and handle `darkovy-poukaz`. Set it active, publish it to the Headless sales channel, and ensure it is available in the Czech market. The gift-card catalog is read independently of collections. Confirm the gift-card fulfillment and customer email settings, then test purchase, fulfillment, delivery of a unique gift code, and redemption against a course order. A public Storefront token can query and buy a published product; it cannot create products or configure fulfillment.
 
@@ -96,6 +106,8 @@ The public deployment remains in demo mode until the native gift card, course co
 ## Courses and seats
 
 One product per course, one variant per date. Set product type `Course` or tag `course`, and include it in `barista-kurzy`. Track inventory per variant with quantity equal to available seats, disable continuing sales when out of stock, and mark courses as not requiring shipping.
+
+For this release, the beginner latte-art variant must match the confirmed offer exactly: `course.starts_at=2026-11-25T16:00:00.000Z`, `course.ends_at=2026-11-25T18:30:00.000Z`, **CZK 2,100**, and product `course.duration_minutes=150`. These UTC times are 17:00–19:30 in Prague. The policy in `src/lib/coursePresentation.ts` selects only that actual future variant and rechecks it before cart/checkout. Missing or mismatched data does not create a fake purchasable session. Update this explicit launch policy when publishing a new offer; rebuild the static site after catalogue changes. Cupping, sensory and filtered-coffee fixtures remain unbookable, including through restored carts.
 
 Group limits are **2 for beginner latte art**, **4 for cupping**, and **4 for filtered coffee**. Set both the `course.capacity` product metafield and each date variant's Shopify inventory correctly. The booking controls and cart enforce the per-session limit; Shopify inventory prevents overselling across customers. For an existing session, available inventory is the group limit minus places already sold, not a fresh reset to the full capacity.
 
@@ -154,4 +166,4 @@ Do not upload `dist/` through Shopify's theme editor. For native Shopify hosting
 - `scripts/verify-shopify.ts`: live-store connection probe.
 - `tests/`: cart regressions, translated routes and browser flows.
 
-Keep global CSS inside Tailwind layers so utilities retain their expected precedence.
+Keep broad element resets inside Tailwind layers. The explicit brand component classes live in `src/styles/brand.css`; homepage-only art direction lives in `src/styles/homepage.css`.

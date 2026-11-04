@@ -13,7 +13,9 @@ const money = (amount: number) => ({ amount: amount.toFixed(2), currencyCode: ca
 function products(lang: Lang, courses: boolean): Product[] {
   return catalog.products.filter(product => Boolean(product.course) === courses).map(product => {
     const variants: Variant[] = product.variants.map(variant => {
-      const dates = product.course && variant.offsetDays !== null && variant.localHour !== null
+      const dates = product.course && 'startsAt' in variant && 'endsAt' in variant
+        ? { startsAt: variant.startsAt, endsAt: variant.endsAt }
+        : product.course && variant.offsetDays !== null && variant.localHour !== null
         ? courseDates(baseDate, variant.offsetDays, variant.localHour, product.course.durationMinutes)
         : { startsAt: null, endsAt: null };
       const title = dates.startsAt ? courseDateLabel(dates.startsAt, lang) : variant.value?.[lang] ?? 'Default Title';
